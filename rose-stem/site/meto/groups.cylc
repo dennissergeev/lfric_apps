@@ -58,6 +58,7 @@
     "xc40_performance": [],
     }) %}
 
+{% include "site/meto/groups/groups_adjoint_tests.cylc" %}
 {% include "site/meto/groups/groups_coupled_interface.cylc" %}
 {% include "site/meto/groups/groups_gravity_wave.cylc" %}
 {% include "site/meto/groups/groups_gungho.cylc" %}

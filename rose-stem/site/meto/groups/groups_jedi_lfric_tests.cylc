@@ -8,24 +8,47 @@
 {# Spice Groups #}
 {% do site_groups.update({
     "jedi_lfric_tests_spice_developer": [
+        "jedi_lfric_tests_nwp_gal9-C12_spice_intel_fast-debug-64bit",
         "jedi_lfric_tests_runge-kutta-C12_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_runge-kutta-C12_spice_gnu_fast-debug-64bit",
+        "jedi_lfric_tests_runge-kutta-C12_spice_gnu_full-debug-64bit",
+        "jedi_lfric_tests_forecast_default-C12_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_default-C12_spice_gnu_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_default-C12_spice_gnu_full-debug-64bit",
+        "jedi_lfric_tests_forecast_no_xios-C12_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_pseudo_default-C12_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_spice_gnu_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_spice_gnu_full-debug-64bit",
+        "jedi_lfric_tests_tlm_forecast_tl_default-C12_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_tlm_forecast_tl_default-C12_spice_gnu_fast-debug-64bit",
+        "jedi_lfric_tests_tlm_forecast_tl_default-C12_spice_gnu_full-debug-64bit",
         "jedi_lfric_tests_spice_integration_tests",
     ],
     "jedi_lfric_tests_spice": [
         "jedi_lfric_tests_spice_developer"
     ],
     "jedi_lfric_tests_spice_integration_tests": [
-        "jedi_lfric_tests_integration_tests_spice_intel_fast-debug-64bit",
+        "jedi_lfric_tests_integration_tests_spice_intel_64bit",
+        "jedi_lfric_tests_integration_tests_spice_gnu_64bit",
     ],
     "jedi_lfric_tests_spice_build": [
         "build_jedi_lfric_tests_spice_intel_fast-debug-64bit",
+        "build_jedi_lfric_tests_spice_gnu_fast-debug-64bit",
+        "build_jedi_lfric_tests_spice_gnu_full-debug-64bit",
     ],
     }) %}
 
 {# XC40 Groups #}
 {% do site_groups.update({
     "jedi_lfric_tests_xc40_developer": [
+        "jedi_lfric_tests_nwp_gal9-C12_xc40_intel_fast-debug-64bit",
         "jedi_lfric_tests_runge-kutta-C12_xc40_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_default-C12_xc40_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_no_xios-C12_xc40_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_pseudo_default-C12_xc40_intel_fast-debug-64bit",
+        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_xc40_intel_fast-debug-64bit",
+        "jedi_lfric_tests_tlm_forecast_tl_default-C12_xc40_intel_fast-debug-64bit",
         "jedi_lfric_tests_xc40_integration_tests",
     ],
     "jedi_lfric_tests_xc40": [
