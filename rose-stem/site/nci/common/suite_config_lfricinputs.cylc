@@ -33,9 +33,14 @@
             -l ncpus={{tasks}}
     {% if tasks > 20 %}
             -l mem=96GB
+    {% elif tasks > 17 %}
+            -l mem=64GB
     {% endif %}
         [[[environment]]]
-            ROSE_LAUNCHER_PREOPTS = -n {{tasks}}
+    {% if tasks > 2 %}
+        {% set rose_launcher_tasks = tasks - 2 %}
+            ROSE_LAUNCHER_PREOPTS = -n {{rose_launcher_tasks}}
+    {% endif %}
 {% endfor %}
 
     [[NCI_GADI_RUN_TASKS]]
@@ -97,42 +102,5 @@
 
     [[GADI_MESH_IFORT-GCC]]
         inherit = GADI_BUILD_IFORT-GCC
-
-    [[run_lfricinputs_um2lfric-aquaplanet-N48L38_C48L38_gadi_ifort-gcc_safe]]
-        [[[directives]]]
-            -l ncpus=2
-
-    [[run_lfricinputs_um2lfric-basicgal-N96L70_C12L70_gadi_ifort-gcc_safe]]
-        [[[directives]]]
-            -l ncpus=2
-
-    [[run_lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_gadi_ifort-gcc_safe]]
-        [[[directives]]]
-            -l ncpus=2
-
-    [[run_lfricinputs_um2lfric-protogal-N96L70_C12L70_gadi_ifort-gcc_safe]]
-        [[[directives]]]
-            -l ncpus=2
-
-    [[run_lfricinputs_um2lfric-aquaplanet_lam_gadi_ifort-gcc_safe]]
-        [[[environment]]]
-            ROSE_LAUNCHER_PREOPTS = -n 16
-        [[[directives]]]
-            -l ncpus=18
-            -l mem=64GB
-
-    [[run_lfricinputs_um2lfric-aquaplanet_lbc_gadi_ifort-gcc_safe]]
-        [[[environment]]]
-            ROSE_LAUNCHER_PREOPTS = -n 16
-        [[[directives]]]
-            -l ncpus=18
-            -l mem=64GB
-
-    [[run_lfricinputs_um2lfric-falklands_lam_gadi_ifort-gcc_safe]]
-        [[[environment]]]
-            ROSE_LAUNCHER_PREOPTS = -n 16
-        [[[directives]]]
-            -l ncpus=18
-            -l mem=64GB
 
 {% do LOG.debug("Finished in site/nci/common/suite_config_lfricinputs.cylc") %}

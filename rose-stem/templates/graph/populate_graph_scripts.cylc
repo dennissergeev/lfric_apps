@@ -8,11 +8,6 @@
 
 {# Define the graph for any script tasks #}
 
-{% set task_values = requested_tasks[task] %}
-{% if task not in tasks_to_run %}
-    {% do tasks_to_run.update({task: task_values}) %}
-{% endif %}
-
 {# Set export source task #}
 {% set export_task = "export-source => export-source_"~site_vars["scripts_platform"] %}
 {% if "export-source" not in tasks_to_run %}
@@ -45,12 +40,11 @@
             lfric_atm.build_task,
             task
             ]) %}
+        {% set task_values = requested_tasks[task] %}
+        {% if task not in tasks_to_run %}
+            {% do tasks_to_run.update({task: task_values}) %}
+        {% endif %}
     {% endif %}
-
-{% elif "local_build_test" in task %}
-    {# Doesn't depend on export-source as required a Working Copy #}
-
-    {% do graph_sections.append([task]) %}
 
 {% else %}
     {# All other scripts have the same simple graph. These are: #}
@@ -66,6 +60,11 @@
         export_task,
         task
         ]) %}
+
+    {% set task_values = requested_tasks[task] %}
+    {% if task not in tasks_to_run %}
+        {% do tasks_to_run.update({task: task_values}) %}
+    {% endif %}
 
 {% endif %}
 

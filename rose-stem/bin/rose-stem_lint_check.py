@@ -6,7 +6,8 @@
 ##############################################################################
 """
 Run cylc lint on the rose-stem suite and fail if any issues detected.
-Ignore codes S012 (line length) and S013 (should be 4 tabs)
+Ignore codes S007 (family all uppercase - due to not detecting jinja2
+variables), S012 (line length) and S013 (should be 4 tabs)
 """
 
 import sys
@@ -35,7 +36,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     source = os.path.abspath(args.source)
-    command = f"cylc lint {source} -n S012 -n S013"
+    command = f"cylc lint {source} -n S007 -n S012 -n S013"
     result = run_command(command)
     try:
         nissues = int(re.search("found (\d+) issue", result.stdout).group(1))

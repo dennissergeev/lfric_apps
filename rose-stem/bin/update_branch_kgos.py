@@ -89,8 +89,10 @@ def get_kgo_dirs(job, flow_file):
                     new = line.split("=")[-1].strip()
                     new = new.removeprefix("$OUTPUT_ROOT")
                 elif line.startswith("[[") and not line.startswith("[[["):
-                    sys.exit("Couldn't identify KGO Directories in the suites "
-                             f"flow-processed.cylc file for job '{job}'.")
+                    sys.exit(
+                        "Couldn't identify KGO Directories in the suites "
+                        f"flow-processed.cylc file for job '{job}'."
+                    )
             if current and new:
                 break
             if f"[[{job}]]" in line:
@@ -154,8 +156,9 @@ def parse_cl_args():
         "--suite",
         required=True,
         help="The name of the suite being run. Will look in ~/cylc-run for log "
-        "files. If the /runN/ directory isn't specified will use the 'runN' "
-        "symlink.",
+        "files. If the numbered run dir isn't given or is given as runN, will "
+        "read the runN symlink and use the real number to work on remote "
+        "platforms.",
     )
     parser.add_argument(
         "-w",
@@ -171,17 +174,26 @@ def parse_cl_args():
         help="The rose-stem site being run used. Needed for platform settings.",
     )
     args = parser.parse_args()
-    args.suite = args.suite.strip("/")
-    if "run" not in args.suite.split("/")[-1]:
-        args.suite = os.path.join(args.suite, "runN")
     args.working_copy = os.path.expanduser(args.working_copy)
+    args.suite = args.suite.strip("/")
+    args.suite = os.path.expanduser(os.path.join("~", "cylc-run", args.suite))
+
+    # Don't allow use of runN as this symlink doesn't exist on remote platforms
+    # If runN or no run provided, read the runN symlink to work out actual num
+    path_base = args.suite.split("/")[-1]
+    if path_base == "runN":
+        args.suite = args.suite.removesuffix("runN")
+        path_base = ""
+    if "run" not in path_base:
+        sym_path = run_command(f"readlink {os.path.join(args.suite, 'runN')}")
+        args.suite = os.path.join(args.suite, sym_path.stdout)
     return args
 
 
 if __name__ == "__main__":
     args = parse_cl_args()
 
-    suite_path = os.path.expanduser(os.path.join("~", "cylc-run", args.suite))
+    suite_path = args.suite
     log_file = os.path.join(suite_path, "log", "job", "1")
     flow_file = os.path.join(suite_path, "log", "config", "flow-processed.cylc")
 

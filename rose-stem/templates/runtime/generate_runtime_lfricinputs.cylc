@@ -38,9 +38,15 @@
     [[{{task}}]]
     {% if SITE == "nci" and task.startswith("fcm_make_") %}
         {# 2-builds require different treatment at NCI #}
-        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, LOCAL, LFRICINPUTS_BASE
+        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, \
+                  LOCAL, \
+                  LFRICINPUTS_BASE
     {% else %}
-        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, LFRICINPUTS_BASE, {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, {{SITE|upper}}_{{task_ns.platform|upper}}_2_TASKS, {{task_ns.platform|upper}}_LFRICINPUTS
+        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, \
+                  LFRICINPUTS_BASE, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_2_TASKS, \
+                  {{task_ns.platform|upper}}_LFRICINPUTS
     {% endif %}
         script = rose task-run --verbose --define='args=--archive'
         execution retry delays = 3*PT1M
@@ -57,7 +63,11 @@
 {% elif task.startswith("configurate") %}
 
     [[{{task}}]]
-        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, LFRICINPUTS_BASE, {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, {{SITE|upper}}_{{task_ns.platform|upper}}_1_TASKS, {{task_ns.platform|upper}}_LFRICINPUTS
+        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, \
+                  LFRICINPUTS_BASE, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_1_TASKS, \
+                  {{task_ns.platform|upper}}_LFRICINPUTS
         [[[environment]]]
             PYTHONPATH = $CYLC_WORKFLOW_SHARE_DIR/fcm_make_{{build_string}}/extract/lfric/GPL/lib/python:
             ROSE_TASK_APP = configurate
@@ -68,7 +78,11 @@
 {% elif task.startswith("psyclone") %}
 
     [[{{task}}]]
-        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, LFRICINPUTS_BASE, {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, {{SITE|upper}}_{{task_ns.platform|upper}}_1_TASKS, {{task_ns.platform|upper}}_LFRICINPUTS
+        inherit = BUILD_{{task_ns.application|upper}}_{{task_ns.platform|upper}}, \
+                  LFRICINPUTS_BASE, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_1_TASKS, \
+                  {{task_ns.platform|upper}}_LFRICINPUTS
         [[[environment]]]
             ROSE_TASK_APP = psyclone
             BUILD_NAME = fcm_make_{{build_string}}
@@ -78,7 +92,9 @@
 {# Generate Weights tasks are assumed to run on the Scripts Platform - Spice for meto #}
 
     [[{{task}}]]
-        inherit = GENERATE_WEIGHTS, LFRICINPUTS_BASE, {{site_vars["scripts_platform"]|upper}}_WEIGHTS
+        inherit = GENERATE_WEIGHTS, \
+                  LFRICINPUTS_BASE, \
+                  {{site_vars["scripts_platform"]|upper}}_WEIGHTS
         script = rose task-run --app-key=generate_weights
         [[[environment]]]
             MPIRUN_N_JOBS = 8
@@ -114,8 +130,23 @@
         {% set opt_confs.vals = opt_confs.vals~","~opt_conf %}
     {% endfor %}
 
+    {% if "ntasks" in task_values %}
+        {% set resource_family = SITE|upper~"_"~
+                                 task_ns.platform|upper~"_"~
+                                 task_values["ntasks"]~"_TASKS" %}
+    {% else %}
+        {% set resource_family = SITE|upper~"_"~
+                                 task_ns.platform|upper~
+                                 "_RUN_TASKS" %}
+    {% endif %}
+
     [[{{task}}]]
-        inherit = {{task_family|upper}}, LFRICINPUTS_BASE,  {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, {{SITE|upper}}_{{task_ns.platform|upper}}_NORMAL_QUEUE, {{SITE|upper}}_{{task_ns.platform|upper}}_RUN_TASKS, {{task_ns.platform|upper}}_LFRICINPUTS
+        inherit = {{task_family|upper}}, \
+                  LFRICINPUTS_BASE, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_{{task_ns.compiler|upper}}, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_NORMAL_QUEUE, \
+                  {{resource_family|upper}}, \
+                  {{task_ns.platform|upper}}_LFRICINPUTS
         env-script = "eval $(rose task-env)"
         script = rose task-run --verbose --path= --path='share/fcm_make_{{build_string}}/build/bin'
         post-script = """
@@ -143,7 +174,11 @@
     {% set rose_ana_app = "rose_ana_"~task_values["app_name"] %}
 
     [[{{task}}]]
-        inherit = {{task_family|upper}}, LFRICINPUTS_BASE, {{SITE|upper}}_{{task_ns.platform|upper}}_1_TASKS, {{task_ns.platform|upper}}_LFRICINPUTS, ROSE_ANA_{{task_ns.platform|upper}}
+        inherit = {{task_family|upper}}, \
+                  LFRICINPUTS_BASE, \
+                  {{SITE|upper}}_{{task_ns.platform|upper}}_1_TASKS, \
+                  {{task_ns.platform|upper}}_LFRICINPUTS, \
+                  ROSE_ANA_{{task_ns.platform|upper}}
         [[[environment]]]
             SUITE_DIR=../{{rose_ana_run_task}}
             KGO_DIR={{site_vars["lfricinputs_kgo_base"]}}/{{task_values["task_family"]}}/{{kgo_vars[task_values["task_family"]]|default("no_kgo_var")}}

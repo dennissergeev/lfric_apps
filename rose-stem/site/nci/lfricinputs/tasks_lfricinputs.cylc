@@ -1,0 +1,47 @@
+{% do LOG.debug("Entered site/nci/lfricinputs/tasks_lfricinputs.cylc") %}
+
+{% if task_ns.conf_name == "um2lfric-aquaplanet-N48L38_C48L38" %}
+
+    {% do task_dict.update({
+        "ntasks": 2,
+    }) %}
+
+{% elif task_ns.conf_name == "um2lfric-basicgal-N96L70_C12L70" %}
+
+    {% do task_dict.update({
+        "ntasks": 2,
+    }) %}
+
+{% elif task_ns.conf_name == "um2lfric-protogal_chem-N96L70_C12L70" %}
+
+    {% do task_dict.update({
+        "ntasks": 2,
+    }) %}
+
+{% elif task_ns.conf_name == "um2lfric-protogal-N96L70_C12L70" %}
+
+    {% do task_dict.update({
+        "ntasks": 2,
+    }) %}
+
+{% elif task_ns.conf_name == "um2lfric-aquaplanet_lam" %}
+
+    {% do task_dict.update({
+        "ntasks": 18,
+    }) %}
+
+{% elif task_ns.conf_name == "um2lfric-aquaplanet_lbc" %}
+
+    {% do task_dict.update({
+        "ntasks": 18,
+    }) %}
+
+{% elif task_ns.conf_name == "um2lfric-falklands_lam" %}
+
+    {% do task_dict.update({
+        "ntasks": 18,
+    }) %}
+
+{% endif %}
+
+{% do LOG.debug("Finished in site/nci/lfricinputs/tasks_lfricinputs.cylc") %}

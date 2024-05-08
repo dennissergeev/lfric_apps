@@ -57,17 +57,28 @@
     {% endif %}
 {% endfor %}
 
-{# If any kgo task fails, run the check_kgo_groups script #}
-{# to check appropriate groups have been run #}
-{# Note: the ? indicates an optional output #}
-{# First check that a kgo task has been run #}
-{# Only do this at meto #}
+{# Loop over all tasks and check if we're running #}
+{# a kgo check task, any scintelapi task and a script #}
+{# These bits of info are needed later #}
 {% set running_kgo = namespace(bool=false) %}
+{% set running_gen_weights = namespace(bool=false) %}
+{% set running_scripts = namespace(bool=false) %}
 {% for t in tasks_to_run %}
     {% if t.startswith("check") %}
         {% set running_kgo.bool = true %}
     {% endif %}
+    {% if "um2lfric" in t or "lfric2um" in t %}
+        {% set running_gen_weights.bool = true %}
+    {% endif %}
+    {% if t in scripts_list %}
+        {% set running_scripts.bool = true %}
+    {% endif %}
 {% endfor %}
+
+{# If any kgo task fails, run the check_kgo_groups script #}
+{# to check appropriate groups have been run #}
+{# Note: the ? indicates an optional output #}
+{# Only do this at meto #}
 {% if SITE == "meto" and running_kgo.bool %}
     {% do graph_sections.append([
         "KGO_CHECKS:fail-any?",
@@ -100,12 +111,18 @@
         {% do graph_sections.append([
             "BUILD_"~platform|upper~":succeed-all?",
             housekeeping_task]) %}
-        {% if "lfricinputs" in requested_applications and
-              platform == site_vars["scripts_platform"] %}
-            {% do graph_sections.append([
-                "GENERATE_WEIGHTS:succeed-all?",
-                housekeeping_task
-                ]) %}
+        {% if platform == site_vars["scripts_platform"] %}
+            {% if running_scripts.bool %}
+                {% do graph_sections.append([
+                    "SCRIPTS"~":succeed-all?",
+                    housekeeping_task]) %}
+            {% endif %}
+            {% if running_gen_weights.bool %}
+                {% do graph_sections.append([
+                    "GENERATE_WEIGHTS:succeed-all?",
+                    housekeeping_task
+                    ]) %}
+            {% endif %}
         {% endif %}
     {% endfor %}
 {% endif %}

@@ -101,9 +101,13 @@
     [[{{task}}]]
         inherit={{local_build_inherit|upper}}
         script = """
-                 scp -r $SOURCE_LFRIC_APPS $CYLC_TASK_WORK_DIR/apps_local_build_source
+                 cp -r $CYLC_WORKFLOW_SHARE_DIR/source/apps $CYLC_TASK_WORK_DIR/apps_local_build_source
+                 cp -r $CYLC_WORKFLOW_SHARE_DIR/source/core $CYLC_TASK_WORK_DIR/core_local_build_source
                  cd $CYLC_TASK_WORK_DIR/apps_local_build_source
-                 python3 build/local_build.py -a gungho_model
+                 python3 build/local_build.py -a gungho_model -c $CYLC_TASK_WORK_DIR/core_local_build_source
+                 cd $CYLC_TASK_WORK_DIR
+                 rm -rf $CYLC_TASK_WORK_DIR/apps_local_build_source
+                 rm -rf $CYLC_TASK_WORK_DIR/core_local_build_source
                  """
         [[[environment]]]
             SOURCE_LFRIC_APPS = {{HOST_SOURCE_LFRIC_APPS}}
