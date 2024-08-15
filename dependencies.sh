@@ -30,11 +30,11 @@ export jules_rev=um13.6
 export jules_sources=
 export shumlib_rev=um13.6
 export shumlib_sources=
-export socrates_rev=um13.6
+export socrates_rev=1659
 export socrates_sources=
 export ukca_rev=um13.6
 export ukca_sources=
-export um_rev=vn13.6
+export um_rev=125587
 export um_sources=
 
 #### Do not edit the definitions below this line without
