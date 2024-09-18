@@ -319,8 +319,9 @@ module linear_data_algorithm_mod
 
   !> @brief Define the initial conditions with random data.
   !> @details The Fortran intrinsic 'random_number' is used to assign
-  !!          random numbers to the initial conditions, with the size set
-  !!          by specified parameters such as gamma_u and gamma_rho.
+  !!          random numbers to the initial conditions, with the range
+  !!          of values set by specified parameters such as gamma_u
+  !!          and gamma_rho.
   !> @param[in,out] modeldb The working data set for the model run
   subroutine linear_init_pert_random( modeldb )
 
@@ -354,12 +355,28 @@ module linear_data_algorithm_mod
     type(field_array_type), pointer      :: mr_array => null()
     type(field_array_type), pointer      :: moist_dyn_array => null()
 
+    integer(i_def) :: random_seed_size
+    integer(i_def), allocatable    :: original_seed(:)
+    integer(i_def), allocatable    :: local_seed(:)
+
     gamma_theta = 1.e2_r_def
     gamma_rho = 1.e-1_r_def
     gamma_exner = 1.e-1_r_def
     gamma_moist_dyn = 1.e-1_r_def
     gamma_mr = 1.e-1_r_def
     gamma_u = 1.e2_r_def
+
+    ! Allocate seed arrays of the required size
+    call random_seed(size = random_seed_size)
+    allocate( original_seed(random_seed_size) )
+    allocate( local_seed(random_seed_size) )
+
+    ! Store the seed to avoid interference with other users of random numbers
+    call random_seed(get = original_seed)
+
+    ! The initial value of the random seed is not important for this routine
+    local_seed = 0
+    call random_seed(put = local_seed)
 
     prognostic_fields => modeldb%fields%get_field_collection(&
                                           "prognostic_fields")
@@ -412,6 +429,10 @@ module linear_data_algorithm_mod
 
     nullify( field, mr, moist_dyn, mesh, vspace )
     nullify( moisture_fields, mr_array, moist_dyn_array )
+
+    ! Reset the seed to what it was on entry to the routine
+    call random_seed(put = original_seed)
+    deallocate(original_seed, local_seed)
 
   end subroutine linear_init_pert_random
 
