@@ -317,7 +317,9 @@ contains
     !
     ! Write out diagnostics (if available)
     !
-    call write_forcing_diagnostics(du_forcing=du_forcing, output_wind_inc=wind_forcing_done)
+    if (write_diag .and. use_xios_io) then
+      call write_forcing_diagnostics(du_forcing=du_forcing, output_wind_inc=wind_forcing_done)
+    end if
 
     if ( subroutine_timers ) call timer("external_forcing_alg")
 
