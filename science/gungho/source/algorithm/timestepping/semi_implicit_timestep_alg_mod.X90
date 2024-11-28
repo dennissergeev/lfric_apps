@@ -339,7 +339,8 @@ contains
     dtemp_encorr = dt * temp_corr_io_value%data(1)
 
     ! Run the timestep
-    call run_step(self, u, rho, theta, exner, mr, moist_dyn,  &
+    call run_step(self, modeldb,                              &
+                  u, rho, theta, exner, mr, moist_dyn,        &
                   adv_tracer_all_outer,adv_tracer_last_outer, &
                   con_tracer_all_outer,con_tracer_last_outer, &
                   prognostic_fields, moisture_fields,         &
@@ -350,7 +351,8 @@ contains
                   cloud_fields, surface_fields, soil_fields,  &
                   snow_fields, chemistry_fields,              &
                   aerosol_fields, stph_fields, lbc_fields,    &
-                  model_clock, dtemp_encorr, mesh, twod_mesh)
+                  model_clock, dtemp_encorr,                  &
+                  mesh, twod_mesh)
 
     nullify(      model_data, model_clock, mesh,              &
                   prognostic_fields, moisture_fields,         &
@@ -529,6 +531,7 @@ contains
   !>          by default. This means that there is one evaluation of old time
   !>          level terms, 2 evaluation of advective terms and 4 evaluations
   !>          of new time level terms and increment updates per timestep
+  !> @param[in]     modeldb                Holds the model state
   !> @param[in,out] u                      3D wind field
   !> @param[in,out] rho                    Density
   !> @param[in,out] theta                  Potential temperature
@@ -561,7 +564,8 @@ contains
   !>                                       correction
   !> @param[in]     mesh                   The current mesh
   !> @param[in]     twod_mesh              The current 2d mesh
-  subroutine run_step(self, u, rho, theta, exner, mr, moist_dyn,  &
+  subroutine run_step(self, modeldb,                              &
+                      u, rho, theta, exner, mr, moist_dyn,        &
                       adv_tracer_all_outer,adv_tracer_last_outer, &
                       con_tracer_all_outer,con_tracer_last_outer, &
                       prognostic_fields, moisture_fields,         &
@@ -572,11 +576,13 @@ contains
                       cloud_fields, surface_fields, soil_fields,  &
                       snow_fields, chemistry_fields,              &
                       aerosol_fields, stph_fields, lbc_fields,    &
-                      model_clock, dtemp_encorr, mesh, twod_mesh)
+                      model_clock, dtemp_encorr,                  &
+                      mesh, twod_mesh)
 
     implicit none
 
     type(semi_implicit_timestep_type), intent(inout) :: self
+    type(modeldb_type), intent(in), target  :: modeldb
 
     ! Prognostic fields
     type( field_type ), intent( inout ) :: u, rho, theta, exner
@@ -724,7 +730,8 @@ contains
     ! Compute slow physic updates
     !--------------------------------------------------------------------
     if (use_physics) then
-      call slow_physics( self%du, self%dtheta, self%mr_after_slow,            &
+      call slow_physics( modeldb,                                             &
+                         self%du, self%dtheta, self%mr_after_slow,            &
                          self%visc_m, self%visc_h,                            &
                          self%state_n(igh_t), self%state_n(igh_u),            &
                          self%state_n(igh_d), self%state_n(igh_p), moist_dyn, &
@@ -734,7 +741,8 @@ contains
                          turbulence_fields, convection_fields, cloud_fields,  &
                          surface_fields, soil_fields, snow_fields,            &
                          chemistry_fields, aerosol_fields, model_clock,       &
-                         cast_dt, dtemp_encorr, mesh, twod_mesh )
+                         cast_dt, dtemp_encorr,                               &
+                         mesh, twod_mesh )
       call invoke(name="update_from_slow_physics",                             &
                   inc_X_plus_Y(self%state_after_slow(igh_t), self%dtheta),     &
                   inc_X_plus_Y(self%state_after_slow(igh_u), self%du)          &

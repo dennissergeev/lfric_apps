@@ -39,6 +39,7 @@ module um_physics_init_mod
                                         flux_bc_opt_interactive,               &
                                         flux_bc_opt_specified_scalars,         &
                                         flux_bc_opt_specified_scalars_tstar,   &
+                                        flux_bc_opt_specified_tstar,           &
                                         fric_heating_in => fric_heating,       &
                                         free_atm_mix, free_atm_mix_to_sharp,   &
                                         free_atm_mix_ntml_corrected,           &
@@ -549,7 +550,7 @@ contains
       entr_smooth_dec = on
 
       select case (flux_bc_opt_in)
-        case(flux_bc_opt_interactive)
+        case(flux_bc_opt_interactive, flux_bc_opt_specified_tstar)
           flux_bc_opt = interactive_fluxes
         case(flux_bc_opt_specified_scalars)
           flux_bc_opt = specified_fluxes_only

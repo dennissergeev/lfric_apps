@@ -860,6 +860,7 @@
   <field id="processed__total_rain_acc" name="total_rain_acc" long_name="surface_rainfall_amount" standard_name="rainfall_amount" unit="kg m-2" domain_ref="face"> $DT * processed__total_rain </field>
   <field id="processed__total_snow_acc" name="total_snow_acc" long_name="surface_snowfall_amount" standard_name="snowfall_amount" unit="kg m-2" domain_ref="face"> $DT * processed__total_snow </field>
   <field id="processed__total_prec_acc" name="total_prec_acc" long_name="surface_precipitation_amount" standard_name="precipitation_amount" unit="kg m-2" domain_ref="face"> $DT * processed__total_prec </field>
+  <field id="processed__virtual_theta" name="virtual_theta" long_name="virtual_potential_temperature" standard_name="virtual_potential_temperature" unit="K" grid_ref="full_level_face_grid"> theta * (1 + 0.61 * processed__qv) </field>
   <!-- Pressure level diagnostic group -->
   <field id="plev__heaviside" name="heaviside_func" long_name="heaviside_function_at_pressure_levels" unit="1" domain_ref="face" axis_ref="pressure_levels"/>
   <field id="plev__temp" name="plev_temp" long_name="temperature_at_pressure_levels" unit="K" domain_ref="face" axis_ref="pressure_levels"/>

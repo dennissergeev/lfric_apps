@@ -147,13 +147,25 @@ def make_figures(file_name, field_list, extrusion, number_of_layers, domain_top,
                 field = field_cube.data[:,:]
 
             field_prof = np.zeros(nlevs)
+            field_prof_var = np.zeros(nlevs)
             for k in range(nlevs):
                 field_prof[k] = np.sum(field[k, :]) / float(npts)
+                field_prof_var[k] = np.sum( (field[k,:] - field_prof[k])**2 ) / float(npts)
 
+            plt.subplot(1,2,1)
             plt.plot(field_prof, z)
+ 
+            plt.subplot(1,2,2)
+            plt.plot(field_prof_var, z)
 
+
+        plt.subplot(1,2,1)
         plt.xlabel('Domain mean '+field_name, style='italic')
         plt.ylabel('height (km)', style='italic')
+
+        plt.subplot(1,2,2)
+        plt.xlabel('Domain variance '+field_name, style='italic')
+
         plt.savefig(plot_path+'/'+field_name+'_profile.png')
         plt.close()
 

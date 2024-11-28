@@ -16,8 +16,6 @@ c_gust=4.0
 cbl_opt='conventional',
 dec_thres_cloud=0.1,
 dyn_diag='zi_l_cu',
-fixed_flux_e=130.052,
-fixed_flux_h=8.04,
 flux_bc_opt='specified_scalars_tstar',
 free_atm_mix='to_sharp',
 fric_heating=.true.,
@@ -461,6 +459,13 @@ method='chebyshev',
 monitor_convergence=.false.,
 preconditioner='diagonal',
 tolerance=1.0e-6,
+/
+&specified_surface
+specified_flux_e=130.052,
+specified_flux_h=8.04,
+function_name_fluxes='constant'
+function_name_sst='constant'
+profile_size=1
 /
 &surface
 alb_leaf_nir=0.341,0.272,0.369,0.368,0.395,

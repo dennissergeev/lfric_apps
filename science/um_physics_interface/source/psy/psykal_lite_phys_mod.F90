@@ -298,7 +298,7 @@ sw_down_surf, lw_down_surf, sw_down_blue_surf, sw_direct_blue_surf, dd_mf_cb, oz
 &alpha1_tile, ashtf_prime_tile, dtstar_tile, fracaero_t_tile, fracaero_s_tile, z0h_tile, &
 &z0m_tile, rhokh_tile, chr1p5m_tile, resfs_tile, gc_tile, canhc_tile, tile_water_extract, blend_height_tq, z0m_eff, ustar, &
 &soil_moist_avail, snow_unload_rate, albedo_obs_scaling, soil_clay, soil_sand, dust_mrel, dust_flux, day_of_year, &
- urbwrr, urbhwr, urbhgt, urbztm, urbdisp, urbemisw, urbemisr, &
+flux_e, flux_h, urbwrr, urbhwr, urbhgt, urbztm, urbdisp, urbemisw, urbemisr, &
 &rhostar, recip_l_mo_sea, &
 &h_blend_orog, t1_sd_2d, q1_sd_2d, gross_prim_prod, z0h_eff, ocn_cpl_point, stencil_depth)
       USE jules_exp_kernel_mod, ONLY: jules_exp_code
@@ -324,6 +324,7 @@ rhostar, recip_l_mo_sea, h_blend_orog, t1_sd_2d, q1_sd_2d, &
 &gross_prim_prod, z0h_eff
       TYPE(integer_field_type), intent(in) :: n_snow_layers, blend_height_tq, ocn_cpl_point
       INTEGER(KIND=i_def), intent(in) :: stencil_depth, ncells, ncells_halo, day_of_year
+      REAL(KIND=r_def), intent(in) :: flux_e, flux_h
       INTEGER(KIND=i_def) nlayers
       TYPE(integer_field_proxy_type) n_snow_layers_proxy, blend_height_tq_proxy, ocn_cpl_point_proxy
       TYPE(field_proxy_type) theta_proxy, exner_in_wth_proxy, u_in_w3_proxy, v_in_w3_proxy, mr_n_proxy, mr_n_1_proxy, &
@@ -632,6 +633,7 @@ sw_up_tile_proxy%data, tile_lw_grey_albedo_proxy%data, sw_down_surf_proxy%data, 
 &gc_tile_proxy%data, canhc_tile_proxy%data, tile_water_extract_proxy%data, blend_height_tq_proxy%data, z0m_eff_proxy%data, &
 &ustar_proxy%data, soil_moist_avail_proxy%data, snow_unload_rate_proxy%data, albedo_obs_scaling_proxy%data, soil_clay_proxy%data, &
 &soil_sand_proxy%data, dust_mrel_proxy%data, dust_flux_proxy%data, day_of_year,&
+flux_e, flux_h, &
 urbwrr_proxy%data, urbhwr_proxy%data, urbhgt_proxy%data, urbztm_proxy%data, &
 urbdisp_proxy%data, urbemisw_proxy%data, urbemisr_proxy%data, &
 rhostar_proxy%data, recip_l_mo_sea_proxy%data, &

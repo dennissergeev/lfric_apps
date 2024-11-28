@@ -433,6 +433,24 @@
         "plot_str": "profile_plot.py $NODAL_DATA_DIR/lfric_diag.nc theta:u_in_w3:v_in_w3:w_in_wth umL70 70 40  $PLOT_DIR",
     }) %}
 
+{% elif task_ns.conf_name == "arm-BiP64x64-100x100_MG" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["arm"],
+        "resolution": "BiP64x64-100x100_MG",
+        "DT": 3,
+        "tsteps": 18000,
+        "crun": 10,
+        "crun_compare": false,
+        "mpi_parts": 64,
+        "panel_decomp": "auto",
+        "xproc":8,
+        "yproc":8,
+        "wallclock": 30,
+        "log_level": "info",
+        "plot_str": "profile_plot.py $NODAL_DATA_DIR/lfric_diag.nc theta:u_in_w3:w_in_wth:m_v linear 110 40 $PLOT_DIR",
+    }) %}
+
 {% elif task_ns.conf_name == "aquaplanet-C12" %}
 
     {% do task_dict.update({

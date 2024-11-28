@@ -76,6 +76,14 @@ module gungho_driver_mod
                                   only: use_random_parameters
   use stph_rp_main_alg_mod,       only: stph_rp_main_alg, &
                                         stph_rp_init_alg
+  use flux_calc_all_mod,          only: flux_calc_init, &
+                                        flux_calc_step
+  use update_tile_temperature_alg_mod, &
+                                  only: update_tile_temperature_alg
+  use blayer_config_mod,          only: flux_bc_opt,                   &
+                                        flux_bc_opt_specified_tstar,   &
+                                        flux_bc_opt_specified_scalars, &
+                                        flux_bc_opt_specified_scalars_tstar
 #endif
 #ifdef COUPLED
   use esm_couple_config_mod,      only : l_esm_couple_test
@@ -204,6 +212,12 @@ contains
          use_random_parameters ) then
       call stph_rp_init_alg( modeldb )
     end if
+
+    ! Specified sensible and latent heat fluxes
+    if ( flux_bc_opt == flux_bc_opt_specified_scalars .or. &
+         flux_bc_opt == flux_bc_opt_specified_scalars_tstar ) then
+      call flux_calc_init( modeldb )
+    end if
 #endif
 
     nullify(mesh, twod_mesh, aerosol_mesh, aerosol_twod_mesh)
@@ -252,6 +266,22 @@ contains
     ! Get primary and 2D meshes
     mesh => mesh_collection%get_mesh(prime_mesh_name)
     twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
+
+#ifdef UM_PHYSICS
+    ! Specified sensible and latent heat fluxes
+    if ( flux_bc_opt == flux_bc_opt_specified_scalars .or. &
+         flux_bc_opt == flux_bc_opt_specified_scalars_tstar ) then
+      call flux_calc_step( modeldb )
+    end if
+
+    ! Specified surface temperatures
+    if ( flux_bc_opt == flux_bc_opt_specified_tstar .or. &
+         flux_bc_opt == flux_bc_opt_specified_scalars_tstar ) then
+      surface_fields => modeldb%fields%get_field_collection("surface_fields")
+      call update_tile_temperature_alg ( modeldb%clock, &
+                                         surface_fields )
+    end if
+#endif
 
 #ifdef COUPLED
     if(l_esm_couple) then

@@ -18,6 +18,7 @@ module bl_exp_alg_mod
   use fem_constants_mod,             only: get_rmultiplicity
   use fs_continuity_mod,             only: W2, W3, Wtheta
   use geometric_constants_mod,       only: get_height, get_da_at_w2
+  use gungho_modeldb_mod,            only: modeldb_type
   use physical_op_constants_mod,     only: get_delta_at_wtheta, get_max_diff, &
                                            get_rdz_fd1, get_dz_at_wtheta,     &
                                            get_rdz_w3, get_dtrdz_wth
@@ -33,6 +34,11 @@ module bl_exp_alg_mod
   use timer_mod,            only: timer
   use log_mod,              only: log_event, LOG_LEVEL_DEBUG
   use mesh_mod,             only: mesh_type
+
+  use blayer_config_mod,          only: flux_bc_opt,                   &
+                                        flux_bc_opt_specified_tstar,   &
+                                        flux_bc_opt_specified_scalars, &
+                                        flux_bc_opt_specified_scalars_tstar
 
   ! xios output
   use io_config_mod,      only: write_diag, use_xios_io
@@ -51,6 +57,7 @@ contains
   !>             vertical mixing of heat, momentum and moisture,
   !>             as documented in UMDP24
   !>         NB This version uses winds in w3 space (i.e. A-grid)
+  !>@param[in]     modeldb           Holds the model state
   !>@param[in,out] visc_m            Smag diffusion coefficient for momentum
   !>@param[in,out] visc_h            Smag diffusion coefficient for scalars
   !>@param[in]     theta             Theta in its native (wth) space
@@ -69,11 +76,12 @@ contains
   !>@param[in,out] soil_fields         Fields for soil hydrology scheme
   !>@param[in]     snow_fields         (in,out) Fields for snow scheme
   !>@param[in]     aerosol_fields      Fields for aerosol scheme
-  subroutine bl_exp_alg(visc_m, visc_h, theta, rho, exner, mr_n,         &
-                        derived_fields, radiation_fields,                &
-                        microphysics_fields, dmr_mphys, orography_fields,&
-                        turbulence_fields, convection_fields,            &
-                        cloud_fields, surface_fields, soil_fields,       &
+  !>@param[in]     flux_e, flux_h
+  subroutine bl_exp_alg(modeldb, visc_m, visc_h, theta, rho, exner, mr_n, &
+                        derived_fields, radiation_fields,                 &
+                        microphysics_fields, dmr_mphys, orography_fields, &
+                        turbulence_fields, convection_fields,             &
+                        cloud_fields, surface_fields, soil_fields,        &
                         snow_fields, aerosol_fields)
 
     use bl_exp_kernel_mod, only: bl_exp_kernel_type
@@ -85,6 +93,7 @@ contains
 
     implicit none
 
+    type( modeldb_type ), intent(in), target :: modeldb
     type( field_type ), intent( inout )     :: visc_m, visc_h
 
     type( field_type ), intent( in )        :: theta, rho, exner, mr_n(nummr)
@@ -276,6 +285,8 @@ contains
     type( field_type ), pointer :: w2_rmultiplicity => null()
     type( field_type ), pointer :: dz_wth => null()
 
+    real(r_def), pointer :: flux_h, flux_e
+
     ! local variables
     type(mesh_type),           pointer :: mesh => null()
     type( field_type ) :: gross_prim_prod, dtl_mphys, dmt_mphys, ngstress_w2,  &
@@ -293,6 +304,12 @@ contains
     if ( subroutine_timers ) call timer('bl_exp_alg')
 
     call log_event( 'slow_physics: Running explicit Boundary layer', LOG_LEVEL_DEBUG )
+
+    if ( flux_bc_opt == flux_bc_opt_specified_scalars .or. &
+         flux_bc_opt == flux_bc_opt_specified_scalars_tstar ) then
+      call modeldb%values%get_value('flux_h', flux_h)
+      call modeldb%values%get_value('flux_e', flux_e)
+    end if
 
     ! Unpack derived fields
     call derived_fields%get_field('exner_in_wth', exner_in_wth)
@@ -575,7 +592,8 @@ contains
                                tile_water_extract, blend_height_tq, z0m_eff,   &
                                ustar, soil_moist_avail, snow_unload_rate,      &
                                albedo_obs_scaling, soil_clay, soil_sand,       &
-                               dust_mrel, dust_flux, day_of_year, urbwrr,      &
+                               dust_mrel, dust_flux, day_of_year,              &
+                               flux_e, flux_h, urbwrr,                         &
                                urbhwr, urbhgt, urbztm, urbdisp, urbemisw,      &
                                urbemisr, rhostar, recip_l_mo_sea,              &
                                h_blend_orog, t1_sd_2d, q1_sd_2d,               &

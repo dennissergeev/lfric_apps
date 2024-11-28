@@ -22,6 +22,7 @@ module slow_physics_alg_mod
   use log_mod,                   only: LOG_LEVEL_INFO
   use lfric_xios_write_mod,      only: write_field_generic
   use mesh_mod,                  only: mesh_type
+  use gungho_modeldb_mod,        only: modeldb_type
   use field_parent_mod,          only: write_interface
   use mixing_config_mod,         only: leonard_term
   use print_field_stats_alg_mod, only: print_field_stats_alg
@@ -148,6 +149,7 @@ contains
 
   !> @details Collection of procedures for subgrid physics that act
   !>          before the outer loop of the solver
+  !> @param[in]     modeldb                Holds the model state
   !> @param[in,out] du                     Increment to wind field
   !> @param[in,out] dtheta                 Increment to theta field
   !> @param[in,out] mr                     Mixing ratios to be updated
@@ -177,7 +179,7 @@ contains
   !> @param[in]     dtemp_encorr           Temperature increment for energy correction
   !> @param[in]     mesh                   Current mesh
   !> @param[in]     twod_mesh              2d mesh
-  subroutine slow_physics(du, dtheta, mr, visc_m, visc_h,                      &
+  subroutine slow_physics(modeldb, du, dtheta, mr, visc_m, visc_h,             &
                           theta, u, rho, exner, moist_dyn, mr_n,               &
                           derived_fields,                                      &
                           radiation_fields, microphysics_fields,               &
@@ -185,10 +187,12 @@ contains
                           orography_fields, turbulence_fields,                 &
                           convection_fields, cloud_fields, surface_fields,     &
                           soil_fields, snow_fields, chemistry_fields,          &
-                          aerosol_fields, clock, dt, dtemp_encorr, mesh, twod_mesh )
+                          aerosol_fields, clock, dt, dtemp_encorr,             &
+                          mesh, twod_mesh )
 
     implicit none
 
+    type( modeldb_type ), intent( in ), target  :: modeldb
     ! Fields
     type( field_type ), intent( inout )      :: du, dtheta, visc_m, visc_h
     type( field_type ), intent( in ), target :: theta, u, rho, exner
@@ -217,9 +221,9 @@ contains
     type(mesh_type), intent(in), pointer :: mesh
     type(mesh_type), intent(in), pointer :: twod_mesh
 
-    class(clock_type),     intent(in) :: clock
-    real( kind=r_def ),    intent(in) :: dt
-    real( kind=r_def ),    intent(in) :: dtemp_encorr
+    class(clock_type),  intent(in) :: clock
+    real( kind=r_def ), intent(in) :: dt
+    real( kind=r_def ), intent(in) :: dtemp_encorr
 
     real( kind=r_def )                :: time_now
 
@@ -749,12 +753,12 @@ contains
     ! UM explicit boundary layer and Jules surface schemes
     !--------------------------------------------------------------------
     if (boundary_layer == boundary_layer_um ) then
-      call bl_exp_alg(visc_m, visc_h, theta, rho, exner, mr_n,           &
+      call bl_exp_alg(modeldb, visc_m, visc_h, theta, rho, exner, mr_n,  &
                       derived_fields, radiation_fields,                  &
                       microphysics_fields, dmr_mphys, orography_fields,  &
                       turbulence_fields, convection_fields, cloud_fields,&
                       surface_fields, soil_fields, snow_fields,          &
-                      aerosol_fields)
+                      aerosol_fields )
 
     !--------------------------------------------------------------------
     ! Calculate Leonard term fluxes and increments

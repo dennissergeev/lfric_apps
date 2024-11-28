@@ -94,6 +94,15 @@
     <field field_ref="snow__snow_layer_ice_mass" />
     <field field_ref="forcing__dtheta_force" />
     <field field_ref="forcing__dt_force" />
+    <field field_ref="cloud__area_fraction" />
+    <field field_ref="processed__m_tot" />
+    <field field_ref="radiation__cloud_cover_rts" />
+    <field field_ref="cloud__cloud_base_altitude" />
+    <field field_ref="processed__trop_level" />
+    <field field_ref="convection__cv_top" />
+    <field field_ref="convection__cv_base" />
+    <field field_ref="processed__temperature" />
+    <field field_ref="processed__virtual_theta" />
   </file>
 
 </file_definition>

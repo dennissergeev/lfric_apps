@@ -26,7 +26,6 @@ module jules_exp_kernel_mod
   use empty_data_mod,         only : empty_real_data
   use fs_continuity_mod,      only : W3, Wtheta
   use kernel_mod,             only : kernel_type
-  use blayer_config_mod,      only : fixed_flux_e, fixed_flux_h
   use radiation_config_mod,   only : topography, topography_horizon
   use surface_config_mod,     only : albedo_obs, sea_surf_alg,           &
                                      sea_surf_alg_specified_roughness,   &
@@ -47,7 +46,7 @@ module jules_exp_kernel_mod
   !>
   type, public, extends(kernel_type) :: jules_exp_kernel_type
     private
-    type(arg_type) :: meta_args(108) = (/                                      &
+    type(arg_type) :: meta_args(110) = (/                                      &
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      WTHETA),                   &! theta_in_wth
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      WTHETA),                   &! exner_in_wth
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      W3, STENCIL(REGION)),      &! u_in_w3
@@ -141,6 +140,8 @@ module jules_exp_kernel_mod
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      ANY_DISCONTINUOUS_SPACE_10),&! dust_div_mrel
          arg_type(GH_FIELD, GH_REAL,  GH_WRITE,     ANY_DISCONTINUOUS_SPACE_10),&! dust_div_flux
          arg_type(GH_SCALAR, GH_INTEGER, GH_READ                             ), &! day_of_year
+         arg_type(GH_SCALAR, GH_REAL,    GH_READ                             ), &! flux_e
+         arg_type(GH_SCALAR, GH_REAL,    GH_READ                             ), &! flux_h
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      ANY_DISCONTINUOUS_SPACE_1), &! urbwrr
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      ANY_DISCONTINUOUS_SPACE_1), &! urbhwr
          arg_type(GH_FIELD, GH_REAL,  GH_READ,      ANY_DISCONTINUOUS_SPACE_1), &! urbhgt
@@ -263,6 +264,8 @@ contains
   !> @param[in]     dust_div_mrel          Relative soil mass in CLASSIC size divisions
   !> @param[in,out] dust_div_flux          Dust emission fluxes in CLASSIC size divisions (kg m-2 s-1)
   !> @param[in]     day_of_year            The day of the year
+  !> @param[in]     flux_e                 Latent heat flux
+  !> @param[in]     flux_h                 Sensible heat flux
   !> @param[in]     urbwrr                 Urban repeating width ratio
   !> @param[in]     urbhwr                 Urban height-to-width ratio
   !> @param[in]     urbhgt                 Urban building height
@@ -314,7 +317,6 @@ contains
   !> @param[in]     ndf_dust               Number of DOFs per cell for dust divisions
   !> @param[in]     undf_dust              Number of total DOFs for dust divisions
   !> @param[in]     map_dust               Dofmap for cell for dust divisions
-
   subroutine jules_exp_code(nlayers, seg_len, seg_len_halo,       &
                            theta_in_wth,                          &
                            exner_in_wth,                          &
@@ -414,6 +416,8 @@ contains
                            dust_div_mrel,                         &
                            dust_div_flux,                         &
                            day_of_year,                           &
+                           flux_e,                                &
+                           flux_h,                                &
                            urbwrr,                                &
                            urbhwr,                                &
                            urbhgt,                                &
@@ -440,7 +444,7 @@ contains
                            ndf_surf, undf_surf, map_surf,         &
                            ndf_smtile, undf_smtile, map_smtile,   &
                            ndf_scal, undf_scal, map_scal,         &
-                           ndf_dust, undf_dust, map_dust)
+                           ndf_dust, undf_dust, map_dust )
 
     !---------------------------------------
     ! LFRic modules
@@ -701,6 +705,8 @@ contains
     real(kind=r_def), dimension(undf_dust), intent(inout)  :: dust_div_flux
 
     real(kind=r_def), pointer, intent(inout) :: z0h_eff(:), gross_prim_prod(:)
+    real(kind=r_def), intent(in) :: flux_h
+    real(kind=r_def), intent(in) :: flux_e
 
     !-----------------------------------------------------------------------
     ! Local variables for the kernel
@@ -1504,8 +1510,8 @@ contains
         ! w'theta' rather than rho*wtheta
         ! RHOLEM = 1.0
 
-        fqw(i,1)   = (rhostar(i,1)*fixed_flux_e)/(lc*rholem)
-        ftl(i,1)   = (rhostar(i,1)*fixed_flux_h)/(cp*rholem)
+        fqw(i,1)   = (rhostar(i,1)*flux_e)/(lc*rholem)
+        ftl(i,1)   = (rhostar(i,1)*flux_h)/(cp*rholem)
 
         fb_surf(i,1) = g * ( bt_blend(i,1,1)*ftl(i,1) +                        &
                              bq_blend(i,1,1)*fqw(i,1) ) /rhostar(i,1)

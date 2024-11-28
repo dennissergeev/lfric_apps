@@ -216,6 +216,7 @@
     "lfric_atm_idealised": [
         "lfric_atm_rce-BiP64x64-100x100_MG_xc40_intel_production-64bit-rbl32",
         "lfric_atm_cbl-BiP64x64-100x100_MG_xc40_intel_production-64bit-rbl32",
+        "lfric_atm_arm-BiP64x64-100x100_MG_xc40_intel_production-64bit-rbl32",
     ],
     }) %}
 
