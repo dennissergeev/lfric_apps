@@ -81,8 +81,8 @@
 {% elif USE_EXAB is defined and USE_EXAB %}
     {% do site_vars.update({"host_ex": "exab"}) %}
 {% else %}
-    {# Currently default to the EXZ #}
-    {% do site_vars.update({"host_ex" : "exz"}) %}
+    {# Currently default to the EXAB #}
+    {% do site_vars.update({"host_ex" : "exab"}) %}
 {% endif %}
 
 {% do site_vars.update({"lfricinputs_kgo_base": "$UMDIR/standard_jobs/lfricinputs/kgo"}) %}

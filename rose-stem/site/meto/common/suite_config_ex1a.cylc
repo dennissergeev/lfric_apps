@@ -53,7 +53,11 @@
         inherit=EX1A_NORMAL_QUEUE
         [[[environment]]]
             {# BIG_DATA_DIR holds ancils and dump files #}
+{% if site_vars["host_ex"] == "exz" %}
             BIG_DATA_DIR = '/common/internal/lfricdir/data'
+{% else %}
+            BIG_DATA_DIR = '/data/users/lfricadmin/data'
+{% endif %}
             TARGET_PLATFORM = 'meto-ex1a'
             RUN_METHOD = 'mpiexec'
         [[[directives]]]
