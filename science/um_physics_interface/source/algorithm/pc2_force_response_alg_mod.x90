@@ -52,7 +52,7 @@ contains
     type( field_type ), intent( in )    :: mr_n ( nummr )
     type( field_type ), intent( in )    :: theta
     type( field_type ), intent( inout ) :: dtheta_forcing
-    type( field_type ), intent( out)    :: dmv_forcing
+    type( field_type ), intent( inout)  :: dmv_forcing
     type( field_type ), intent( out)    :: dmcl_forcing
     type( field_type ), intent( out)    :: dcfl_forcing
     type( field_type ), intent( out)    :: dbcf_forcing
@@ -83,7 +83,6 @@ contains
     call cloud_fields%get_field('frozen_fraction', frozen_fraction)
     call cloud_fields%get_field('bulk_fraction', bulk_fraction)
 
-    call dtheta_forcing%copy_field_properties(dmv_forcing)
     call dtheta_forcing%copy_field_properties(dmcl_forcing)
     call dtheta_forcing%copy_field_properties(dcfl_forcing)
     call dtheta_forcing%copy_field_properties(dbcf_forcing)
@@ -94,8 +93,7 @@ contains
     call dtheta_forcing%copy_field_properties(dcfl_pc2_inc)
     call dtheta_forcing%copy_field_properties(dbcf_pc2_inc)
 
-    call invoke(setval_c(dmv_forcing,    0.0_r_def),                 &
-                setval_c(dmcl_forcing,   0.0_r_def),                 &
+    call invoke(setval_c(dmcl_forcing,   0.0_r_def),                 &
                 pc2_homogeneous_kernel_type ( mr_n(imr_v),           &
                                               mr_n(imr_cl),          &
                                               liquid_fraction,       &

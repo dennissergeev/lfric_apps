@@ -91,6 +91,7 @@ temp_tend_data=-2.314814e-5,0.0,
 temp_tend_heights=1500.0,2500.0,
 temp_tend_size=2,
 theta_forcing='temp_tend',
+vapour_forcing='none',
 wind_forcing='none',
 /
 &extrusion

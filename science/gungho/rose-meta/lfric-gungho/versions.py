@@ -77,7 +77,6 @@ class vn20_t85(MacroUpgrade):
         self.add_setting(
             config, ["namelist:geostrophic_forcing", "times"], "0.0"
         )
-
         return config, self.reports
 
 
@@ -102,5 +101,45 @@ class vn20_t358(MacroUpgrade):
         self.remove_setting(
             config, ["namelist:finite_element", "element_order"]
         )
+        return config, self.reports
+
+
+class vn20_t82(MacroUpgrade):
+    """Upgrade macro for ticket #82 by Chris Smith."""
+
+    BEFORE_TAG = "vn2.0_t358"
+    AFTER_TAG = "vn2.0_t82"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: science/gungho/rose-meta/lfric-gungho
+        # Commands From: science/gungho/rose-meta/lfric-gungho
+        """Add vapour_forcing namelist to configuration source list"""
+        source = self.get_setting_value(
+            config, ["file:configuration.nml", "source"]
+        )
+        source = source + "\n" + " (namelist:vapour_forcing)"
+        self.change_setting_value(
+            config, ["file:configuration.nml", "source"], source
+        )
+        """Add vapour_forcing setting to external_forcing namelist"""
+        self.add_setting(
+            config, ["namelist:external_forcing", "vapour_forcing"], "'none'"
+        )
+        """Data for vapour_forcing namelist"""
+        self.add_setting(config, ["namelist:vapour_forcing"])
+        self.add_setting(
+            config, ["namelist:vapour_forcing", "coordinate"], "'height'"
+        )
+        self.add_setting(config, ["namelist:vapour_forcing", "heights"], "0.0")
+        self.add_setting(
+            config, ["namelist:vapour_forcing", "number_heights"], "1"
+        )
+        self.add_setting(
+            config, ["namelist:vapour_forcing", "number_times"], "1"
+        )
+        self.add_setting(
+            config, ["namelist:vapour_forcing", "profile_data"], "0.0"
+        )
+        self.add_setting(config, ["namelist:vapour_forcing", "times"], "0.0")
 
         return config, self.reports

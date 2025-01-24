@@ -314,6 +314,7 @@ contains
 
     ! Flags to indicate whether scheme has run and increments need adding
     logical( kind=l_def ) :: theta_forcing_done
+    logical( kind=l_def ) :: vapour_forcing_done
     logical( kind=l_def ) :: energy_correction_done
     logical( kind=l_def ) :: wind_forcing_done
     logical( kind=l_def ) :: microphysics_done
@@ -365,6 +366,7 @@ contains
     end if
 
     theta_forcing_done   = .false.
+    vapour_forcing_done  = .false.
     energy_correction_done = .false.
     wind_forcing_done    = .false.
     microphysics_done    = .false.
@@ -386,7 +388,8 @@ contains
                                 mr_n, cloud_fields, dt, time_now,              &
                                 dtheta_forcing, du_forcing, dmv_forcing,       &
                                 dmcl_forcing, dcfl_forcing, dbcf_forcing,      &
-                                theta_forcing_done, wind_forcing_done)
+                                theta_forcing_done, vapour_forcing_done,       &
+                                wind_forcing_done)
     end if
 
     !--------------------------------------------------------------------
@@ -876,12 +879,17 @@ contains
 
     if (theta_forcing_done) then
       call invoke(inc_X_plus_Y(dtheta, dtheta_forcing))
+    end if
+
+    if (vapour_forcing_done) then
       if (cloud == cloud_um .and. scheme == scheme_pc2 &
            .and. pc2_force_response) then
         call invoke(inc_X_plus_Y(mr(imr_v),       dmv_forcing),    &
                     inc_X_plus_Y(mr(imr_cl),      dmcl_forcing),   &
                     inc_X_plus_Y(liquid_fraction, dcfl_forcing),   &
                     inc_X_plus_Y(bulk_fraction,   dbcf_forcing) )
+      else
+        call invoke(inc_X_plus_Y(mr(imr_v), dmv_forcing) )
       end if
     end if
 

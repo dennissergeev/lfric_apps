@@ -100,6 +100,7 @@ integral_method='fe',
 &external_forcing
 pc2_force_response=.true.
 theta_forcing='temp_tend',
+vapour_forcing='none',
 wind_forcing='none',
 /
 &extrusion
