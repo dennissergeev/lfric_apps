@@ -83,10 +83,20 @@ USE lfricinp_stashmaster_mod, ONLY: &
     stashcode_isooh, stashcode_ison, stashcode_macr, stashcode_macrooh,       &
     stashcode_mpan, stashcode_hacet, stashcode_mgly, stashcode_nald,          &
     stashcode_hcooh, stashcode_meco3h, stashcode_meco2h, stashcode_h2,        &
-    stashcode_meoh, stashcode_msa, stashcode_nh3, stashcode_cs2,              &
+    stashcode_dms_mmr, stashcode_so2_mmr, stashcode_h2so4, stashcode_meoh,    &
+    stashcode_msa, stashcode_dmso, stashcode_nh3, stashcode_cs2,              &
     stashcode_csul, stashcode_h2s, stashcode_so3, stashcode_passive_o3,       &
     stashcode_age_of_air, stashcode_lumped_n, stashcode_lumped_br,            &
-    stashcode_lumped_cl
+    stashcode_lumped_cl, stashcode_monoterpene, stashcode_sec_org,            &
+    stashcode_n_nuc_sol, stashcode_nuc_sol_su, stashcode_n_ait_sol,           &
+    stashcode_ait_sol_su, stashcode_ait_sol_bc, stashcode_ait_sol_om,         &
+    stashcode_n_acc_sol, stashcode_acc_sol_su, stashcode_acc_sol_bc,          &
+    stashcode_acc_sol_om, stashcode_acc_sol_ss, stashcode_acc_sol_du,         &
+    stashcode_n_cor_sol, stashcode_cor_sol_su, stashcode_cor_sol_bc,          &
+    stashcode_cor_sol_om, stashcode_cor_sol_ss, stashcode_cor_sol_du,         &
+    stashcode_n_ait_ins, stashcode_ait_ins_bc, stashcode_ait_ins_om,          &
+    stashcode_n_acc_ins, stashcode_acc_ins_du, stashcode_n_cor_ins,           &
+    stashcode_cor_ins_du, stashcode_nuc_sol_om
 
 USE lfricinp_regrid_options_mod, ONLY: winds_on_w3
 
@@ -225,7 +235,11 @@ CALL map_field_name(stashcode_mebr, 'mebr')                          ! stash 340
 CALL map_field_name(stashcode_n, 'n')                                ! stash 34058
 CALL map_field_name(stashcode_o3p, 'o3p')                            ! stash 34059
 CALL map_field_name(stashcode_h2, 'h2')                              ! stash 34070
+CALL map_field_name(stashcode_dms_mmr, 'dms_mmr')                    ! stash 34071
+CALL map_field_name(stashcode_so2_mmr, 'so2_mmr')                    ! stash 34072
+CALL map_field_name(stashcode_h2so4, 'h2so4')                        ! stash 34073
 CALL map_field_name(stashcode_msa, 'msa')                            ! stash 34074
+CALL map_field_name(stashcode_dmso, 'dmso')                          ! stash 34075
 CALL map_field_name(stashcode_nh3, 'nh3')                            ! stash 34076
 CALL map_field_name(stashcode_cs2, 'cs2')                            ! stash 34077
 CALL map_field_name(stashcode_csul, 'csul')                          ! stash 34078
@@ -241,10 +255,38 @@ CALL map_field_name(stashcode_i_proo, 'i_proo')                      ! stash 340
 CALL map_field_name(stashcode_etco3, 'etco3')                        ! stash 34088
 CALL map_field_name(stashcode_mecoch2oo, 'mecoch2oo')                ! stash 34089
 CALL map_field_name(stashcode_meoh, 'meoh')                          ! stash 34090
+CALL map_field_name(stashcode_monoterpene, 'monoterpene')            ! stash 34091
+CALL map_field_name(stashcode_sec_org, 'sec_org')                    ! stash 34092
 CALL map_field_name(stashcode_so3, 'so3')                            ! stash 34094
 CALL map_field_name(stashcode_lumped_n, 'lumped_n')                  ! stash 34098
 CALL map_field_name(stashcode_lumped_br, 'lumped_br')                ! stash 34099
 CALL map_field_name(stashcode_lumped_cl, 'lumped_cl')                ! stash 34100
+CALL map_field_name(stashcode_n_nuc_sol, 'n_nuc_sol')                ! stash 34101
+CALL map_field_name(stashcode_nuc_sol_su, 'nuc_sol_su')              ! stash 34102
+CALL map_field_name(stashcode_n_ait_sol, 'n_ait_sol')                ! stash 34103
+CALL map_field_name(stashcode_ait_sol_su, 'ait_sol_su')              ! stash 34104
+CALL map_field_name(stashcode_ait_sol_bc, 'ait_sol_bc')              ! stash 34105
+CALL map_field_name(stashcode_ait_sol_om, 'ait_sol_om')              ! stash 34106
+CALL map_field_name(stashcode_n_acc_sol, 'n_acc_sol')                ! stash 34107
+CALL map_field_name(stashcode_acc_sol_su, 'acc_sol_su')              ! stash 34108
+CALL map_field_name(stashcode_acc_sol_bc, 'acc_sol_bc')              ! stash 34109
+CALL map_field_name(stashcode_acc_sol_om, 'acc_sol_om')              ! stash 34110
+CALL map_field_name(stashcode_acc_sol_ss, 'acc_sol_ss')              ! stash 34111
+CALL map_field_name(stashcode_acc_sol_du, 'acc_sol_du')              ! stash 34112
+CALL map_field_name(stashcode_n_cor_sol, 'n_cor_sol')                ! stash 34113
+CALL map_field_name(stashcode_cor_sol_su, 'cor_sol_su')              ! stash 34114
+CALL map_field_name(stashcode_cor_sol_bc, 'cor_sol_bc')              ! stash 34115
+CALL map_field_name(stashcode_cor_sol_om, 'cor_sol_om')              ! stash 34116
+CALL map_field_name(stashcode_cor_sol_ss, 'cor_sol_ss')              ! stash 34117
+CALL map_field_name(stashcode_cor_sol_du, 'cor_sol_du')              ! stash 34118
+CALL map_field_name(stashcode_n_ait_ins, 'n_ait_ins')                ! stash 34119
+CALL map_field_name(stashcode_ait_ins_bc, 'ait_ins_bc')              ! stash 34120
+CALL map_field_name(stashcode_ait_ins_om, 'ait_ins_om')              ! stash 34121
+CALL map_field_name(stashcode_n_acc_ins, 'n_acc_ins')                ! stash 34122
+CALL map_field_name(stashcode_acc_ins_du, 'acc_ins_du')              ! stash 34123
+CALL map_field_name(stashcode_n_cor_ins, 'n_cor_ins')                ! stash 34124
+CALL map_field_name(stashcode_cor_ins_du, 'cor_ins_du')              ! stash 34125
+CALL map_field_name(stashcode_nuc_sol_om, 'nuc_sol_om')              ! stash 34126
 CALL map_field_name(stashcode_passive_o3, 'passive_o3')              ! stash 34149
 CALL map_field_name(stashcode_age_of_air, 'age_of_air')              ! stash 34150
 

@@ -181,8 +181,12 @@
         <field id="meco3h" name="meco3h" long_name="mass_fraction_of_peroxy_acetic_acid_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="meco2h" name="meco2h" long_name="mass_fraction_of_acetic_acid_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="h2" name="h2" long_name="mass_fraction_of_hydrogen_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="dms_mmr" name="dms_mmr" long_name="mass_fraction_of_dimethyl_sulfide_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="so2_mmr" name="so2_mmr" long_name="mass_fraction_of_sulfur_dioxide_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="h2so4" name="h2so4" long_name="mass_fraction_of_sulfuric_acid_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="meoh" name="meoh" long_name="mass_fraction_of_methanol_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="msa" name="msa" long_name="mass_fraction_of_methyl_sulphonic_acid_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="dmso" name="dmso" long_name="mass_fraction_of_dimethyl_sulfoxide_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="nh3" name="nh3" long_name="mass_fraction_of_ammonia_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="cs2" name="cs2" long_name="mass_fraction_of_carbon_disulphide_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="csul" name="csul" long_name="mass_fraction_of_carbonyl_sulphide_in_air" unit="1" grid_ref="full_level_face_grid" />
@@ -190,6 +194,34 @@
         <field id="so3" name="so3" long_name="mass_fraction_of_sulphur_trioxide_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="passive_o3" name="passive_o3" long_name="mass_fraction_of_passive_ozone_in_air" unit="1" grid_ref="full_level_face_grid" />
         <field id="age_of_air" name="age_of_air" long_name="mass_fraction_of_age_of_air_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="monoterpene" name="monoterpene" long_name="mass_fraction_of_monoterpene_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="sec_org" name="sec_org" long_name="mass_fraction_of_secondary_organic_in_air" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_nuc_sol" name="n_nuc_sol" long_name="nucleation_mode_soluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="nuc_sol_su" name="nuc_sol_su" long_name="nucleation_mode_soluble_h2so4_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_ait_sol" name="n_ait_sol" long_name="aitken_mode_soluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="ait_sol_su" name="ait_sol_su" long_name="aitken_mode_soluble_h2so4_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="ait_sol_bc" name="ait_sol_bc" long_name="aitken_mode_soluble_bc_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="ait_sol_om" name="ait_sol_om" long_name="aitken_mode_soluble_om_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_acc_sol" name="n_acc_sol" long_name="accumulation_mode_soluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="acc_sol_su" name="acc_sol_su" long_name="accumulation_mode_soluble_h2so4_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="acc_sol_bc" name="acc_sol_bc" long_name="accumulation_mode_soluble_bc_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="acc_sol_om" name="acc_sol_om" long_name="accumulation_mode_soluble_om_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="acc_sol_ss" name="acc_sol_ss" long_name="accumulation_mode_soluble_sea_salt_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="acc_sol_du" name="acc_sol_du" long_name="accumulation_mode_soluble_dust_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_cor_sol" name="n_cor_sol" long_name="coarse_mode_soluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="cor_sol_su" name="cor_sol_su" long_name="coarse_mode_soluble_h2so4_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="cor_sol_bc" name="cor_sol_bc" long_name="coarse_mode_soluble_bc_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="cor_sol_om" name="cor_sol_om" long_name="coarse_mode_soluble_om_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="cor_sol_ss" name="cor_sol_ss" long_name="coarse_mode_soluble_sea_salt_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="cor_sol_du" name="cor_sol_du" long_name="coarse_mode_soluble_dust_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_ait_ins" name="n_ait_ins" long_name="aitken_mode_insoluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="ait_ins_bc" name="ait_ins_bc" long_name="aitken_mode_insoluble_bc_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="ait_ins_om" name="ait_ins_om" long_name="aitken_mode_insoluble_om_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_acc_ins" name="n_acc_ins" long_name="accumulation_mode_insoluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="acc_ins_du" name="acc_ins_du" long_name="accumulation_mode_insoluble_dust" unit="1" grid_ref="full_level_face_grid" />
+        <field id="n_cor_ins" name="n_cor_ins" long_name="coarse_mode_insoluble_number" unit="1" grid_ref="full_level_face_grid" />
+        <field id="cor_ins_du" name="cor_ins_du" long_name="coarse_mode_insoluble_dust_mmr" unit="1" grid_ref="full_level_face_grid" />
+        <field id="nuc_sol_om" name="nuc_sol_om" long_name="nucleation_mode_soluble_om_mmr" unit="1" grid_ref="full_level_face_grid" />
 
 	<!-- Fields currently unused NOT CHECKED -->
 	<field id="surface_altitude" name="surface_altitude" long_name="Surface altitude" unit="m" domain_ref="face"/>
@@ -320,8 +352,12 @@
         <field field_ref="meco3h"/>
         <field field_ref="meco2h"/>
         <field field_ref="h2"/>
+        <field field_ref="dms_mmr"/>
+        <field field_ref="so2_mmr"/>
+        <field field_ref="h2so4"/>
         <field field_ref="meoh"/>
         <field field_ref="msa"/>
+        <field field_ref="dmso"/>
         <field field_ref="nh3"/>
         <field field_ref="cs2"/>
         <field field_ref="csul"/>
@@ -329,6 +365,34 @@
         <field field_ref="so3"/>
         <field field_ref="passive_o3"/>
         <field field_ref="age_of_air"/>
+        <field field_ref="monoterpene"/>
+        <field field_ref="sec_org"/>
+        <field field_ref="n_nuc_sol"/>
+        <field field_ref="nuc_sol_su"/>
+        <field field_ref="n_ait_sol"/>
+        <field field_ref="ait_sol_su"/>
+        <field field_ref="ait_sol_bc"/>
+        <field field_ref="ait_sol_om"/>
+        <field field_ref="n_acc_sol"/>
+        <field field_ref="acc_sol_su"/>
+        <field field_ref="acc_sol_bc"/>
+        <field field_ref="acc_sol_om"/>
+        <field field_ref="acc_sol_ss"/>
+        <field field_ref="acc_sol_du"/>
+        <field field_ref="n_cor_sol"/>
+        <field field_ref="cor_sol_su"/>
+        <field field_ref="cor_sol_bc"/>
+        <field field_ref="cor_sol_om"/>
+        <field field_ref="cor_sol_ss"/>
+        <field field_ref="cor_sol_du"/>
+        <field field_ref="n_ait_ins"/>
+        <field field_ref="ait_ins_bc"/>
+        <field field_ref="ait_ins_om"/>
+        <field field_ref="n_acc_ins"/>
+        <field field_ref="acc_ins_du"/>
+        <field field_ref="n_cor_ins"/>
+        <field field_ref="cor_ins_du"/>
+        <field field_ref="nuc_sol_om"/>
       </file>
 
       <file id="land_area_ancil" name="land_area_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
