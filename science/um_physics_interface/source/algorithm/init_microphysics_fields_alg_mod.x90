@@ -27,6 +27,7 @@ contains
   subroutine init_microphysics_fields_alg(microphysics_fields)
 
     use mphys_inputs_mod, only: l_mcr_precfrac
+    use microphysics_config_mod, only: microphysics_casim
 
     implicit none
     ! Arguments
@@ -70,20 +71,9 @@ contains
     call microphysics_fields%get_field('tnuc_nlcl', tnuc_nlcl)
     call microphysics_fields%get_field('precfrac', precfrac)
 
-    call microphysics_fields%get_field('nl_mphys', n_cl)
-    call microphysics_fields%get_field('nr_mphys', n_r)
-    call microphysics_fields%get_field('ni_mphys', n_ci)
-    call microphysics_fields%get_field('ns_mphys', n_s)
-    call microphysics_fields%get_field('ng_mphys', n_g)
-
     ! Set microphysics output fields to zero for use when scheme is off
     call invoke( setval_c(dtheta_mphys, 0.0_r_def), &
                  setval_c(dmv_mphys,    0.0_r_def), &
-                 setval_c(n_cl,         0.0_r_def), &
-                 setval_c(n_r,          0.0_r_def), &
-                 setval_c(n_ci,         0.0_r_def), &
-                 setval_c(n_s,          0.0_r_def), &
-                 setval_c(n_g,          0.0_r_def), &
                  setval_c(ls_rain,      0.0_r_def), &
                  setval_c(ls_snow,      0.0_r_def), &
                  setval_c(ls_graup,     0.0_r_def), &
@@ -96,6 +86,27 @@ contains
                  setval_c(rim_agg,      0.0_r_def), &
                  setval_c(tnuc,         0.0_r_def), &
                  setval_c(tnuc_nlcl,    0.0_r_def))
+
+    ! Initialise Casim numbers
+    if (microphysics_casim) then
+
+      call microphysics_fields%get_field('nl_mphys', n_cl)
+      call microphysics_fields%get_field('nr_mphys', n_r)
+      call microphysics_fields%get_field('ni_mphys', n_ci)
+      call microphysics_fields%get_field('ns_mphys', n_s)
+      call microphysics_fields%get_field('ng_mphys', n_g)
+
+      ! Initialise rain, snow and graupel numbers to nonzero values
+      ! This ~10/litre (1e4) number concentration is a pragmatic choice
+      ! until number concentration prognostics are fed in from a Casim
+      ! parent model.
+      ! Cloud liquid and ice will be done using activation routines.
+      call invoke(setval_c(n_cl, 0.0_r_def),   &
+                  setval_c(n_r,  1.0e4_r_def), &
+                  setval_c(n_ci, 0.0_r_def),   &
+                  setval_c(n_s,  1.0e4_r_def), &
+                  setval_c(n_g,  1.0e4_r_def) )
+    end if
 
     ! Initialise precipitation fraction to nonzero value - it will be set
     ! correctly in first run through microphysics scheme

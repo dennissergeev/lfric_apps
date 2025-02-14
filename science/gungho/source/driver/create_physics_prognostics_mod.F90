@@ -462,17 +462,21 @@ contains
     checkpoint_flag = microphysics_casim
     advection_flag = microphysics_casim
 
-    call processor%apply(make_spec('nl_mphys', main%microphysics,               &
-        adv_coll=if_adv((advection_flag .and. casim_iopt_act /= 0_i_def),       &
-         adv%last_adv), ckp=checkpoint_flag))
-    call processor%apply(make_spec('nr_mphys', main%microphysics,               &
-        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag))
-    call processor%apply(make_spec('ni_mphys', main%microphysics,               &
-        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag))
-    call processor%apply(make_spec('ns_mphys', main%microphysics,               &
-        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag))
-    call processor%apply(make_spec('ng_mphys', main%microphysics,               &
-        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag))
+    call processor%apply(make_spec('nl_mphys', main%microphysics,              &
+        adv_coll=if_adv((advection_flag .and. casim_iopt_act /= 0_i_def),      &
+        adv%last_adv), ckp=checkpoint_flag, empty = (.not. microphysics_casim)))
+    call processor%apply(make_spec('nr_mphys', main%microphysics,              &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. microphysics_casim) ))
+    call processor%apply(make_spec('ni_mphys', main%microphysics,              &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. microphysics_casim) ))
+    call processor%apply(make_spec('ns_mphys', main%microphysics,              &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. microphysics_casim) ))
+    call processor%apply(make_spec('ng_mphys', main%microphysics,              &
+        adv_coll=if_adv(advection_flag, adv%last_adv), ckp=checkpoint_flag,    &
+        empty = (.not. microphysics_casim) ))
 
     ! 2D fields, don't need checkpointing
     call processor%apply(make_spec('ls_rain', main%microphysics, W3, twod=.true.))

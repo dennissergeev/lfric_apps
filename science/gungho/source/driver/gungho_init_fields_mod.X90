@@ -94,6 +94,8 @@ module gungho_init_fields_mod
   use variable_fields_mod,                only : init_variable_fields
   use lfric_xios_time_axis_mod,           only : regridder
   use intermesh_mappings_alg_mod,         only : map_scalar_intermesh
+  use casim_activate_alg_mod,             only : casim_activate_alg
+  use microphysics_config_mod,            only : microphysics_casim
 #endif
   use linked_list_mod,                    only : linked_list_type, &
                                                  linked_list_item_type
@@ -788,6 +790,19 @@ subroutine create_model_data( modeldb,      &
       call map_physics_fields_alg(u, exner, rho, theta,     &
                                   moist_dyn_array%bundle,     &
                                   derived_fields)
+
+#ifdef UM_PHYSICS
+      ! Initialise Casim numbers if they aren't coming from an LFRic dump
+      if (microphysics_casim .and. &
+           ( prognostic_init_choice /= init_option_checkpoint_dump ) ) then
+        call casim_activate_alg( theta, mr_array%bundle,                   &
+                                 derived_fields,                           &
+                                 cloud_fields,                             &
+                                 microphysics_fields,                      &
+                                 convection_fields,                        &
+                                 initialise=.true.)
+      end if
+#endif
 
       ! Initialise ancillary fields
       select case ( ancil_choice )

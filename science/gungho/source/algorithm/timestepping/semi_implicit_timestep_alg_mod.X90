@@ -996,7 +996,7 @@ contains
 
               call lam_blend_lbc(self%state(igh_u), self%state(igh_p), &
                                  self%state(igh_d), self%state(igh_t), &
-                                 mr, lbc_fields)
+                                 mr, lbc_fields, microphysics_fields)
 
             end if
           endif
@@ -1046,7 +1046,7 @@ contains
       if (microphysics_casim) then
         call casim_activate_alg( self%state(igh_t), mr, derived_fields,      &
                                  cloud_fields, microphysics_fields,          &
-                                 convection_fields )
+                                 convection_fields, initialise=.false. )
       end if ! microphysics_casim
     end if
 #endif
