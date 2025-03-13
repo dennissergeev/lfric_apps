@@ -39,10 +39,10 @@
     "lfricinputs_um2lfric-protogal-N96L70_C12L70_spice_ifort-gcc_safe":                 BASE,
     "lfricinputs_um2lfric-protogal-N96L70_C12L70_spice_ifort-gcc_rigorous":             BASE,
 
-    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_gfortran-gcc_safe": BASE~"_t424",
-    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_gfortran-gcc_rigorous": BASE~"_t424",
-    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_ifort-gcc_safe": BASE~"_t424",
-    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_ifort-gcc_rigorous": BASE~"_t424",
+    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_gfortran-gcc_safe": BASE,
+    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_gfortran-gcc_rigorous": BASE,
+    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_ifort-gcc_safe": BASE,
+    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_spice_ifort-gcc_rigorous": BASE,
 
     "lfricinputs_um2lfric-aquaplanet_lam_spice_gfortran-gcc_safe":                      BASE,
     "lfricinputs_um2lfric-aquaplanet_lam_spice_gfortran-gcc_rigorous":                  BASE,

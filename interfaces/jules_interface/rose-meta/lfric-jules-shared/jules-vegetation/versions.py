@@ -1,5 +1,9 @@
 import sys
+
 from metomi.rose.upgrade import MacroUpgrade
+
+from .version20_21 import *
+
 
 class UpgradeError(Exception):
     """Exception created when an upgrade fails."""
@@ -12,6 +16,7 @@ class UpgradeError(Exception):
         return self.msg
 
     __str__ = __repr__
+
 
 """
 Copy this template and complete to add your macro

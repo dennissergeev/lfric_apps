@@ -25,8 +25,8 @@
     "lfricinputs_um2lfric-protogal-N96L70_C12L70_azspice_gnu_safe":             BASE,
     "lfricinputs_um2lfric-protogal-N96L70_C12L70_azspice_gnu_rigorous":         BASE,
 
-    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_azspice_gnu_safe": BASE~"_t424",
-    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_azspice_gnu_rigorous": BASE~"_t424",
+    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_azspice_gnu_safe": BASE,
+    "lfricinputs_um2lfric-protogal_chem-N96L70_C12L70_azspice_gnu_rigorous": BASE,
 
     "lfricinputs_um2lfric-aquaplanet_lam_azspice_gnu_safe":                     BASE,
     "lfricinputs_um2lfric-aquaplanet_lam_azspice_gnu_rigorous":                 BASE,
