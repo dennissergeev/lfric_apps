@@ -294,6 +294,8 @@
     "lfric_atm_xc40_gal_performance": [
         "lfric_atm_nwp_gal9_perf-C192_MG_xc40_intel_production-64bit-rbl32",
         "lfric_atm_clim_gal9_perf-C48_MG_xc40_intel_production-64bit-rbl32",
+        "lfric_atm_nwp_gal9_perf_16x16-C256_MG_xc40_intel_production-64bit-rbl32",
+        "lfric_atm_nwp_gal9_perf_32x32-C256_MG_xc40_intel_production-64bit-rbl32",
     ],
     "lfric_atm_xc40_performance": [
         "lfric_atm_xc40_gal_performance",

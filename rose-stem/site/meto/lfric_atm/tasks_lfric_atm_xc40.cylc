@@ -11,6 +11,29 @@
         "wallclock": 5,
     }) %}
 
+{% elif task_ns.conf_name == "nwp_gal9_perf_16x16-C256_MG" %}
+
+    {% do task_dict.update({
+        "task_ranks_per_node": 18,
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_32x32-C256_MG" %}
+
+    {% do task_dict.update({
+        "task_ranks_per_node": 18,
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_16x16-C512_MG" %}
+
+    {% do task_dict.update({
+        "task_ranks_per_node": 18,
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_32x32-C512_MG" %}
+
+    {% do task_dict.update({
+        "task_ranks_per_node": 18,
+    }) %}
 {% endif %}
 
 {% do LOG.debug("Finised in site/meto/lfric_atm/tasks_lfric_atm_xc40.cylc") %}

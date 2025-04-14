@@ -69,28 +69,6 @@
         "wallclock": 10,
     }) %}
 
-{% elif task_ns.conf_name == "nwp_gal9_perf-C256_MG" %}
-
-    {% do task_dict.update({
-        "opt_confs": ["um_dump","no_diags"],
-        "resolution": "C256_MG",
-        "DT": 600,
-        "tsteps": 120,
-        "mpi_parts": 768,
-        "wallclock": 20,
-    }) %}
-
-{% elif task_ns.conf_name == "nwp_gal9_perf-C512_MG" %}
-
-    {% do task_dict.update({
-        "opt_confs": ["um_dump","no_diags"],
-        "resolution": "C512_MG",
-        "DT": 300,
-        "tsteps": 120,
-        "mpi_parts": 3072,
-        "wallclock": 20,
-    }) %}
-
 {% elif task_ns.conf_name == "nwp_gal9-C224_MG" %}
 
     {% do task_dict.update({
@@ -118,6 +96,58 @@
         "xios_nodes": 4,
         "mpi_parts_xios" : 16,
         "log_level": "error",
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_16x16-C256_MG" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["um_dump","june_case","no_diags"],
+        "resolution": "C256_MG",
+        "DT": 600,
+        "tsteps": 120,
+        "mpi_parts": 1536,
+        "wallclock": 180,
+        "xios_nodes": 8,
+        "mpi_parts_xios" : 32,
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_32x32-C256_MG" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["um_dump","june_case","no_diags"],
+        "resolution": "C256_MG",
+        "DT": 600,
+        "tsteps": 120,
+        "mpi_parts": 384,
+        "wallclock": 180,
+        "xios_nodes": 4,
+        "mpi_parts_xios" : 16,
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_16x16-C512_MG" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["um_dump","june_case","no_diags"],
+        "resolution": "C512_MG",
+        "DT": 300,
+        "tsteps": 120,
+        "mpi_parts": 6144,
+        "wallclock": 20,
+        "xios_nodes": 16,
+        "mpi_parts_xios" : 160,
+    }) %}
+
+{% elif task_ns.conf_name == "nwp_gal9_perf_32x32-C512_MG" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["um_dump","june_case","no_diags"],
+        "resolution": "C512_MG",
+        "DT": 300,
+        "tsteps": 120,
+        "mpi_parts": 1536,
+        "wallclock": 20,
+        "xios_nodes": 8,
+        "mpi_parts_xios" : 32,
     }) %}
 
 {% elif task_ns.conf_name == "nwp_gal9-C896_MG" %}
