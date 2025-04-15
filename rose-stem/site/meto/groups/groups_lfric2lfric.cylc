@@ -9,11 +9,17 @@
 {% do site_groups.update({
     "lfric2lfric_spice_developer": [
         "lfric2lfric_ral_seuk-C32_lam_MG_spice_intel_fast-debug-64bit",
+        "lfric2lfric_ral3-seuk_spice_intel_fast-debug-64bit",
         "lfric2lfric_clim_gal9-C24_C12_spice_intel_fast-debug-64bit",
         "lfric2lfric_spice_canned",
     ],
+    "lfric2lfric_spice_extra": [
+        "lfric2lfric_ral3-uk_spice_intel_fast-debug-64bit",
+        "lfric2lfric_ral3-ukv_spice_intel_fast-debug-64bit",
+    ],
     "lfric2lfric_spice": [
         "lfric2lfric_spice_developer",
+        "lfric2lfric_spice_extra",
     ],
     "lfric2lfric_spice_canned": [
         "lfric2lfric_canned_spice_intel_fast-debug-64bit",
@@ -27,11 +33,17 @@
 {% do site_groups.update({
     "lfric2lfric_azspice_developer": [
         "lfric2lfric_ral_seuk-C32_lam_MG_azspice_gnu_fast-debug-64bit",
+        "lfric2lfric_ral3-seuk_azspice_gnu_fast-debug-64bit",
         "lfric2lfric_clim_gal9-C24_C12_azspice_gnu_fast-debug-64bit",
         "lfric2lfric_azspice_canned",
     ],
+    "lfric2lfric_azspice_extra": [
+        "lfric2lfric_ral3-uk_azspice_gnu_fast-debug-64bit",
+        "lfric2lfric_ral3-ukv_azspice_gnu_fast-debug-64bit",
+    ],
     "lfric2lfric_azspice": [
         "lfric2lfric_azspice_developer",
+        "lfric2lfric_azspice_extra",
     ],
     "lfric2lfric_azspice_canned": [
         "lfric2lfric_canned_azspice_gnu_fast-debug-64bit",
@@ -45,11 +57,17 @@
 {% do site_groups.update({
     "lfric2lfric_xc40_developer": [
         "lfric2lfric_ral_seuk-C32_lam_MG_xc40_intel_fast-debug-64bit",
+        "lfric2lfric_ral3-seuk_xc40_intel_fast-debug-64bit",
         "lfric2lfric_clim_gal9-C24_C12_xc40_intel_fast-debug-64bit",
         "lfric2lfric_xc40_canned",
     ],
+    "lfric2lfric_xc40_extra": [
+        "lfric2lfric_ral3-uk_xc40_intel_fast-debug-64bit",
+        "lfric2lfric_ral3-ukv_xc40_intel_fast-debug-64bit",
+    ],
     "lfric2lfric_xc40": [
         "lfric2lfric_xc40_developer",
+        "lfric2lfric_xc40_extra",
     ],
     "lfric2lfric_xc40_build": [
         "build_lfric2lfric_xc40_intel_fast-debug-64bit",
@@ -66,8 +84,13 @@
             "lfric2lfric_spice_developer",
             "lfric2lfric_xc40_developer",
         ],
+        "lfric2lfric_extra": [
+            "lfric2lfric_spice_extra",
+            "lfric2lfric_xc40_extra",
+        ],
         "lfric2lfric": [
             "lfric2lfric_developer",
+            "lfric2lfric_extra",
         ],
         "lfric2lfric_build": [
             "lfric2lfric_spice_build",
@@ -83,8 +106,12 @@
         "lfric2lfric_developer": [
             "lfric2lfric_azspice_developer",
         ],
+        "lfric2lfric_extra": [
+            "lfric2lfric_azspice_extra",
+        ],
         "lfric2lfric": [
             "lfric2lfric_developer",
+            "lfric2lfric_extra",
         ],
         "lfric2lfric_build": [
             "lfric2lfric_azspice_build",

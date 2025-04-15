@@ -12,6 +12,27 @@
         "resolution": "C32_lam_MG",
     }) %}
 
+{% elif task_ns.conf_name == "ral3-seuk" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["ral3"],
+        "resolution": "ral3_seuk",
+    }) %}
+
+{% elif task_ns.conf_name == "ral3-uk" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["ral3"],
+        "resolution": "ral3_uk",
+    }) %}
+
+{% elif task_ns.conf_name == "ral3-ukv" %}
+
+    {% do task_dict.update({
+        "opt_confs": ["ral3"],
+        "resolution": "ral3_ukv",
+    }) %}
+
 {% elif task_ns.conf_name == "clim_gal9-C24_C12" %}
 
     {% do task_dict.update({
