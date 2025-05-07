@@ -91,3 +91,17 @@ class vn21_t476(MacroUpgrade):
         self.add_setting(config, ["namelist:physics", "ussp_segment"], "0")
 
         return config, self.reports
+
+
+class vn21_t663(MacroUpgrade):
+    """Upgrade macro for ticket #663 by Ian Boutle."""
+
+    BEFORE_TAG = "vn2.1_t476"
+    AFTER_TAG = "vn2.1_t663"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/um-aerosol
+        # Commands From: rose-meta/um-aerosol
+        self.add_setting(config, ["namelist:aerosol", "murk_lbc"], ".false.")
+
+        return config, self.reports

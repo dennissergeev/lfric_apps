@@ -45,6 +45,7 @@ Science settings
 - mol - use MoL transport scheme
 - mol_wind - use MoL for horizontal wind transport (as GC5-LFRic #638.3)
 - moruses - use the MORUSES urban scheme
+- murk - use single-species aerosol Murk
 - no_aerosol - use no aerosol scheme (fixed cloud drop number)
 - no_dust - don't use interactive dust
 - ral3 - regional configuration

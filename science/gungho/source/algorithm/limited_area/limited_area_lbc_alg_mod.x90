@@ -31,6 +31,7 @@ module limited_area_lbc_alg_mod
                                             lbc_option_gungho_file,      &
                                             lbc_option_um2lfric_file
   use microphysics_config_mod,        only: microphysics_casim
+  use aerosol_config_mod,             only: murk_lbc
 
   implicit none
 
@@ -105,7 +106,7 @@ contains
   !> @param[in]     lbc_fields Field collection containing LBC data
   !> @param[in]     microphysics_fields Collection containing microphysics data
   subroutine lam_blend_lbc( state_u, state_p, state_d, state_t, mr, lbc_fields,&
-                            microphysics_fields )
+                            microphysics_fields, aerosol_fields )
     use log_mod,                 only: log_event,         &
                                        LOG_LEVEL_INFO
 
@@ -118,6 +119,7 @@ contains
     type(field_type),            intent(inout) :: mr(nummr)
     type(field_collection_type), intent(in)    :: lbc_fields
     type(field_collection_type), intent(in)    :: microphysics_fields
+    type(field_collection_type), intent(in)    :: aerosol_fields
     character(len=*), parameter                :: name_u    = 'lbc_u',     &
                                                   name_p    = 'lbc_exner', &
                                                   name_d    = 'lbc_rho',   &
@@ -125,11 +127,12 @@ contains
                                                   name_m_v  = 'lbc_m_v',   &
                                                   name_m_cl = 'lbc_m_cl',  &
                                                   name_m_s  = 'lbc_m_s',   &
-                                                  name_m_r  = 'lbc_m_r'
+                                                  name_m_r  = 'lbc_m_r',   &
+                                                  name_murk = 'lbc_murk'
     character(str_def)                         :: name_mr
     integer(i_def)                             :: imr
 
-    type(field_type), pointer :: nr_mphys, ni_mphys, ns_mphys, ng_mphys
+    type(field_type), pointer :: nr_mphys, ni_mphys, ns_mphys, ng_mphys, murk
     type(field_type) :: nx_lbc
 
     select case( lbc_option )
@@ -164,6 +167,10 @@ contains
       call blend_field( mr(imr_s), lbc_fields, name_m_s )
       call blend_field( mr(imr_r), lbc_fields, name_m_r )
 
+      if (murk_lbc) then
+        call aerosol_fields%get_field('murk', murk)
+        call blend_field( murk, lbc_fields, name_murk )
+      end if
       ! For Casim give number fields values in LBC region
       ! N.B. cloud liquid not done since activation will be called on this
       ! anyway

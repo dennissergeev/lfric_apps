@@ -7,7 +7,7 @@
 
 module murk_alg_mod
 
-  use constants_mod,                 only: r_def
+  use constants_mod,                 only: r_def, i_def
   use integer_field_mod,             only: integer_field_type
   use field_mod,                     only: field_type
   use field_collection_mod,          only: field_collection_type
@@ -17,6 +17,7 @@ module murk_alg_mod
   use physics_constants_mod,         only: get_rdz_w3
   use fs_continuity_mod,             only: W3, Wtheta
   use mesh_mod,                      only: mesh_type
+  use um_sizes_init_mod,             only: um_sizes_init
 
   implicit none
 
@@ -63,6 +64,8 @@ contains
     type( field_type ), pointer :: ent_t_frac_dsc  => null()
     type( field_type ), pointer :: ent_zrzi_dsc    => null()
 
+    integer(i_def) :: ncells
+
     call aerosol_fields%get_field('murk',murk)
     call aerosol_fields%get_field('murk_source',murk_source)
 
@@ -88,6 +91,10 @@ contains
     call tracer_emission_alg(murk, murk_source, derived_fields, &
                              amplitude, murk_source_scaling)
 
+    ! Switch UM to running i-first on whole domain
+    ncells = mesh%get_last_edge_cell()
+    call um_sizes_init(ncells)
+
     ! Call tracer mixing routine for murk field
     call invoke(tracer_mix_kernel_type(murk, height_w3, height_wth, rdz_w3, &
                                        rhokh_bl, dtrdz_tq_bl, zh_nonloc,    &
@@ -95,6 +102,9 @@ contains
                                        ent_we_lim, ent_t_frac, ent_zrzi,    &
                                        ent_we_lim_dsc, ent_t_frac_dsc,      &
                                        ent_zrzi_dsc) )
+
+    ! Switch UM back to columns
+    call um_sizes_init(1_i_def)
 
   end subroutine murk_alg
 

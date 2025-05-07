@@ -27,6 +27,7 @@ module create_lbcs_mod
                                          lbc_option_analytic,    &
                                          lbc_option_gungho_file, &
                                          lbc_option_um2lfric_file
+  use aerosol_config_mod,         only : murk_lbc
 
   implicit none
 
@@ -110,6 +111,9 @@ module create_lbcs_mod
           call proc%apply(make_spec('lbc_qcl', main%lbc, Wtheta, time_axis=axis%lbc))
           call proc%apply(make_spec('lbc_qcf', main%lbc, Wtheta, time_axis=axis%lbc))
           call proc%apply(make_spec('lbc_qrain', main%lbc, Wtheta, time_axis=axis%lbc))
+          if (murk_lbc) then
+            call proc%apply(make_spec('lbc_murk', main%lbc, Wtheta, time_axis=axis%lbc))
+          end if
 
           !----- Fields derived from the fields in the LBC file---------
           call proc%apply(make_spec('lbc_rho', main%lbc, W3))

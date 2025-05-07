@@ -320,15 +320,6 @@ module gungho_setup_io_mod
                                                          io_mode=FILE_MODE_READ ) )
         end if
 
-        if (murk_prognostic) then
-          ! Set aerosol emission ancil filenames from namelist
-          write(ancil_fname,'(A)') trim(ancil_directory)//'/'//                &
-                                   trim(emiss_murk_ancil_path)
-          call files_list%insert_item( lfric_xios_file_type( ancil_fname,      &
-                                                         xios_id="emiss_murk_ancil", &
-                                                         io_mode=FILE_MODE_READ ) )
-        end if
-
       end if ! static ancils on cold start
 
       ! Only read updating ancils on new run, if updating or using surf
@@ -423,6 +414,19 @@ module gungho_setup_io_mod
         call files_list%insert_item( lfric_xios_file_type( ancil_fname,        &
                                                          xios_id="ozone_ancil", &
                                                          io_mode=FILE_MODE_READ ) )
+
+        if (murk_prognostic) then
+          ! Set aerosol emission ancil filenames from namelist
+          if (emiss_murk_ancil_path(1:1) == '/') then
+            write(ancil_fname,'(A)') trim(emiss_murk_ancil_path)
+          else
+            write(ancil_fname,'(A)') trim(ancil_directory)//'/'//              &
+                                     trim(emiss_murk_ancil_path)
+          end if
+          call files_list%insert_item( lfric_xios_file_type( ancil_fname,      &
+                                                         xios_id="emiss_murk_ancil", &
+                                                         io_mode=FILE_MODE_READ ) )
+        end if
 
         if ( ( glomap_mode == glomap_mode_dust_and_clim ) .or.    &
              ( glomap_mode == glomap_mode_climatology   ) ) then

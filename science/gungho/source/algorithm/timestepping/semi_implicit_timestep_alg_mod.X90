@@ -1013,7 +1013,8 @@ contains
 
               call lam_blend_lbc(self%state(igh_u), self%state(igh_p), &
                                  self%state(igh_d), self%state(igh_t), &
-                                 mr, lbc_fields, microphysics_fields)
+                                 mr, lbc_fields, microphysics_fields,  &
+                                 aerosol_fields)
 
             end if
           endif

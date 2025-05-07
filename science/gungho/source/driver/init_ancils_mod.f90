@@ -50,7 +50,8 @@ module init_ancils_mod
                                              emissions_GC5,             &
                                              easyaerosol_cdnc,          &
                                              easyaerosol_sw,            &
-                                             easyaerosol_lw
+                                             easyaerosol_lw,            &
+                                             murk_prognostic
   use socrates_init_mod,              only : n_sw_band, n_lw_band
   use jules_surface_config_mod,       only : l_vary_z0m_soil, l_urban2t
   use jules_radiation_config_mod,     only : l_sea_alb_var_chl, l_albedo_obs
@@ -127,6 +128,7 @@ contains
     type(time_axis_type), save :: albedo_nir_time_axis
     type(time_axis_type), save :: pft_time_axis
     type(time_axis_type), save :: ozone_time_axis
+    type(time_axis_type), save :: murk_time_axis
     type(time_axis_type), save :: em_bc_bf_time_axis
     type(time_axis_type), save :: em_bc_ff_time_axis
     type(time_axis_type), save :: em_bc_bb_time_axis
@@ -387,6 +389,13 @@ contains
     call ancil_times_list%insert_item(ozone_time_axis)
 
     !=====  AEROSOL ANCILS =====
+    if (murk_prognostic) then
+      call murk_time_axis%initialise("murk_time", file_id="emiss_murk_ancil", &
+                                    interp_flag=interp_flag, pop_freq="monthly")
+      call setup_ancil_field("murk_source", depository, ancil_fields, mesh, &
+                             twod_mesh, time_axis=murk_time_axis)
+      call ancil_times_list%insert_item(murk_time_axis)
+    end if
 
     if ( ( glomap_mode == glomap_mode_climatology ) .or. &
          ( glomap_mode == glomap_mode_dust_and_clim ) ) then

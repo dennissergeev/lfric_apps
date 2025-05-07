@@ -222,8 +222,9 @@
     <field id="dust_mrel" name="mass_fraction_of_dust_in_size_bins" long_name="mass_fraction_of_dust_in_size_bins" unit="kg kg-1" operation="once" domain_ref="face" axis_ref="dust_divisions" />
   </file>
 
-  <file id="emiss_murk_ancil" name="emiss_murk_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="false" enabled=".FALSE.">
-    <field id="murk_source" name="murk_source" long_name="emissions_of_murk_aerosol" unit="kg m-2 s-1" operation="once" domain_ref="full_level_face_grid"/>
+  <file id="emiss_murk_ancil" name="emiss_murk_ancil" mode="read" output_freq="1mo" convention="UGRID" cyclic="true" enabled=".FALSE.">
+    <field id="murk_time" name="time"  unit="hours" operation="once" axis_ref="monthly_climatology"/>
+    <field id="murk_source_data" name="m01s00i057" long_name="emissions_of_murk_aerosol" unit="kg m-2 s-1" operation="instant" grid_ref="3D_monthly_grid"/>
   </file>
 
   <!--- UKCA Offline Oxidant ancils -->

@@ -129,7 +129,6 @@ contains
     type( field_type ), pointer :: pvol_du_cor_ins => null()
 
     type( field_type ), pointer :: murk_3d => null()
-    type( field_type ), pointer :: murk_source => null()
 
     call aerosol_fields%get_field('n_ait_sol', n_ait_sol)
     call aerosol_fields%get_field('ait_sol_su', ait_sol_su)
@@ -194,11 +193,14 @@ contains
       call aerosol_fields%get_field('pvol_om_ait_ins', pvol_om_ait_ins)
       call aerosol_fields%get_field('pvol_du_acc_ins', pvol_du_acc_ins)
       call aerosol_fields%get_field('pvol_du_cor_ins', pvol_du_cor_ins)
-
       call aerosol_fields%get_field('murk', murk_3d)
-      call aerosol_fields%get_field('murk_source', murk_source)
-      if (murk) call invoke(setval_c(murk_3d, 20.0_r_def))
-      if (murk_prognostic) call invoke(setval_c(murk_source, 2.0e-4_r_def))
+
+      if (murk_prognostic) then
+        call invoke(setval_c(murk_3d, 0.0_r_def))
+      else if (murk) then
+        ! Initialise murk field to a plausible value for idealised testing
+        call invoke(setval_c(murk_3d, 20.0_r_def))
+      end if
 
     end if
 
