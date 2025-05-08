@@ -15,16 +15,14 @@ import argparse
 
 PLATFORMS = {
     "meto": {
-        "spice": {"copy_command": "cp "},
         "azspice": {"copy_command": "cp "},
-        "xc40": {"copy_command": "scp xcel00:"},
         "ex1a": {},
     }
 }
 
 EX1A_PLATFORMS = {
     "exab": {"copy_command": "scp login.exab.sc:"},
-    "excd": {"copy_command": "scp login.excd.sc:"}
+    "excd": {"copy_command": "scp login.excd.sc:"},
 }
 
 
@@ -39,7 +37,8 @@ def run_command(command):
 
 def get_ex_platform():
     """
-    If KGOs are required for ex1a ask the user which platform the tests were run on and adapt the PLATFORM dictionary
+    If KGOs are required for ex1a ask the user which platform the tests were run on and
+    adapt the PLATFORM dictionary
     """
     zone = input("Which ex1a zone were the tests run on? 1 for EXAB or 2 for EXCD: ")
 
@@ -129,8 +128,7 @@ def copy_checksums(job, stored_kgo, new_kgo, suite_name, working_copy, site):
             break
     else:
         sys.exit(
-            f"[FAIL]: Couldn't find a valid platform for job {job} at "
-            f"site {site}"
+            f"[FAIL]: Couldn't find a valid platform for job {job} at " f"site {site}"
         )
 
     # Join the kgo paths with the path to their base location (wc / cylc suite)
@@ -140,9 +138,7 @@ def copy_checksums(job, stored_kgo, new_kgo, suite_name, working_copy, site):
     stored_kgo_path = os.path.join(working_copy, stored_kgo.lstrip("/"))
 
     # Run mkdir -p on the stored kgo path to ensure it exists
-    stored_kgo_dir = stored_kgo_path.removesuffix(
-        os.path.basename(stored_kgo_path)
-    )
+    stored_kgo_dir = stored_kgo_path.removesuffix(os.path.basename(stored_kgo_path))
     mkdir_command = f"mkdir -p {stored_kgo_dir}"
     result = run_command(mkdir_command)
     if result.returncode:
@@ -207,9 +203,7 @@ def parse_cl_args():
         args.suite = args.suite.removesuffix("runN")
         path_base = ""
     if "run" not in path_base:
-        spath = os.path.expanduser(
-            os.path.join('~', 'cylc-run', args.suite, 'runN')
-        )
+        spath = os.path.expanduser(os.path.join("~", "cylc-run", args.suite, "runN"))
         sym_path = run_command(f"readlink {spath}")
         args.suite = os.path.join(args.suite, sym_path.stdout.strip("\n"))
     return args

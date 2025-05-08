@@ -5,19 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_adjoint.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "adjoint_spice_developer": [
-        "adjoint_spice_unit_tests"
-    ],
-    "adjoint_spice": [
-        "adjoint_spice_developer"
-    ],
-    "adjoint_spice_unit_tests": [
-        "adjoint_unit_tests_spice_gnu_64bit",
-    ]
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "adjoint_azspice_developer": [
@@ -28,18 +15,6 @@
     ],
     "adjoint_azspice_unit_tests": [
         "adjoint_unit_tests_azspice_gnu_64bit",
-    ]
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "adjoint_xc40_developer": [
-        "adjoint_xc40_unit_tests"
-    ],
-    "adjoint_xc40": [
-        "adjoint_xc40_developer",
-    ],
-    "adjoint_xc40_unit_tests": [
     ]
     }) %}
 
@@ -56,63 +31,32 @@
     ]
     }) %}
 
-{# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "adjoint_developer": [
-            "scripts",
-            "adjoint_spice_developer",
-            "adjoint_xc40_developer",
-            "adjoint_unit_tests"
-        ],
-        "adjoint": [
-            "adjoint_developer",
-            "adjoint_spice",
-            "adjoint_xc40"
-        ],
-        "adjoint_unit_tests": [
-            "adjoint_spice_unit_tests",
-            "adjoint_xc40_unit_tests"
-        ]
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "adjoint_developer": [
-            "scripts",
-            "adjoint_azspice_developer",
-            "adjoint_ex1a_developer",
-        ],
-        "adjoint": [
-            "adjoint_developer",
-            "adjoint_azspice",
-            "adjoint_ex1a",
-        ],
-        "adjoint_unit_tests": [
-            "adjoint_azspice_unit_tests",
-            "adjoint_ex1a_unit_tests",
-        ]
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "adjoint_developer": [
+        "scripts",
+        "adjoint_azspice_developer",
+        "adjoint_ex1a_developer",
+    ],
+    "adjoint": [
+        "adjoint_developer",
+        "adjoint_azspice",
+        "adjoint_ex1a",
+    ],
+    "adjoint_unit_tests": [
+        "adjoint_azspice_unit_tests",
+        "adjoint_ex1a_unit_tests",
+    ]
+    }) %}
 
 {# Generic Extends #}
 {% do site_groups.developer.extend(site_groups.adjoint_developer) %}
 {% do site_groups.all.extend(site_groups.adjoint) %}
 {% do site_groups.unit_tests.extend(site_groups.adjoint_unit_tests) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.adjoint_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.adjoint_spice) %}
-{% do site_groups.spice_unit_tests.extend(site_groups.adjoint_spice_unit_tests) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.adjoint_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.adjoint_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.adjoint_azspice_unit_tests) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.adjoint_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.adjoint_xc40) %}
-{% do site_groups.xc40_unit_tests.extend(site_groups.adjoint_xc40_unit_tests) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.adjoint_ex1a_developer) %}

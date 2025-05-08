@@ -5,40 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_jedi_lfric_tests.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "jedi_lfric_tests_spice_developer": [
-        "jedi_lfric_tests_nwp_gal9-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_runge-kutta-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_runge-kutta-C12_spice_gnu_fast-debug-64bit",
-        "jedi_lfric_tests_runge-kutta-C12_spice_gnu_full-debug-64bit",
-        "jedi_lfric_tests_forecast_gh-si-for-linear-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_gh-si-for-linear-C12_spice_gnu_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_gh-si-for-linear-C12_spice_gnu_full-debug-64bit",
-        "jedi_lfric_tests_forecast_pseudo_default-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_spice_gnu_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_spice_gnu_full-debug-64bit",
-        "jedi_lfric_tests_tlm_forecast_tl_default-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_tlm_forecast_tl_default-C12_spice_gnu_fast-debug-64bit",
-        "jedi_lfric_tests_tlm_tests_default-C12_spice_intel_fast-debug-64bit",
-        "jedi_lfric_tests_tlm_tests_default-C12_spice_gnu_fast-debug-64bit",
-        "jedi_lfric_tests_spice_integration_tests",
-    ],
-    "jedi_lfric_tests_spice": [
-        "jedi_lfric_tests_spice_developer"
-    ],
-    "jedi_lfric_tests_spice_integration_tests": [
-        "jedi_lfric_tests_integration_tests_spice_intel_64bit",
-        "jedi_lfric_tests_integration_tests_spice_gnu_64bit",
-    ],
-    "jedi_lfric_tests_spice_build": [
-        "build_jedi_lfric_tests_spice_intel_fast-debug-64bit",
-        "build_jedi_lfric_tests_spice_gnu_fast-debug-64bit",
-        "build_jedi_lfric_tests_spice_gnu_full-debug-64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "jedi_lfric_tests_azspice_developer": [
@@ -63,29 +29,6 @@
     "jedi_lfric_tests_azspice_build": [
         "build_jedi_lfric_tests_azspice_gnu_fast-debug-64bit",
         "build_jedi_lfric_tests_azspice_gnu_full-debug-64bit",
-    ],
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "jedi_lfric_tests_xc40_developer": [
-        "jedi_lfric_tests_nwp_gal9-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_runge-kutta-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_gh-si-for-linear-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_pseudo_default-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_forecast_pseudo_pseudomodel-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_tlm_forecast_tl_default-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_tlm_tests_default-C12_xc40_intel_fast-debug-64bit",
-        "jedi_lfric_tests_xc40_integration_tests",
-    ],
-    "jedi_lfric_tests_xc40": [
-        "jedi_lfric_tests_xc40_developer"
-    ],
-    "jedi_lfric_tests_xc40_integration_tests": [
-        "jedi_lfric_tests_integration_tests_xc40_intel_fast-debug-64bit",
-    ],
-    "jedi_lfric_tests_xc40_build": [
-        "build_jedi_lfric_tests_xc40_intel_fast-debug-64bit",
     ],
     }) %}
 
@@ -114,51 +57,27 @@
     }) %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "jedi_lfric_tests_developer": [
-            "scripts",
-            "jedi_lfric_tests_spice_developer",
-            "jedi_lfric_tests_xc40_developer",
-            "jedi_lfric_tests_integration_tests",
-        ],
-        "jedi_lfric_tests": [
-            "jedi_lfric_tests_developer",
-            "jedi_lfric_tests_spice",
-            "jedi_lfric_tests_xc40",
-        ],
-        "jedi_lfric_tests_integration_tests": [
-            "jedi_lfric_tests_spice_integration_tests",
-            "jedi_lfric_tests_xc40_integration_tests",
-        ],
-        "jedi_lfric_tests_build": [
-            "jedi_lfric_tests_spice_build",
-            "jedi_lfric_tests_xc40_build",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "jedi_lfric_tests_developer": [
-            "scripts",
-            "jedi_lfric_tests_azspice_developer",
-            "jedi_lfric_tests_ex1a_developer",
-            "jedi_lfric_tests_integration_tests",
-        ],
-        "jedi_lfric_tests": [
-            "jedi_lfric_tests_developer",
-            "jedi_lfric_tests_azspice",
-            "jedi_lfric_tests_ex1a",
-        ],
-        "jedi_lfric_tests_integration_tests": [
-            "jedi_lfric_tests_azspice_integration_tests",
-            "jedi_lfric_tests_ex1a_integration_tests",
-        ],
-        "jedi_lfric_tests_build": [
-            "jedi_lfric_tests_azspice_build",
-            "jedi_lfric_tests_ex1a_build",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "jedi_lfric_tests_developer": [
+        "scripts",
+        "jedi_lfric_tests_azspice_developer",
+        "jedi_lfric_tests_ex1a_developer",
+        "jedi_lfric_tests_integration_tests",
+    ],
+    "jedi_lfric_tests": [
+        "jedi_lfric_tests_developer",
+        "jedi_lfric_tests_azspice",
+        "jedi_lfric_tests_ex1a",
+    ],
+    "jedi_lfric_tests_integration_tests": [
+        "jedi_lfric_tests_azspice_integration_tests",
+        "jedi_lfric_tests_ex1a_integration_tests",
+    ],
+    "jedi_lfric_tests_build": [
+        "jedi_lfric_tests_azspice_build",
+        "jedi_lfric_tests_ex1a_build",
+    ],
+    }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.jedi_lfric_tests_developer) %}
@@ -166,23 +85,11 @@
 {% do site_groups.integration_tests.extend(site_groups.jedi_lfric_tests_integration_tests) %}
 {% do site_groups.build.extend(site_groups.jedi_lfric_tests_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.jedi_lfric_tests_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.jedi_lfric_tests_spice) %}
-{% do site_groups.spice_integration_tests.extend(site_groups.jedi_lfric_tests_spice_integration_tests) %}
-{% do site_groups.spice_build.extend(site_groups.jedi_lfric_tests_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.jedi_lfric_tests_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.jedi_lfric_tests_azspice) %}
 {% do site_groups.azspice_integration_tests.extend(site_groups.jedi_lfric_tests_azspice_integration_tests) %}
 {% do site_groups.azspice_build.extend(site_groups.jedi_lfric_tests_azspice_build) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.jedi_lfric_tests_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.jedi_lfric_tests_xc40) %}
-{% do site_groups.xc40_integration_tests.extend(site_groups.jedi_lfric_tests_xc40_integration_tests) %}
-{% do site_groups.xc40_build.extend(site_groups.jedi_lfric_tests_xc40_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.jedi_lfric_tests_ex1a_developer) %}

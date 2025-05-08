@@ -51,8 +51,8 @@ else
   LAUNCHER=${RUN_METHOD}
 fi
 
-# Only XC40 and EX are really using ranks per node / numa settings
-if [ "${TARGET_PLATFORM}" = "meto-xc40" ] || [ "${TARGET_PLATFORM}" = "meto-ex1a" ] ; then
+# Only EXs are really using ranks per node / numa settings
+if [ "${TARGET_PLATFORM}" = "meto-ex1a" ] ; then
 
   # Check if there are threads
   if [ -z "${OMP_NUM_THREADS+x}" ] ; then
@@ -115,72 +115,12 @@ if [ "${TARGET_PLATFORM}" = "meto-xc40" ] || [ "${TARGET_PLATFORM}" = "meto-ex1a
   if (( "${TOTAL_RANKS}" < "${SET_CORES_PER_NODE}" )) ; then
       SET_CORES_PER_NODE="${TOTAL_RANKS}"
   fi
-  # Set Numa region values per Node - currently not provided - set automatically
-  #===========================================
-  if [ "${TARGET_PLATFORM}" = "meto-xc40" ] ; then
-    if (( "${SET_CORES_PER_NODE}" > 1 )) ; then
-        WRK_CORES_PER_NUMA_REGION="$(( SET_CORES_PER_NODE / NUMA_REGIONS_PER_NODE ))"
-        SET_MPI_TASKS_PER_NUMA_REGION="${WRK_CORES_PER_NUMA_REGION}"
-        #Check if total tasks are exceeding the numa size
-        if (( "${CHECK_LOCAL_CPUS_USED}" > "${WRK_CORES_PER_NUMA_REGION}" )) ; then
-            SET_MPI_TASKS_PER_NUMA_REGION="${WRK_CORES_PER_NUMA_REGION}"
-        fi
-        # If its not a clean division, ensure more end up on a numa so we still fit sensible quantities to a node
-        while [ $((SET_CORES_PER_NODE / SET_MPI_TASKS_PER_NUMA_REGION)) -gt "$NUMA_REGIONS_PER_NODE" ] || \
-            [ $((SET_MPI_TASKS_PER_NUMA_REGION * NUMA_REGIONS_PER_NODE)) -lt "$SET_CORES_PER_NODE" ] ; do
-            SET_MPI_TASKS_PER_NUMA_REGION="$(( SET_MPI_TASKS_PER_NUMA_REGION + 1 ))" 
-        done
-        # If there is an override, we need numa s it to be a multiple of N
-        if (( "${CORES_PER_NODE_OVERRIDE}" > "0" )) ; then
-            if [ $((SET_CORES_PER_NODE / SET_MPI_TASKS_PER_NUMA_REGION)) -lt "$NUMA_REGIONS_PER_NODE" ] || \
-                [ $((SET_MPI_TASKS_PER_NUMA_REGION * NUMA_REGIONS_PER_NODE)) -gt "$SET_CORES_PER_NODE" ] ; then
-                CHECK_VALUE="$(( CORE_PER_NUMA ))"
-                FOUND_MULTIPLIER="false"
-                while [ "$FOUND_MULTIPLIER" == "false" ] && [ ${CHECK_VALUE} -gt 0 ]  ; do
-                    if [ $((SET_CORES_PER_NODE % CHECK_VALUE)) -eq 0 ] ; then
-                        FOUND_MULTIPLIER="true"
-                        SET_MPI_TASKS_PER_NUMA_REGION=$CHECK_VALUE
-                    fi
-                    CHECK_VALUE="$(( CHECK_VALUE - 1 ))"
-                done
-                # If we cannot find a sensible multipler, set it to itself, or 1
-                if [ "$FOUND_MULTIPLIER" == "false" ] ; then
-                    if (( "${SET_CORES_PER_NODE}" <= "${CORE_PER_NUMA}" )) ; then
-                        SET_MPI_TASKS_PER_NUMA_REGION="${SET_CORES_PER_NODE}"
-                    else
-                        SET_MPI_TASKS_PER_NUMA_REGION="1"
-                    fi
-                fi
-            fi
-        fi
-    else
-        SET_MPI_TASKS_PER_NUMA_REGION="1"
-    fi
-  fi
 fi
 
 # Construct launcher options
 #===========================================
 LAUNCHER_OPTS=""
-#XIOS_OPTS=""
-if [ "${RUN_METHOD}" = "aprun" ] ; then
-  if [ "${TARGET_PLATFORM}" != "meto-xc40" ] ; then
-    echo Launcher \"aprun\" is specific to Cray XC40 platforms.
-    exit 1
-  else
-    if (( "${CORES_PER_NODE_OVERRIDE}" == "0" )) ; then
-      LAUNCHER_OPTS="-cc depth -n ${TOTAL_RANKS} -S ${SET_MPI_TASKS_PER_NUMA_REGION} -d ${OMP_NUM_THREADS} -j ${HYPERTHREADS}"
-    else
-      LAUNCHER_OPTS="-cc depth -n ${TOTAL_RANKS} -N ${SET_CORES_PER_NODE} -S ${SET_MPI_TASKS_PER_NUMA_REGION} -d ${OMP_NUM_THREADS} -j ${HYPERTHREADS}"
-    fi
-  fi
-  if [[ ! -z "${XIOS_SERVER_MODE}" && "${XIOS_SERVER_MODE}" = "True" ]] ; then
-    XIOS_CORES_PER_NODE="$(( mpi_parts_xios / xios_nodes ))"
-    XIOS_CORES_PER_NUMA="$(( (XIOS_CORES_PER_NODE+NUMA_REGIONS_PER_NODE-1) / NUMA_REGIONS_PER_NODE ))"
-    XIOS_OPTS=" : -n ${XIOS_SERVER_RANKS} -S ${XIOS_CORES_PER_NUMA} "
-  fi
-  
-elif [ "${RUN_METHOD}" = "mpiexec" ] ; then    
+if [ "${RUN_METHOD}" = "mpiexec" ] ; then
   if [ "${TARGET_PLATFORM}" = "meto-ex1a" ] ; then
     if (( "${CORES_PER_NODE_OVERRIDE}" == "0" )) && (( "${CHECK_LOCAL_CPUS_USED}" <= "${SET_CORES_PER_NODE}" )) ; then
       LAUNCHER_OPTS="--cpu-bind=depth --np ${TOTAL_RANKS} --depth ${OMP_NUM_THREADS}"
@@ -207,7 +147,6 @@ elif [ "${RUN_METHOD}" = "mpiexec" ] ; then
       XIOS_OPTS=" : -n ${XIOS_SERVER_RANKS} "
     fi    
   fi
-
 elif [ "${RUN_METHOD}" = "executable" ] ; then
   LAUNCHER_OPTS=""
 fi

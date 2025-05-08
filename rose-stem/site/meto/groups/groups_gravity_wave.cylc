@@ -5,40 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_gravity_wave.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "gravity_wave_spice_developer": [
-        "gravity_wave_default-C24_spice_intel_fast-debug-64bit",
-        "gravity_wave_default-C24_spice_intel_full-debug-64bit",
-        "gravity_wave_default-C24_spice_gnu_fast-debug-64bit",
-        "gravity_wave_default-C24_spice_gnu_full-debug-64bit",
-        "gravity_wave_multigrid-C24_MG_spice_intel_fast-debug-64bit",
-        "gravity_wave_limited_300x4-BiP300x4-1000x2000_spice_intel_fast-debug-64bit",
-        "gravity_wave_p1_75x4-BiP75x4-4000x2000_spice_intel_fast-debug-64bit",
-        "gravity_wave_limited_spherical_50x50_LAM50x50-2x2_spice_intel_fast-debug-64bit",
-        "gravity_wave_limited_c24-C24_spice_intel_fast-debug-64bit",
-        "gravity_wave_limited_c24_rec-C24_spice_intel_fast-debug-64bit",
-        "gravity_wave_spice_unit_tests",
-        "gravity_wave_spice_canned",
-    ],
-    "gravity_wave_spice": [
-        "gravity_wave_spice_developer",
-    ],
-    "gravity_wave_spice_unit_tests": [
-        "gravity_wave_unit_tests_spice_gnu_64bit",
-    ],
-    "gravity_wave_spice_canned": [
-        "gravity_wave_canned_spice_intel_fast-debug-64bit",
-        "gravity_wave_canned_spice_gnu_fast-debug-64bit",
-    ],
-    "gravity_wave_spice_build": [
-        "build_gravity_wave_spice_intel_fast-debug-64bit",
-        "build_gravity_wave_spice_intel_full-debug-64bit",
-        "build_gravity_wave_spice_gnu_fast-debug-64bit",
-        "build_gravity_wave_spice_gnu_full-debug-64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "gravity_wave_azspice_developer": [
@@ -65,32 +31,6 @@
     "gravity_wave_azspice_build": [
         "build_gravity_wave_azspice_gnu_fast-debug-64bit",
         "build_gravity_wave_azspice_gnu_full-debug-64bit",
-    ],
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "gravity_wave_xc40_developer": [
-        "gravity_wave_default-C24_xc40_intel_fast-debug-64bit",
-        "gravity_wave_multigrid-C24_MG_xc40_intel_fast-debug-64bit",
-        "gravity_wave_limited_300x4-BiP300x4-1000x2000_xc40_intel_fast-debug-64bit",
-        "gravity_wave_p1_75x4-BiP75x4-4000x2000_xc40_intel_fast-debug-64bit",
-        "gravity_wave_limited_spherical_50x50_LAM50x50-2x2_xc40_intel_fast-debug-64bit",
-        "gravity_wave_limited_c24-C24_xc40_intel_fast-debug-64bit",
-        "gravity_wave_limited_c24_rec-C24_xc40_intel_fast-debug-64bit",
-        "gravity_wave_xc40_unit_tests",
-        "gravity_wave_xc40_canned",
-    ],
-    "gravity_wave_xc40": [
-        "gravity_wave_xc40_developer",
-    ],
-    "gravity_wave_xc40_unit_tests": [
-    ],
-    "gravity_wave_xc40_canned": [
-        "gravity_wave_canned_xc40_intel_fast-debug-64bit",
-    ],
-    "gravity_wave_xc40_build": [
-        "build_gravity_wave_xc40_intel_fast-debug-64bit",
     ],
     }) %}
 
@@ -121,58 +61,30 @@
     }) %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "gravity_wave_developer": [
-            "scripts",
-            "gravity_wave_spice_developer",
-            "gravity_wave_xc40_developer",
-            "gravity_wave_unit_tests",
-        ],
-        "gravity_wave": [
-            "gravity_wave_developer",
-            "gravity_wave_spice",
-            "gravity_wave_xc40",
-        ],
-        "gravity_wave_unit_tests": [
-            "gravity_wave_spice_unit_tests",
-            "gravity_wave_xc40_unit_tests",
-        ],
-        "gravity_wave_build": [
-            "gravity_wave_spice_build",
-            "gravity_wave_xc40_build",
-        ],
-        "gravity_wave_canned": [
-            "gravity_wave_spice_canned",
-            "gravity_wave_xc40_canned",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "gravity_wave_developer": [
-            "scripts",
-            "gravity_wave_azspice_developer",
-            "gravity_wave_ex1a_developer",
-        ],
-        "gravity_wave": [
-            "gravity_wave_developer",
-            "gravity_wave_azspice",
-            "gravity_wave_ex1a",
-        ],
-        "gravity_wave_unit_tests": [
-            "gravity_wave_azspice_unit_tests",
-            "gravity_wave_ex1a_unit_tests",
-        ],
-        "gravity_wave_build": [
-            "gravity_wave_azspice_build",
-            "gravity_wave_ex1a_build",
-        ],
-        "gravity_wave_canned": [
-            "gravity_wave_azspice_canned",
-            "gravity_wave_ex1a_canned",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "gravity_wave_developer": [
+        "scripts",
+        "gravity_wave_azspice_developer",
+        "gravity_wave_ex1a_developer",
+    ],
+    "gravity_wave": [
+        "gravity_wave_developer",
+        "gravity_wave_azspice",
+        "gravity_wave_ex1a",
+    ],
+    "gravity_wave_unit_tests": [
+        "gravity_wave_azspice_unit_tests",
+        "gravity_wave_ex1a_unit_tests",
+    ],
+    "gravity_wave_build": [
+        "gravity_wave_azspice_build",
+        "gravity_wave_ex1a_build",
+    ],
+    "gravity_wave_canned": [
+        "gravity_wave_azspice_canned",
+        "gravity_wave_ex1a_canned",
+    ],
+    }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.gravity_wave_developer) %}
@@ -180,23 +92,11 @@
 {% do site_groups.unit_tests.extend(site_groups.gravity_wave_unit_tests) %}
 {% do site_groups.build.extend(site_groups.gravity_wave_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.gravity_wave_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.gravity_wave_spice) %}
-{% do site_groups.spice_unit_tests.extend(site_groups.gravity_wave_spice_unit_tests) %}
-{% do site_groups.spice_build.extend(site_groups.gravity_wave_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.gravity_wave_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.gravity_wave_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.gravity_wave_azspice_unit_tests) %}
 {% do site_groups.azspice_build.extend(site_groups.gravity_wave_azspice_build) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.gravity_wave_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.gravity_wave_xc40) %}
-{% do site_groups.xc40_unit_tests.extend(site_groups.gravity_wave_xc40_unit_tests) %}
-{% do site_groups.xc40_build.extend(site_groups.gravity_wave_xc40_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.gravity_wave_ex1a_developer) %}

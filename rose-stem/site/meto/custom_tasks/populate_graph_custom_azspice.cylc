@@ -3,6 +3,8 @@
 {# The file LICENCE, distributed with this code, contains details of the terms #}
 {# under which the code may be used. #}
 {# ########################################################################### #}
-{% do LOG.debug("Entered site/meto/linear_model/tasks_linear_model_xc40.cylc") %}
+{% do LOG.debug("Entered site/meto/custom_tasks/populate_graph_custom_azspice.cylc") %}
 
-{% do LOG.debug("Finished in site/meto/linear_model/tasks_linear_model_xc40.cylc") %}
+
+
+{% do LOG.debug("Finished in site/meto/custom_tasks/populate_graph_custom_azspice.cylc") %}

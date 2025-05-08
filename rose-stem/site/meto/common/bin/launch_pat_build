@@ -8,28 +8,18 @@ set -e
 
 EXEC_NAME="$1"
 
-echo "Running Pat build script" 
+echo "Running Pat build script"
 
 #This is where the gungho exe is
 EXEC_PATH="${BIN_DIR}/${EXEC_NAME}"
 echo "${EXEC_PATH}"
 
-#XC40 - these could be set by a module - intel only
-if [ "${LFRIC_TARGET_PLATFORM}" = "meto-xc40" ] ; then
-    PAT_LIBS=(-D link-instr="-L/opt/cray/alps/default/lib64" -D link-instr="-L/opt/cray/xpmem/0.1-2.0502.64982.5.3.ari/lib64" -Oapa)
-else
-    PAT_LIBS=
-fi
+PAT_LIBS=
 
 #Make sure we are in the location, otherwise the exe we wll end up with the exe in the wrong place
 cd "${BIN_DIR}"
 rm -f "${EXEC_NAME}+pat"
 
 #build into exisiting exe with craypat
-#XC40
-if [ "${LFRIC_TARGET_PLATFORM}" = "meto-xc40" ] ; then
-    pat_build "${PAT_LIBS[@]}" "${EXEC_NAME}"
-#EXZ
-else
-    pat_build "${EXEC_NAME}"
-fi
+#EXs
+pat_build "${EXEC_NAME}"

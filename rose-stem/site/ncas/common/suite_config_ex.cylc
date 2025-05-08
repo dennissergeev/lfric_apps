@@ -55,7 +55,7 @@
     [[EX_BUILD]]
         inherit=EX_SERIAL_QUEUE
         [[[environment]]]
-            PSYCLONE_TRANSFORMATION="meto-xc40"
+            PSYCLONE_TRANSFORMATION="meto-ex1a"
         [[[directives]]]
              --ntasks=4
 

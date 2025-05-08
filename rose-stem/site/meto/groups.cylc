@@ -19,89 +19,45 @@
         "test_launch-exe",
         "macro_chains_checker",
     ],
-    "spice_developer": [],
-    "spice": ["spice_developer"],
-    "xc40_developer": [],
-    "xc40": ["xc40_developer"],
     "ex1a_developer": [],
  	"ex1a": ["ex1a_developer"],
     "azspice_developer": [],
     "azspice": ["azspice_developer"],
-    "spice_build": [],
-    "xc40_build": [],
     "ex1a_build": [],
     "azspice_build": [],
     "ex1a_cce": [],
-    "spice_unit_tests": [],
-    "xc40_unit_tests": [],
     "ex1a_unit_tests": [],
     "azspice_unit_tests": [],
-    "spice_integration_tests": [],
-    "xc40_integration_tests": [],
     "ex1a_integration_tests": [],
     "azspice_integration_tests": [],
-    "xc40_performance": [],
     }) %}
 
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-            "developer" : [
-            "spice_developer",
-            "xc40_developer",
-            "scripts",
-        ],
-        "all": [
-            "spice",
-            "xc40",
-        ],
-        "build": [
-            "spice_build",
-            "xc40_build",
-        ],
-        "unit_tests": [
-            "spice_unit_tests",
-            "xc40_unit_tests"
-        ],
-        "integration_tests": [
-            "spice_integration_tests",
-            "xc40_integration_tests",
-        ],
-        "monsoon": [
-            "gungho_model_xc40",
-            "lfric_atm_xc40",
-        ],
-        "performance": [
-            "xc40_performance",
-        ],
+{% do site_groups.update({
+    "developer" : [
+        "azspice_developer",
+        "ex1a_developer",
+        "scripts",
+    ],
+    "all": [
+        "azspice",
+        "ex1a",
+    ],
+    "build": [
+        "azspice_build",
+        "ex1a_build",
+    ],
+    "unit_tests": [
+        "azspice_unit_tests",
+        "ex1a_unit_tests"
+    ],
+    "integration_tests": [
+        "azspice_integration_tests",
+        "ex1a_integration_tests",
+    ],
+    "performance": [
+        "ex1a_performance",
+    ],
     }) %}
-{% else %}
-    {% do site_groups.update({
-        "developer" : [
-            "azspice_developer",
-            "ex1a_developer",
-            "scripts",
-        ],
-        "all": [
-            "azspice",
-            "ex1a",
-        ],
-        "build": [
-            "azspice_build",
-            "ex1a_build",
-        ],
-        "unit_tests": [
-            "azspice_unit_tests",
-            "ex1a_unit_tests"
-        ],
-        "integration_tests": [
-            "azspice_integration_tests",
-            "ex1a_integration_tests",
-        ],
-        "performance": [
-            "ex1a_performance",
-        ],
-    }) %}
-{% endif %}
 
 {% include "site/meto/groups/groups_adjoint.cylc" %}
 {% include "site/meto/groups/groups_adjoint_tests.cylc" %}

@@ -6,17 +6,9 @@
 {% do LOG.debug("Entered site/meto/suite_config.cylc") %}
 
     [[METO_ORIG]]
-{% if site_vars["meto_xc40"] == "xcsc" %}
-        {# export-source task requires python 3.7 #}
-        pre-script = "module load scitools/production-os45-1"
-        platform = {{site_vars["meto_xc40"]}}
-{% else %}
         pre-script = "module load scitools"
         platform = {{ROSE_ORIG_HOST}}
-{% endif %}
 
-{% include 'site/meto/common/suite_config_spice.cylc' %}
-{% include 'site/meto/common/suite_config_xc40.cylc' %}
 {% include 'site/meto/common/suite_config_ex1a.cylc' %}
 {% include 'site/meto/common/suite_config_azspice.cylc' %}
 

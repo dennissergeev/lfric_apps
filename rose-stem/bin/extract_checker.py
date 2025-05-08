@@ -295,7 +295,7 @@ if __name__ == "__main__":
         "--suite_name",
         default=None,
         help="Name of suite run "
-        + "(default = lfric_atm-heads-meto-spice-nightly)",
+        + "(default = lfric_atm-heads-meto-azspice-nightly)",
     )
     parser.add_argument(
         "-d", "--suite_dir", default=None, help="Directory of rose suite"
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-p",
         "--platform",
-        default="spice",
+        default="azspice",
         help="Which platform the build job was run from on",
     )
     args = parser.parse_args()

@@ -5,19 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_socrates_interface.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "socrates_interface_spice_developer": [
-        "socrates_interface_spice_unit_tests",
-    ],
-    "socrates_interface_spice": [
-        "socrates_interface_spice_developer",
-    ],
-    "socrates_interface_spice_unit_tests": [
-        "socrates_interface_unit_tests_spice_gnu_64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "socrates_interface_azspice_developer": [
@@ -28,18 +15,6 @@
     ],
     "socrates_interface_azspice_unit_tests": [
         "socrates_interface_unit_tests_azspice_gnu_64bit",
-    ],
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "socrates_interface_xc40_developer": [
-        "socrates_interface_xc40_unit_tests",
-    ],
-    "socrates_interface_xc40": [
-        "socrates_interface_xc40_developer",
-    ],
-    "socrates_interface_xc40_unit_tests": [
     ],
     }) %}
 
@@ -56,65 +31,34 @@
     ],
     }) %}
 
-{# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "socrates_interface_developer": [
-            "scripts",
-            "socrates_interface_spice_developer",
-            "socrates_interface_xc40_developer",
-            "socrates_interface_unit_tests",
-        ],
-        "socrates_interface": [
-            "socrates_interface_developer",
-            "socrates_interface_spice",
-            "socrates_interface_xc40",
-        ],
-        "socrates_interface_unit_tests": [
-            "socrates_interface_spice_unit_tests",
-            "socrates_interface_xc40_unit_tests",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "socrates_interface_developer": [
-            "scripts",
-            "socrates_interface_azspice_developer",
-            "socrates_interface_ex1a_developer",
-        ],
-        "socrates_interface": [
-            "socrates_interface_developer",
-            "socrates_interface_azspice",
-            "socrates_interface_ex1a",
-        ],
-        "socrates_interface_unit_tests": [
-            "socrates_interface_azspice_unit_tests",
-            "socrates_interface_ex1a_unit_tests",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "socrates_interface_developer": [
+        "scripts",
+        "socrates_interface_azspice_developer",
+        "socrates_interface_ex1a_developer",
+    ],
+    "socrates_interface": [
+        "socrates_interface_developer",
+        "socrates_interface_azspice",
+        "socrates_interface_ex1a",
+    ],
+    "socrates_interface_unit_tests": [
+        "socrates_interface_azspice_unit_tests",
+        "socrates_interface_ex1a_unit_tests",
+    ],
+    }) %}
 
 {# Generic Extends #}
 {% do site_groups.developer.extend(site_groups.socrates_interface_developer) %}
 {% do site_groups.all.extend(site_groups.socrates_interface) %}
 {% do site_groups.unit_tests.extend(site_groups.socrates_interface_unit_tests) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.socrates_interface_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.socrates_interface_spice) %}
-{% do site_groups.spice_unit_tests.extend(site_groups.socrates_interface_spice_unit_tests) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.socrates_interface_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.socrates_interface_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.socrates_interface_azspice_unit_tests) %}
 
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.socrates_interface_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.socrates_interface_xc40) %}
-{% do site_groups.xc40_unit_tests.extend(site_groups.socrates_interface_xc40_unit_tests) %}
-
-{# Azspice Extends #}
+{# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.socrates_interface_ex1a_developer) %}
 {% do site_groups.ex1a.extend(site_groups.socrates_interface_ex1a) %}
 {% do site_groups.ex1a_unit_tests.extend(site_groups.socrates_interface_ex1a_unit_tests) %}

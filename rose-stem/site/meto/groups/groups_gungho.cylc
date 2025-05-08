@@ -5,24 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_gungho.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "gungho_spice_developer": [
-        "gungho_spice_unit_tests",
-        "gungho_spice_integration_tests",
-    ],
-    "gungho_spice": [
-        "gungho_spice_developer",
-    ],
-    "gungho_spice_unit_tests": [
-        "gungho_unit_tests_spice_gnu_64bit",
-    ],
-    "gungho_spice_integration_tests": [
-        "gungho_integration_tests_spice_intel_64bit",
-        "gungho_integration_tests_spice_gnu_64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "gungho_azspice_developer": [
@@ -37,22 +19,6 @@
     ],
     "gungho_azspice_integration_tests": [
         "gungho_integration_tests_azspice_gnu_64bit",
-    ],
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "gungho_xc40_developer": [
-        "gungho_xc40_unit_tests",
-        "gungho_xc40_integration_tests",
-    ],
-    "gungho_xc40": [
-        "gungho_xc40_developer",
-    ],
-    "gungho_xc40_unit_tests": [
-    ],
-    "gungho_xc40_integration_tests": [
-        "gungho_integration_tests_xc40_intel_64bit",
     ],
     }) %}
 
@@ -74,53 +40,28 @@
     }) %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "gungho_developer": [
-            "scripts",
-            "gungho_spice_developer",
-            "gungho_xc40_developer",
-            "gungho_unit_tests",
-            "gungho_integration_tests",
-        ],
-        "gungho": [
-            "gungho_developer",
-            "gungho_spice",
-            "gungho_xc40",
-        ],
-        "gungho_unit_tests": [
-            "gungho_spice_unit_tests",
-            "gungho_xc40_unit_tests",
-        ],
-        "gungho_integration_tests": [
-            "gungho_spice_integration_tests",
-            "gungho_xc40_integration_tests",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "gungho_developer": [
-            "scripts",
-            "gungho_azspice_developer",
-            "gungho_ex1a_developer",
-            "gungho_integration_tests",
-            "gungho_unit_tests",
-        ],
-        "gungho": [
-            "gungho_developer",
-            "gungho_azspice",
-            "gungho_ex1a",
-        ],
-        "gungho_unit_tests": [
-            "gungho_azspice_unit_tests",
-            "gungho_ex1a_unit_tests",
-        ],
-        "gungho_integration_tests": [
-            "gungho_azspice_integration_tests",
-            "gungho_ex1a_integration_tests",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "gungho_developer": [
+        "scripts",
+        "gungho_azspice_developer",
+        "gungho_ex1a_developer",
+        "gungho_integration_tests",
+        "gungho_unit_tests",
+    ],
+    "gungho": [
+        "gungho_developer",
+        "gungho_azspice",
+        "gungho_ex1a",
+    ],
+    "gungho_unit_tests": [
+        "gungho_azspice_unit_tests",
+        "gungho_ex1a_unit_tests",
+    ],
+    "gungho_integration_tests": [
+        "gungho_azspice_integration_tests",
+        "gungho_ex1a_integration_tests",
+    ],
+    }) %}
 
 {# Generic Extends #}
 {% do site_groups.developer.extend(site_groups.gungho_developer) %}
@@ -128,23 +69,11 @@
 {% do site_groups.unit_tests.extend(site_groups.gungho_unit_tests) %}
 {% do site_groups.integration_tests.extend(site_groups.gungho_integration_tests) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.gungho_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.gungho_spice) %}
-{% do site_groups.spice_unit_tests.extend(site_groups.gungho_spice_unit_tests) %}
-{% do site_groups.spice_integration_tests.extend(site_groups.gungho_spice_integration_tests) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.gungho_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.gungho_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.gungho_azspice_unit_tests) %}
 {% do site_groups.azspice_integration_tests.extend(site_groups.gungho_azspice_integration_tests) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.gungho_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.gungho_xc40) %}
-{% do site_groups.xc40_unit_tests.extend(site_groups.gungho_xc40_unit_tests) %}
-{% do site_groups.xc40_integration_tests.extend(site_groups.gungho_xc40_integration_tests) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.gungho_ex1a_developer) %}

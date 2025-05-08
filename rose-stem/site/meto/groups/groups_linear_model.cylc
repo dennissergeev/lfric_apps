@@ -5,31 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_linear_model.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "linear_model_spice_developer": [
-        "linear_model_nwp_gal9-C12_spice_intel_fast-debug-64bit",
-        "linear_model_nwp_gal9_random-C12_spice_intel_fast-debug-64bit",
-        "linear_model_nwp_gal9_zero-C12_spice_intel_fast-debug-64bit",
-        "linear_model_runge-kutta-C12_spice_intel_fast-debug-64bit",
-        "linear_model_semi-implicit-C12_spice_intel_fast-debug-64bit",
-        "linear_model_dcmip301-C24_spice_intel_fast-debug-64bit",
-        "linear_model_spice_canned",
-    ],
-    "linear_model_spice": [
-        "linear_model_spice_developer",
-    ],
-    "linear_model_spice_build": [
-        "build_linear_model_spice_intel_fast-debug-64bit",
-        "build_linear_model_spice_gnu_fast-debug-64bit",
-        "build_linear_model_spice_gnu_full-debug-64bit",
-    ],
-    "linear_model_spice_canned": [
-        "linear_model_canned_spice_intel_fast-debug-64bit",
-        "linear_model_canned_spice_gnu_fast-debug-64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "linear_model_azspice_developer": [
@@ -50,28 +25,6 @@
     ],
     "linear_model_azspice_canned": [
         "linear_model_canned_azspice_gnu_fast-debug-64bit",
-    ],
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "linear_model_xc40_developer": [
-        "linear_model_nwp_gal9-C12_xc40_intel_fast-debug-64bit",
-        "linear_model_nwp_gal9_random-C12_xc40_intel_fast-debug-64bit",
-        "linear_model_nwp_gal9_zero-C12_xc40_intel_fast-debug-64bit",
-        "linear_model_runge-kutta-C12_xc40_intel_fast-debug-64bit",
-        "linear_model_semi-implicit-C12_xc40_intel_fast-debug-64bit",
-        "linear_model_dcmip301-C24_xc40_intel_fast-debug-64bit",
-        "linear_model_xc40_canned",
-    ],
-    "linear_model_xc40": [
-        "linear_model_xc40_developer",
-    ],
-    "linear_model_xc40_build": [
-        "build_linear_model_xc40_intel_fast-debug-64bit",
-    ],
-    "linear_model_xc40_canned": [
-        "linear_model_canned_xc40_intel_fast-debug-64bit",
     ],
     }) %}
 
@@ -98,69 +51,36 @@
     }) %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "linear_model_developer": [
-            "scripts",
-            "linear_model_spice_developer",
-            "linear_model_xc40_developer",
-        ],
-        "linear_model": [
-            "linear_model_developer",
-            "linear_model_spice",
-            "linear_model_xc40",
-        ],
-        "linear_model_build": [
-            "linear_model_spice_build",
-            "linear_model_xc40_build",
-        ],
-        "linear_model_canned": [
-            "linear_model_spice_canned",
-            "linear_model_xc40_canned",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "linear_model_developer": [
-            "scripts",
-            "linear_model_azspice_developer",
-            "linear_model_ex1a_developer",
-        ],
-        "linear_model": [
-            "linear_model_developer",
-            "linear_model_azspice",
-            "linear_model_ex1a",
-        ],
-        "linear_model_build": [
-            "linear_model_azspice_build",
-            "linear_model_ex1a_build",
-        ],
-        "linear_model_canned": [
-            "linear_model_azspice_canned",
-            "linear_model_ex1a_canned",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "linear_model_developer": [
+        "scripts",
+        "linear_model_azspice_developer",
+        "linear_model_ex1a_developer",
+    ],
+    "linear_model": [
+        "linear_model_developer",
+        "linear_model_azspice",
+        "linear_model_ex1a",
+    ],
+    "linear_model_build": [
+        "linear_model_azspice_build",
+        "linear_model_ex1a_build",
+    ],
+    "linear_model_canned": [
+        "linear_model_azspice_canned",
+        "linear_model_ex1a_canned",
+    ],
+    }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.linear_model_developer) %}
 {% do site_groups.all.extend(site_groups.linear_model) %}
 {% do site_groups.build.extend(site_groups.linear_model_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.linear_model_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.linear_model_spice) %}
-{% do site_groups.spice_build.extend(site_groups.linear_model_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.linear_model_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.linear_model_azspice) %}
 {% do site_groups.azspice_build.extend(site_groups.linear_model_azspice_build) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.linear_model_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.linear_model_xc40) %}
-{% do site_groups.xc40_build.extend(site_groups.linear_model_xc40_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.linear_model_ex1a_developer) %}

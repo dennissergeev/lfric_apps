@@ -5,33 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_solver.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "solver_spice_developer": [
-        "solver_bicgstab-C24_spice_gnu_fast-debug-64bit",
-        "solver_bicgstab-C24_spice_intel_fast-debug-64bit",
-        "solver_cg-C24_spice_gnu_fast-debug-64bit",
-        "solver_cg-C24_spice_intel_fast-debug-64bit",
-        "solver_fgmres-C24_spice_gnu_fast-debug-64bit",
-        "solver_fgmres-C24_spice_intel_fast-debug-64bit",
-        "solver_gcr-C24_spice_gnu_fast-debug-64bit",
-        "solver_gcr-C24_spice_intel_fast-debug-64bit",
-        "solver_gmres-C24_spice_gnu_fast-debug-64bit",
-        "solver_gmres-C24_spice_intel_fast-debug-64bit",
-        "solver_jacobi-C24_spice_gnu_fast-debug-64bit",
-        "solver_jacobi-C24_spice_intel_fast-debug-64bit",
-        "solver_prec_only-C24_spice_gnu_fast-debug-64bit",
-        "solver_prec_only-C24_spice_intel_fast-debug-64bit",
-    ],
-    "solver_spice": [
-        "solver_spice_developer",
-    ],
-    "solver_spice_build": [
-        "build_solver_spice_intel_fast-debug-64bit",
-        "build_solver_spice_gnu_fast-debug-64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "solver_azspice_developer": [
@@ -50,26 +23,6 @@
         "build_solver_azspice_gnu_fast-debug-64bit",
     ],
     }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "solver_xc40_developer": [
-        "solver_bicgstab-C24_xc40_intel_fast-debug-64bit",
-        "solver_cg-C24_xc40_intel_fast-debug-64bit",
-        "solver_fgmres-C24_xc40_intel_fast-debug-64bit",
-        "solver_gcr-C24_xc40_intel_fast-debug-64bit",
-        "solver_gmres-C24_xc40_intel_fast-debug-64bit",
-        "solver_jacobi-C24_xc40_intel_fast-debug-64bit",
-        "solver_prec_only-C24_xc40_intel_fast-debug-64bit",
-    ],
-    "solver_xc40": [
-        "solver_xc40_developer",
-    ],
-    "solver_xc40_build": [
-        "build_solver_xc40_intel_fast-debug-64bit",
-    ],
-    }) %}
-
 
 {# EX1A Groups #}
 {% do site_groups.update({
@@ -98,62 +51,32 @@
     ],
     }) %}
 
-{# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "solver_developer": [
-            "scripts",
-            "solver_spice_developer",
-            "solver_xc40_developer",
-        ],
-        "solver": [
-            "solver_developer",
-            "solver_spice",
-            "solver_xc40",
-        ],
-        "solver_build": [
-            "solver_spice_build",
-            "solver_xc40_build",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "solver_developer": [
-            "scripts",
-            "solver_azspice_developer",
-            "solver_ex1a_developer",
-        ],
-        "solver": [
-            "solver_developer",
-            "solver_azspice",
-            "solver_ex1a",
-        ],
-        "solver_build": [
-            "solver_azspice_build",
-            "solver_ex1a_build",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "solver_developer": [
+        "scripts",
+        "solver_azspice_developer",
+        "solver_ex1a_developer",
+    ],
+    "solver": [
+        "solver_developer",
+        "solver_azspice",
+        "solver_ex1a",
+    ],
+    "solver_build": [
+        "solver_azspice_build",
+        "solver_ex1a_build",
+    ],
+    }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.solver_developer) %}
 {% do site_groups.all.extend(site_groups.solver) %}
 {% do site_groups.build.extend(site_groups.solver_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.solver_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.solver_spice) %}
-{% do site_groups.spice_build.extend(site_groups.solver_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.solver_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.solver_azspice) %}
 {% do site_groups.azspice_build.extend(site_groups.solver_azspice_build) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.solver_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.solver_xc40) %}
-{% do site_groups.xc40_build.extend(site_groups.solver_xc40_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.solver_ex1a_developer) %}

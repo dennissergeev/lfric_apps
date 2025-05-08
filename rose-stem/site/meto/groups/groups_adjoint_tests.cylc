@@ -5,30 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_adjoint_tests.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "adjoint_tests_spice_developer": [
-        "adjoint_tests_default-C12_spice_intel_fast-debug-64bit-rsolver64",
-        "adjoint_tests_default-C12_spice_intel_full-debug-64bit-rsolver64",
-        "adjoint_tests_default-C12_spice_gnu_fast-debug-64bit-rsolver64",
-        "adjoint_tests_default-C12_spice_gnu_full-debug-64bit-rsolver64",
-        "adjoint_tests_spice_canned",
-    ],
-    "adjoint_tests_spice": [
-        "adjoint_tests_spice_developer",
-    ],
-    "adjoint_tests_spice_canned": [
-        "adjoint_tests_canned_spice_intel_fast-debug-64bit-rsolver64",
-        "adjoint_tests_canned_spice_gnu_fast-debug-64bit-rsolver64",
-    ],
-    "adjoint_tests_spice_build": [
-        "build_adjoint_tests_spice_intel_fast-debug-64bit",
-        "build_adjoint_tests_spice_intel_full-debug-64bit",
-        "build_adjoint_tests_spice_gnu_fast-debug-64bit",
-        "build_adjoint_tests_spice_gnu_full-debug-64bit",
-    ],
-    })  %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "adjoint_tests_azspice_developer": [
@@ -45,25 +21,6 @@
     "adjoint_tests_azspice_build": [
         "build_adjoint_tests_azspice_gnu_fast-debug-64bit",
         "build_adjoint_tests_azspice_gnu_full-debug-64bit",
-    ],
-    })  %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "adjoint_tests_xc40_developer": [
-        "adjoint_tests_default-C12_xc40_intel_fast-debug-64bit-rsolver64",
-        "adjoint_tests_default-C12_xc40_intel_full-debug-64bit-rsolver64",
-        "adjoint_tests_xc40_canned",
-    ],
-    "adjoint_tests_xc40": [
-        "adjoint_tests_xc40_developer",
-    ],
-    "adjoint_tests_xc40_canned": [
-        "adjoint_tests_canned_xc40_intel_fast-debug-64bit-rsolver64",
-    ],
-    "adjoint_tests_xc40_build": [
-        "build_adjoint_tests_xc40_intel_fast-debug-64bit",
-        "build_adjoint_tests_xc40_intel_full-debug-64bit",
     ],
     })  %}
 
@@ -87,68 +44,40 @@
     })  %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "adjoint_tests_developer": [
-            "scripts",
-            "adjoint_tests_spice_developer",
-            "adjoint_tests_xc40_developer",
-        ],
-        "adjoint_tests": [
-            "adjoint_tests_developer",
-            "adjoint_tests_spice",
-            "adjoint_tests_xc40",
-        ],
-        "adjoint_tests_canned": [
-            "adjoint_tests_spice_canned",
-            "adjoint_tests_xc40_canned",
-        ],
-        "adjoint_tests_build": [
-            "adjoint_tests_spice_build",
-            "adjoint_tests_xc40_build",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "adjoint_tests_developer": [
-            "scripts",
-            "adjoint_tests_azspice_developer",
-            "adjoint_tests_ex1a_developer",
-        ],
-        "adjoint_tests": [
-            "adjoint_tests_developer",
-            "adjoint_tests_azspice",
-            "adjoint_tests_ex1a",
-        ],
-        "adjoint_tests_canned": [
-            "adjoint_tests_azspice_canned",
-            "adjoint_tests_ex1a_canned",
-        ],
-        "adjoint_tests_build": [
-            "adjoint_tests_azspice_build",
-            "adjoint_tests_ex1a_build",
-        ],
-        }) %}
-{% endif %}
+{% do site_groups.update({
+    "adjoint_tests_developer": [
+        "scripts",
+        "adjoint_tests_azspice_developer",
+        "adjoint_tests_ex1a_developer",
+    ],
+    "adjoint_tests": [
+        "adjoint_tests_developer",
+        "adjoint_tests_azspice",
+        "adjoint_tests_ex1a",
+    ],
+    "adjoint_tests_canned": [
+        "adjoint_tests_azspice_canned",
+        "adjoint_tests_ex1a_canned",
+    ],
+    "adjoint_tests_build": [
+        "adjoint_tests_azspice_build",
+        "adjoint_tests_ex1a_build",
+    ],
+    }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.adjoint_tests_developer) %}
 {% do site_groups.all.extend(site_groups.adjoint_tests) %}
 {% do site_groups.build.extend(site_groups.adjoint_tests_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.adjoint_tests_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.adjoint_tests_spice) %}
-{% do site_groups.spice_build.extend(site_groups.adjoint_tests_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.adjoint_tests_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.adjoint_tests_azspice) %}
 {% do site_groups.azspice_build.extend(site_groups.adjoint_tests_azspice_build) %}
 
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.adjoint_tests_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.adjoint_tests_xc40) %}
-{% do site_groups.xc40_build.extend(site_groups.adjoint_tests_xc40_build) %}
+{# EX1A Extends #}
+{% do site_groups.ex1a_developer.extend(site_groups.adjoint_tests_ex1a_developer) %}
+{% do site_groups.ex1a.extend(site_groups.adjoint_tests_ex1a) %}
+{% do site_groups.ex1a_build.extend(site_groups.adjoint_tests_ex1a_build) %}
 
 {% do LOG.debug("Finished in site/meto/groups/groups_adjoint_tests.cylc") %}

@@ -5,48 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_shallow_water.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "shallow_water_spice_developer": [
-        "shallow_water_galewsky-C24_spice_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi-C24_spice_intel_fast-debug-64bit",
-        "shallow_water_gaussian-BiP32x32-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_gaussian_vi-BiP32x32-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_gaussian_ex-BiP32x32-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_thermal_vi-BiP32x32-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_williamson2_vi-C24_spice_intel_fast-debug-64bit",
-        "shallow_water_williamson2_vi-C24_spice_gnu_fast-debug-64bit",
-        "shallow_water_williamson5_vi-C24_spice_intel_fast-debug-64bit",
-        "shallow_water_spice_unit_tests",
-        "shallow_water_spice_canned",
-    ],
-    "shallow_water_spice_extra": [
-        "shallow_water_galewsky_vi-C96_spice_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi_ffsl-C96_spice_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi_koren-C96_spice_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi_mono-C96_spice_intel_fast-debug-64bit",
-        "shallow_water_thermal-BiP32x32-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_vortex_plane-BiP64x64-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_vortex_plane_vi-BiP64x64-1x1_spice_intel_fast-debug-64bit",
-        "shallow_water_williamson5-C24_spice_intel_fast-debug-64bit",
-    ],
-    "shallow_water_spice": [
-        "shallow_water_spice_developer",
-        "shallow_water_spice_extra",
-    ],
-    "shallow_water_spice_unit_tests": [
-        "shallow_water_unit_tests_spice_gnu_64bit",
-    ],
-    "shallow_water_spice_build": [
-        "build_shallow_water_spice_intel_fast-debug-64bit",
-        "build_shallow_water_spice_gnu_fast-debug-64bit",
-    ],
-    "shallow_water_spice_canned": [
-        "shallow_water_canned_spice_intel_fast-debug-64bit",
-        "shallow_water_canned_spice_gnu_fast-debug-64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "shallow_water_azspice_developer": [
@@ -83,44 +41,6 @@
     ],
     "shallow_water_azspice_canned": [
         "shallow_water_canned_azspice_gnu_fast-debug-64bit",
-    ],
-    }) %}
-
-{# XC40 Groups #}
-{% do site_groups.update({
-    "shallow_water_xc40_developer": [
-        "shallow_water_galewsky-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_gaussian-BiP32x32-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_gaussian_vi-BiP32x32-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_gaussian_ex-BiP32x32-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_thermal_vi-BiP32x32-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_williamson2_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_williamson5_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_xc40_unit_tests",
-        "shallow_water_xc40_canned",
-    ],
-    "shallow_water_xc40_extra": [
-        "shallow_water_galewsky_vi-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi_ffsl-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi_koren-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_galewsky_vi_mono-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_thermal-BiP32x32-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_vortex_plane-BiP64x64-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_vortex_plane_vi-BiP64x64-1x1_xc40_intel_fast-debug-64bit",
-        "shallow_water_williamson5-C24_xc40_intel_fast-debug-64bit",
-    ],
-    "shallow_water_xc40": [
-        "shallow_water_xc40_developer",
-        "shallow_water_xc40_extra",
-    ],
-    "shallow_water_xc40_unit_tests": [
-    ],
-    "shallow_water_xc40_build": [
-        "build_shallow_water_xc40_intel_fast-debug-64bit",
-    ],
-    "shallow_water_xc40_canned": [
-        "shallow_water_canned_xc40_intel_fast-debug-64bit",
     ],
     }) %}
 
@@ -164,103 +84,35 @@
     ],
     }) %}
 
-{# Science Groups #}
+{# Platform Generic Groups #}
 {% do site_groups.update({
-    "shallow_water_xc40_paper_plots": [
-        "shallow_water_paper_galewsky_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_galewsky_vi-C48_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_vortex_sphere_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_vortex_sphere_vi-C48_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2_vi-C48_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2_vi-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson5_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson5_vi-C48_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson5_vi-C96_xc40_intel_fast-debug-64bit",
+    "shallow_water_developer": [
+        "scripts",
+        "shallow_water_azspice_developer",
+        "shallow_water_ex1a_developer",
     ],
-    "shallow_water_xc40_paper_comparison": [
-        "shallow_water_paper_galewsky_hr-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_galewsky_hr-C192_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_galewsky_hr_vi-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_galewsky_hr_vi-C192_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_vortex_sphere-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_vortex_sphere-C192_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_vortex_sphere_vi-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_vortex_sphere_vi-C192_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2-C48_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2-C96_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2_vi-C24_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2_vi-C48_xc40_intel_fast-debug-64bit",
-        "shallow_water_paper_williamson2_vi-C96_xc40_intel_fast-debug-64bit",
+    "shallow_water_extra": [
+        "shallow_water_azspice_extra",
+        "shallow_water_ex1a_extra",
+    ],
+    "shallow_water": [
+        "shallow_water_developer",
+        "shallow_water_azspice",
+        "shallow_water_ex1a",
+    ],
+    "shallow_water_unit_tests": [
+        "shallow_water_azspice_unit_tests",
+        "shallow_water_ex1a_unit_tests",
+    ],
+    "shallow_water_build": [
+        "shallow_water_azspice_build",
+        "shallow_water_ex1a_build",
+    ],
+    "shallow_water_canned": [
+        "shallow_water_azspice_canned",
+        "shallow_water_ex1a_canned",
     ],
     }) %}
-
-{# Platform Generic Groups #}
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "shallow_water_developer": [
-            "scripts",
-            "shallow_water_spice_developer",
-            "shallow_water_xc40_developer",
-            "shallow_water_unit_tests",
-        ],
-        "shallow_water_extra": [
-            "shallow_water_spice_extra",
-            "shallow_water_xc40_extra",
-        ],
-        "shallow_water": [
-            "shallow_water_developer",
-            "shallow_water_spice",
-            "shallow_water_xc40",
-        ],
-        "shallow_water_paper": [
-            "shallow_water_xc40_paper_plots",
-            "shallow_water_xc40_paper_comparison",
-        ],
-        "shallow_water_unit_tests": [
-            "shallow_water_spice_unit_tests",
-            "shallow_water_xc40_unit_tests",
-        ],
-        "shallow_water_build": [
-            "shallow_water_spice_build",
-            "shallow_water_xc40_build",
-        ],
-        "shallow_water_canned": [
-            "shallow_water_spice_canned",
-            "shallow_water_xc40_canned",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "shallow_water_developer": [
-            "scripts",
-            "shallow_water_azspice_developer",
-            "shallow_water_ex1a_developer",
-        ],
-        "shallow_water_extra": [
-            "shallow_water_azspice_extra",
-            "shallow_water_ex1a_extra",
-        ],
-        "shallow_water": [
-            "shallow_water_developer",
-            "shallow_water_azspice",
-            "shallow_water_ex1a",
-        ],
-        "shallow_water_unit_tests": [
-            "shallow_water_azspice_unit_tests",
-            "shallow_water_ex1a_unit_tests",
-        ],
-        "shallow_water_build": [
-            "shallow_water_azspice_build",
-            "shallow_water_ex1a_build",
-        ],
-        "shallow_water_canned": [
-            "shallow_water_azspice_canned",
-            "shallow_water_ex1a_canned",
-        ],
-        }) %}
-{% endif %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.shallow_water_developer) %}
@@ -268,23 +120,11 @@
 {% do site_groups.unit_tests.extend(site_groups.shallow_water_unit_tests) %}
 {% do site_groups.build.extend(site_groups.shallow_water_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.shallow_water_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.shallow_water_spice) %}
-{% do site_groups.spice_unit_tests.extend(site_groups.shallow_water_spice_unit_tests) %}
-{% do site_groups.spice_build.extend(site_groups.shallow_water_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.shallow_water_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.shallow_water_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.shallow_water_azspice_unit_tests) %}
 {% do site_groups.azspice_build.extend(site_groups.shallow_water_azspice_build) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.shallow_water_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.shallow_water_xc40) %}
-{% do site_groups.xc40_unit_tests.extend(site_groups.shallow_water_xc40_unit_tests) %}
-{% do site_groups.xc40_build.extend(site_groups.shallow_water_xc40_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.shallow_water_ex1a_developer) %}

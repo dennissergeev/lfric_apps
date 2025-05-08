@@ -17,8 +17,8 @@ WORKING_CONFIGS = {
     "meto": [
         "all",
         "build",
-        "gungho_model_baroclinic-C24_MG_spice_intel_fast-debug-64bit",
-        "build_gungho_model_spice_intel_fast-debug-64bit",
+        "gungho_model_baroclinic-C24_MG_azspice_gnu_fast-debug-64bit",
+        "build_gungho_model_azspice_gnu_fast-debug-64bit",
     ],
     "nci": ["all"],
     "niwa" : ["all"],

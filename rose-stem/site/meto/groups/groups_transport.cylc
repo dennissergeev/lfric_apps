@@ -5,119 +5,6 @@
 {# ########################################################################### #}
 {% do LOG.debug("Entered site/meto/groups/groups_transport.cylc") %}
 
-{# Spice Groups #}
-{% do site_groups.update({
-    "transport_spice_developer": [
-        "transport_cylinder_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_cylinder_xz_mol-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_cylinder_xz_split-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_split_vhv-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl-C48_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl_overset-C48_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl_3d_overset-C48_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_mol-C48_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_mol1d_overset-C48_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_split-C48_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cosine_ffsl-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cosine_mol-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cosine_mol-C32_spice_intel_full-debug-64bit",
-        "transport_sbr_hori_cosine_mol-C32_spice_gnu_full-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_nirv_spt_edges-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_ppm_spt_edges-C32_spice_intel_fast-debug-64bit",
-        "transport_spice_unit_tests",
-        "transport_spice_canned",
-    ],
-    "transport_spice": [
-        "transport_spice_developer",
-    ],
-    "transport_spice_canned": [
-        "transport_canned_spice_intel_fast-debug-64bit",
-        "transport_canned_spice_intel_fast-debug-32bit",
-        "transport_canned_spice_gnu_fast-debug-64bit",
-        "transport_canned_spice_gnu_fast-debug-32bit",
-    ],
-    "transport_spice_unit_tests": [
-        "transport_unit_tests_spice_gnu_64bit",
-    ],
-    "transport_spice_build": [
-        "build_transport_spice_intel_fast-debug-64bit",
-        "build_transport_spice_intel_fast-debug-32bit",
-        "build_transport_spice_intel_full-debug-64bit",
-        "build_transport_spice_gnu_fast-debug-32bit",
-        "build_transport_spice_gnu_full-debug-64bit",
-    ],
-    "transport_spice_next-config": [
-        "transport_curl_free_reversible_xz_ffsl_bigcfl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_cylinder_xz_ffsl_bigcfl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_deformation_2d_ffsl_bigcfl-C32_spice_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl_overset_bigcfl-C48_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_overset-C32_spice_intel_fast-debug-64bit",
-        "transport_next-sbr_hori_cos_phi_ffsl_nirv_spt_edges-C32_spice_intel_fast-debug-64bit",
-        "transport_next-sbr_hori_cos_phi_ffsl_ppm_spt_edges-C32_spice_intel_fast-debug-64bit",
-    ],
-    "transport_spice_ffsl-horizontal-sbr": [
-        "transport_sbr_gaussian_pole_ffsl-C24_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_pole_ffsl-C48_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_pole_ffsl-C96_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_equator_ffsl-C24_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_equator_ffsl-C48_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_equator_ffsl-C96_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_corner_ffsl-C24_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_corner_ffsl-C48_spice_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_corner_ffsl-C96_spice_intel_fast-debug-64bit",
-    ],
-    "transport_spice_ffsl-additional": [
-        "transport_constant_wind_xy_ffsl-BiP40x40-5x5_spice_intel_fast-debug-64bit",
-        "transport_deformation_yz_ffsl-BiP16x100-2x2_spice_intel_fast-debug-64bit",
-        "transport_deformation_2d_ffsl-C32_spice_intel_fast-debug-64bit",
-    ],
-    "transport_spice_ffsl": [
-        "transport_spice_ffsl-horizontal-sbr",
-        "transport_spice_ffsl-additional",
-    ],
-    "transport_spice_vertical-slice": [
-        "transport_rotational_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_translational_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_div_free_reversible_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_curl_free_reversible_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_cylinder_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-    ],
-    "transport_spice_comparison": [
-        "transport_eternal_fountain_xz_mol-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_split_hvh-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_split_vhv-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_mol-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl_3d-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_mol1d_overset-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl_overset-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl_3d_overset-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_split-C48_spice_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_mol-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_ffsl-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_ffsl_3d-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_split-BiP100x10-20x20_spice_intel_fast-debug-64bit",
-        "transport_sbr_vertical_mol-C24_spice_intel_fast-debug-64bit",
-        "transport_sbr_vertical_ffsl-C24_spice_intel_fast-debug-64bit",
-        "transport_sbr_vertical_split-C24_spice_intel_fast-debug-64bit",
-        "transport_dcmip101_mol-C24_spice_intel_fast-debug-64bit",
-        "transport_dcmip101_ffsl-C24_spice_intel_fast-debug-64bit",
-        "transport_dcmip101_split-C24_spice_intel_fast-debug-64bit",
-        "transport_vertical_deformation_mol-C24_spice_intel_fast-debug-64bit",
-        "transport_vertical_deformation_ffsl-C24_spice_intel_fast-debug-64bit",
-        "transport_vertical_deformation_split-C24_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_mol-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_mol1d-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_mol1d_overset-C32_spice_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_overset-C32_spice_intel_fast-debug-64bit",
-        "transport_four_part_sbr-C24_spice_intel_fast-debug-64bit",
-    ],
-    }) %}
-
 {# Azspice Groups #}
 {% do site_groups.update({
     "transport_azspice_developer": [
@@ -226,111 +113,6 @@
     ],
     }) %}
 
-{# XC40 Groups #}
-{% do site_groups.update({
-    "transport_xc40_developer": [
-        "transport_cylinder_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_cylinder_xz_mol-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_cylinder_xz_split-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_split_vhv-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl-C48_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl_overset-C48_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl_3d_overset-C48_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_mol-C48_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_mol1d_overset-C48_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_split-C48_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cosine_ffsl-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cosine_mol-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cosine_mol-C32_xc40_intel_full-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_nirv_spt_edges-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_ppm_spt_edges-C32_xc40_intel_fast-debug-64bit",
-        "transport_xc40_canned",
-        "transport_xc40_unit_tests",
-    ],
-    "transport_xc40": [
-        "transport_xc40_developer",
-    ],
-    "transport_xc40_canned": [
-        "transport_canned_xc40_intel_fast-debug-64bit",
-        "transport_canned_xc40_intel_fast-debug-32bit",
-    ],
-    "transport_xc40_unit_tests": [
-    ],
-    "transport_xc40_build": [
-        "build_transport_xc40_intel_fast-debug-64bit",
-    ],
-    "transport_xc40_next-config": [
-        "transport_curl_free_reversible_xz_ffsl_bigcfl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_cylinder_xz_ffsl_bigcfl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_deformation_2d_ffsl_bigcfl-C32_xc40_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_hadley_dcmip_ffsl_overset_bigcfl-C48_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_overset-C32_xc40_intel_fast-debug-64bit",
-        "transport_next-sbr_hori_cos_phi_ffsl_nirv_spt_edges-C32_xc40_intel_fast-debug-64bit",
-        "transport_next-sbr_hori_cos_phi_ffsl_ppm_spt_edges-C32_xc40_intel_fast-debug-64bit",
-    ],
-    "transport_xc40_ffsl-horizontal-sbr": [
-        "transport_sbr_gaussian_pole_ffsl-C24_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_pole_ffsl-C48_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_pole_ffsl-C96_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_equator_ffsl-C24_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_equator_ffsl-C48_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_equator_ffsl-C96_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_corner_ffsl-C24_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_corner_ffsl-C48_xc40_intel_fast-debug-64bit",
-        "transport_sbr_gaussian_corner_ffsl-C96_xc40_intel_fast-debug-64bit",
-    ],
-    "transport_xc40_ffsl-additional": [
-        "transport_constant_wind_xy_ffsl-BiP40x40-5x5_xc40_intel_fast-debug-64bit",
-        "transport_deformation_yz_ffsl-BiP16x100-2x2_xc40_intel_fast-debug-64bit",
-        "transport_deformation_2d_ffsl-C32_xc40_intel_fast-debug-64bit",
-    ],
-    "transport_xc40_ffsl": [
-        "transport_xc40_ffsl-horizontal-sbr",
-        "transport_xc40_ffsl-additional",
-    ],
-    "transport_xc40_vertical-slice": [
-        "transport_rotational_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_translational_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_div_free_reversible_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_curl_free_reversible_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_cylinder_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-    ],
-    "transport_xc40_comparison": [
-        "transport_eternal_fountain_xz_mol-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_split_hvh-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_eternal_fountain_xz_split_vhv-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_mol-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl_3d-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_mol1d_overset-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl_overset-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_ffsl_3d_overset-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-hadley_dcmip_split-C48_xc40_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_mol-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_ffsl-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_ffsl_3d-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_comp-cylinder_xz_split-BiP100x10-20x20_xc40_intel_fast-debug-64bit",
-        "transport_sbr_vertical_mol-C24_xc40_intel_fast-debug-64bit",
-        "transport_sbr_vertical_ffsl-C24_xc40_intel_fast-debug-64bit",
-        "transport_sbr_vertical_split-C24_xc40_intel_fast-debug-64bit",
-        "transport_dcmip101_mol-C24_xc40_intel_fast-debug-64bit",
-        "transport_dcmip101_ffsl-C24_xc40_intel_fast-debug-64bit",
-        "transport_dcmip101_split-C24_xc40_intel_fast-debug-64bit",
-        "transport_vertical_deformation_mol-C24_xc40_intel_fast-debug-64bit",
-        "transport_vertical_deformation_ffsl-C24_xc40_intel_fast-debug-64bit",
-        "transport_vertical_deformation_split-C24_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_mol-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_mol1d-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_mol1d_overset-C32_xc40_intel_fast-debug-64bit",
-        "transport_sbr_hori_cos_phi_ffsl_overset-C32_xc40_intel_fast-debug-64bit",
-        "transport_four_part_sbr-C24_xc40_intel_fast-debug-64bit",
-    ],
-    }) %}
-
 {# EX1A groups #}
 {% do site_groups.update({
     "transport_ex1a_developer": [
@@ -408,82 +190,31 @@
     ],
   }) %}
 
-{% if site_vars.launch_platform == "spice" %}
-    {% do site_groups.update({
-        "transport_developer": [
-            "scripts",
-            "transport_spice_developer",
-            "transport_xc40_developer",
-            "transport_unit_tests",
-        ],
-        "transport": [
-            "transport_developer",
-            "transport_spice",
-            "transport_xc40",
-        ],
-        "transport_canned": [
-            "transport_spice_canned",
-            "transport_xc40_canned",
-        ],
-        "transport_unit_tests": [
-            "transport_spice_unit_tests",
-            "transport_xc40_unit_tests",
-        ],
-        "transport_build": [
-            "transport_spice_build",
-            "transport_xc40_build",
-        ],
-        "transport_next-config": [
-            "transport_spice_next-config",
-            "transport_xc40_next-config",
-        ],
-        "transport_ffsl-horizontal-sbr": [
-            "transport_spice_ffsl-horizontal-sbr"
-            "transport_xc40_ffsl-horizontal-sbr",
-        ],
-        "transport_ffsl-additional": [
-            "transport_spice_ffsl-additional",
-            "transport_xc40_ffsl-additional",
-        ],
-        "transport_ffsl": [
-            "transport_spice_ffsl",
-            "transport_xc40_ffsl",
-        ],
-        "transport_vertical-slice": [
-            "transport_spice_vertical-slice",
-            "transport_xc40_vertical-slice",
-        ],
-        "transport_comparison": [
-            "transport_spice_comparison",
-            "transport_xc40_comparison",
-        ],
-        }) %}
-{% else %}
-    {% do site_groups.update({
-        "transport_developer": [
-            "scripts",
-            "transport_azspice_developer",
-            "transport_ex1a_developer",
-        ],
-        "transport": [
-            "transport_developer",
-            "transport_azspice",
-            "transport_ex1a",
-        ],
-        "transport_canned": [
-            "transport_azspice_canned",
-            "transport_ex1a_canned",
-        ],
-        "transport_unit_tests": [
-            "transport_azspice_unit_tests",
-            "transport_ex1a_unit_tests",
-        ],
-        "transport_build": [
-            "transport_azspice_build",
-            "transport_ex1a_build",
-        ],
-        }) %}
-{% endif %}
+
+{% do site_groups.update({
+    "transport_developer": [
+        "scripts",
+        "transport_azspice_developer",
+        "transport_ex1a_developer",
+    ],
+    "transport": [
+        "transport_developer",
+        "transport_azspice",
+        "transport_ex1a",
+    ],
+    "transport_canned": [
+        "transport_azspice_canned",
+        "transport_ex1a_canned",
+    ],
+    "transport_unit_tests": [
+        "transport_azspice_unit_tests",
+        "transport_ex1a_unit_tests",
+    ],
+    "transport_build": [
+        "transport_azspice_build",
+        "transport_ex1a_build",
+    ],
+    }) %}
 
 {# Platform Generic Extends #}
 {% do site_groups.developer.extend(site_groups.transport_developer) %}
@@ -491,23 +222,11 @@
 {% do site_groups.unit_tests.extend(site_groups.transport_unit_tests) %}
 {% do site_groups.build.extend(site_groups.transport_build) %}
 
-{# Spice Extends #}
-{% do site_groups.spice_developer.extend(site_groups.transport_spice_developer) %}
-{% do site_groups.spice.extend(site_groups.transport_spice) %}
-{% do site_groups.spice_unit_tests.extend(site_groups.transport_spice_unit_tests) %}
-{% do site_groups.spice_build.extend(site_groups.transport_spice_build) %}
-
 {# Azspice Extends #}
 {% do site_groups.azspice_developer.extend(site_groups.transport_azspice_developer) %}
 {% do site_groups.azspice.extend(site_groups.transport_azspice) %}
 {% do site_groups.azspice_unit_tests.extend(site_groups.transport_azspice_unit_tests) %}
 {% do site_groups.azspice_build.extend(site_groups.transport_azspice_build) %}
-
-{# XC40 Extends #}
-{% do site_groups.xc40_developer.extend(site_groups.transport_xc40_developer) %}
-{% do site_groups.xc40.extend(site_groups.transport_xc40) %}
-{% do site_groups.xc40_unit_tests.extend(site_groups.transport_xc40_unit_tests) %}
-{% do site_groups.xc40_build.extend(site_groups.transport_xc40_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.transport_ex1a_developer) %}

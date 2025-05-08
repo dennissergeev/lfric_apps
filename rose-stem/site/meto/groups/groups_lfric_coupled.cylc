@@ -19,26 +19,24 @@
     }) %}
 
 {# Platform Generic Groups #}
-{% if site_vars.launch_platform == "azspice" %}
-    {% do site_groups.update({
-        "lfric_coupled_developer": [
-            "scripts",
-            "lfric_coupled_ex1a_developer",
-        ],
-        "lfric_coupled": [
-            "lfric_coupled_developer",
-            "lfric_coupled_ex1a",
-        ],
-        "lfric_coupled_build": [
-            "lfric_coupled_ex1a_build",
-        ],
-        }) %}
+{% do site_groups.update({
+    "lfric_coupled_developer": [
+        "scripts",
+        "lfric_coupled_ex1a_developer",
+    ],
+    "lfric_coupled": [
+        "lfric_coupled_developer",
+        "lfric_coupled_ex1a",
+    ],
+    "lfric_coupled_build": [
+        "lfric_coupled_ex1a_build",
+    ],
+    }) %}
 
-    {# Platform Generic Extends #}
-    {% do site_groups.developer.extend(site_groups.lfric_coupled_developer) %}
-    {% do site_groups.all.extend(site_groups.lfric_coupled) %}
-    {% do site_groups.build.extend(site_groups.lfric_coupled_build) %}
-{% endif %}
+{# Platform Generic Extends #}
+{% do site_groups.developer.extend(site_groups.lfric_coupled_developer) %}
+{% do site_groups.all.extend(site_groups.lfric_coupled) %}
+{% do site_groups.build.extend(site_groups.lfric_coupled_build) %}
 
 {# EX1A Extends #}
 {% do site_groups.ex1a_developer.extend(site_groups.lfric_coupled_ex1a_developer) %}

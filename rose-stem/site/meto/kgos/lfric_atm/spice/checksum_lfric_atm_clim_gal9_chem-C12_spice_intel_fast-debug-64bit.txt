@@ -1,9 +1,0 @@
-Inner product checksum rho = 40DACD9E98363DB4
-Inner product checksum theta = 4231BA34B9F6F740
-Inner product checksum u = 456063B3F7440A3A
-Inner product checksum mr1 = 3FFA0ED729CE7DA0
-Inner product checksum mr2 = 3EE92B84B3405770
-Inner product checksum mr3 = 3EAB587693979F25
-Inner product checksum mr4 = 3ED96602661444C2
-Inner product checksum mr5 =                0
-Inner product checksum mr6 =                0
