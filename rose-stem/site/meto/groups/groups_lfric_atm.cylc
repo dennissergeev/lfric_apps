@@ -70,6 +70,9 @@
         "lfric_atm_aquaplanet-C12_azspice_gnu_fast-debug-64bit",
         "lfric_atm_thai_ben1-C48_MG_azspice_gnu_fast-debug-64bit",
     ],
+    "lfric_atm_azspice_io": [
+ 	    "lfric_atm_io-C12_azspice_gnu_fast-debug-64bit",
+    ],
     "lfric_atm_azspice": [
         "lfric_atm_azspice_developer",
         "lfric_atm_azspice_extra",
@@ -202,6 +205,10 @@
         "lfric_atm_nwp_gal9_mgnoukca-C48_MG_ex1a_cce_fast-debug-64bit",
         "lfric_atm_nwp_gal9_coarse_aero_threaded-C48_MG_ex1a_cce_fast-debug-64bit",
     ],
+    "lfric_atm_ex1a_io": [
+        "lfric_atm_io-C12_ex1a_cce_fast-debug-64bit",
+        "lfric_atm_io-C224_MG_ex1a_cce_fast-debug-64bit",
+    ],
     "lfric_atm_ex1a": [
         "lfric_atm_ex1a_developer",
         "lfric_atm_ex1a_extra",
@@ -226,6 +233,10 @@
     "lfric_atm_extra": [
         "lfric_atm_azspice_extra",
         "lfric_atm_ex1a_extra",
+    ],
+    "lfric_atm_io": [
+        "lfric_atm_azspice_io",
+        "lfric_atm_ex1a_io",
     ],
     "lfric_atm_weekly": [
         "lfric_atm_ex1a_weekly",

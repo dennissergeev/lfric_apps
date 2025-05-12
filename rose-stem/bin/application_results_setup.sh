@@ -25,3 +25,4 @@ ln -sf $TASK_OUTPUT_DIR/results/lfric_ver.nc $CYLC_TASK_WORK_DIR/lfric_ver.nc
 ln -sf $TASK_OUTPUT_DIR/results/lfric_ver_tp0.nc $CYLC_TASK_WORK_DIR/lfric_ver_tp0.nc
 ln -sf $TASK_OUTPUT_DIR/results/lfric_initial.nc $CYLC_TASK_WORK_DIR/lfric_initial.nc
 ln -sf $TASK_OUTPUT_DIR/results/lfric_averages.nc $CYLC_TASK_WORK_DIR/lfric_averages.nc
+ln -sf $TASK_OUTPUT_DIR/results/lfric_temporal.nc $CYLC_TASK_WORK_DIR/lfric_temporal.nc
