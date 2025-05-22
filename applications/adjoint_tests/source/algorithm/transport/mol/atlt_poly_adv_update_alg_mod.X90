@@ -38,7 +38,6 @@ module atlt_poly_adv_update_alg_mod
     ! Arguments for tl and adj calls
     type(r_tran_field_type) :: advective
     type(r_tran_field_type) :: wind
-    type(r_tran_field_type) :: dummy_w2h
     type(r_tran_field_type) :: ls_reconstruction
     type(r_tran_field_type) :: wind_dir
 
@@ -80,7 +79,6 @@ module atlt_poly_adv_update_alg_mod
     )
     call advective % initialise( vector_space=vector_space_wtheta_ptr, name='advective' )
     call wind % initialise( vector_space=vector_space_w2h_ptr, name='wind' )
-    call wind % copy_field_properties( dummy_w2h )
     call ls_reconstruction % initialise( vector_space=vector_space_wt_md_ptr, name='ls_reconstruction' )
     call wind_dir % initialise( vector_space=vector_space_w2h_ptr, name='wind_dir' )
     call advective_input % initialise( vector_space=vector_space_wtheta_ptr, name='advective_input' )
@@ -96,8 +94,8 @@ module atlt_poly_adv_update_alg_mod
                  setval_random( wind_dir ),                                          &
                  poly_adv_update_kernel_type( advective,                             &
                                               ls_reconstruction, stencil_extent,     &
-                                              wind, stencil_extent,                  &
-                                              wind_dir ),                            &
+                                              wind,                                  &
+                                              wind_dir, stencil_extent ),            &
                  x_innerproduct_x( advective_inner_prod, advective ),                &
                  x_innerproduct_x( wind_inner_prod, wind ) )
 
@@ -124,9 +122,9 @@ module atlt_poly_adv_update_alg_mod
 
     call invoke_atl_poly_adv_update_kernel_type( advective,         &
                                                  ls_reconstruction, &
-                                                 wind, dummy_w2h,   &
+                                                 wind,              &
                                                  wind_dir,          &
-                                                 stencil_extent, stencil_extent, stencil_extent )
+                                                 stencil_extent, stencil_extent )
     call invoke( x_innerproduct_y( advective_advective_input_inner_prod, &
                                    advective,                            &
                                    advective_input ),                    &

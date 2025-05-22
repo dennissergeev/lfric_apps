@@ -118,7 +118,7 @@ contains
                  adj_poly_adv_update_kernel_type( u_grad_f,                &
                                                   h_reconstruction,        &
                                                   dummy, stencil_extent,   &
-                                                  ls_wind, stencil_extent, wind_dir ) )
+                                                  ls_wind, wind_dir, stencil_extent ) )
 
 
     stencil_extent = fv_horizontal_order/2_i_def

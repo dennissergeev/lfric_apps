@@ -33,12 +33,12 @@ private
 !-------------------------------------------------------------------------------
 !> The type declaration for the kernel. Contains the metadata needed by the PSy layer
 type, public, extends(kernel_type) :: atl_poly_adv_update_kernel_type
-  type(arg_type) :: META_ARGS(5) = (/ &
+  type(arg_type) :: META_ARGS(4) = (/ &
     arg_type(GH_FIELD, GH_REAL, GH_READWRITE, Wtheta),                                 & ! advective
     arg_type(GH_FIELD, GH_REAL, GH_READ, ANY_DISCONTINUOUS_SPACE_1, STENCIL(CROSS2D)), & ! ls_reconstruction
     arg_type(GH_FIELD, GH_REAL, GH_INC, W2),                                           & ! wind
-    arg_type(GH_FIELD, GH_REAL, GH_READ, W2, STENCIL(CROSS2D)),                        & ! dummy_w2
-    arg_type(GH_FIELD, GH_REAL, GH_READ, W2)/)                                           ! wind_dir
+    arg_type(GH_FIELD, GH_REAL, GH_READ, W2, STENCIL(CROSS2D))                         & ! wind_dir
+  /)
   integer :: OPERATES_ON = cell_column
   contains
     procedure, nopass :: atl_poly_adv_update_code
@@ -63,13 +63,12 @@ contains
 !> @param[in]     smap_md_max       Maximum size of the multidata stencil map
 !> @param[in]     smap_md           Stencil map for the multidata fields
 !> @param[in,out] wind              Active wind field
-!> @param[in]     dummy_w2          Read only wind field to get stencil
-!> @param[in]     smap_w2_size      Size of the w2stencil map in each direction
-!> @param[in]     smap_w2_max       Maximum size of the w2 stencil map
-!> @param[in]     smap_w2           Stencil map for the w2 fields
 !> @param[in]     wind_dir          Wind field used to determine direction,
 !!                                  equal to wind when used in gungho
 !!                                  but ls_wind when used in the linear model
+!> @param[in]     smap_w2_size      Size of the w2stencil map in each direction
+!> @param[in]     smap_w2_max       Maximum size of the w2 stencil map
+!> @param[in]     smap_w2           Stencil map for the w2 fields
 !> @param[in]     ndf_wt            Number of degrees of freedom per cell
 !> @param[in]     undf_wt           Number of unique degrees of freedom for the advective field
 !> @param[in]     map_wt            Dofmap for the cell at the base of the column
@@ -87,11 +86,10 @@ subroutine atl_poly_adv_update_code( nlayers,           &
                                      smap_md_max,       &
                                      smap_md,           &
                                      wind,              &
-                                     dummy_w2,          &
+                                     wind_dir,          &
                                      smap_w2_size,      &
                                      smap_w2_max,       &
                                      smap_w2,           &
-                                     wind_dir,          &
                                      ndf_wt,            &
                                      undf_wt,           &
                                      map_wt,            &
@@ -125,7 +123,6 @@ subroutine atl_poly_adv_update_code( nlayers,           &
 
   real(kind=r_tran), dimension(undf_wt), intent(inout) :: advective
   real(kind=r_tran), dimension(undf_w2), intent(inout) :: wind
-  real(kind=r_tran), dimension(undf_w2), intent(in)    :: dummy_w2
   real(kind=r_tran), dimension(undf_md), intent(in)    :: ls_reconstruction
   real(kind=r_tran), dimension(undf_w2), intent(in)    :: wind_dir
 

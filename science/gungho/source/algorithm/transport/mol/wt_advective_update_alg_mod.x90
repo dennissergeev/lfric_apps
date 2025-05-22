@@ -195,8 +195,8 @@ contains
                  poly_adv_update_kernel_type(u_grad_f,             &
                                              h_reconstruction,     &
                                              stencil_extent,       &
-                                             wind, stencil_extent, &
-                                             wind_dir))
+                                             wind,                 &
+                                             wind_dir, stencil_extent))
 
     if ( subroutine_timers ) call timer('transport.wt_hori_recon')
 

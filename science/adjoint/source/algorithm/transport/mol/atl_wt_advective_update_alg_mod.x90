@@ -201,8 +201,6 @@ contains
     type(field_type), target  :: ls_remap_field, ls_field_big_halo
     type(field_type), pointer :: ls_field_ptr
 
-    type(field_type) :: dummy_w2h
-
     logical(kind=l_def) :: monotone
     integer(kind=i_def) :: remap_depth
 
@@ -274,13 +272,12 @@ contains
 
     end if
 
-    call wind % copy_field_properties( dummy_w2h )
     stencil_extent = 1
     call invoke_atl_poly_adv_update_kernel_type( u_grad_f,            &
                                                  ls_h_reconstruction, &
-                                                 wind, dummy_w2h,     &
+                                                 wind,                &
                                                  wind_dir,            &
-                                                 stencil_extent, stencil_extent, stencil_extent )
+                                                 stencil_extent, stencil_extent )
 
   end subroutine atl_hori_wt_update_alg
 

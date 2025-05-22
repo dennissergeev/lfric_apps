@@ -37,8 +37,8 @@ type, public, extends(kernel_type) :: poly_adv_update_kernel_type
   type(arg_type) :: meta_args(4) = (/                                                          &
        arg_type(GH_FIELD,  GH_REAL,    GH_WRITE, Wtheta),                                      &
        arg_type(GH_FIELD,  GH_REAL,    GH_READ,  ANY_DISCONTINUOUS_SPACE_1, STENCIL(CROSS2D)), &
-       arg_type(GH_FIELD,  GH_REAL,    GH_READ,  W2, STENCIL(CROSS2D)),                        &
-       arg_type(GH_FIELD,  GH_REAL,    GH_READ,  W2)                                           &
+       arg_type(GH_FIELD,  GH_REAL,    GH_READ,  W2),                                          &
+       arg_type(GH_FIELD,  GH_REAL,    GH_READ,  W2, STENCIL(CROSS2D))                         &
        /)
   integer :: operates_on = CELL_COLUMN
 contains
@@ -64,12 +64,12 @@ contains
 !> @param[in]     smap_md_max    Maximum size of the multidata stencil map
 !> @param[in]     smap_md        Stencil map for the multidata fields
 !> @param[in]     wind           Wind field
-!> @param[in]     smap_w2_size   Size of the w2stencil map in each direction
-!> @param[in]     smap_w2_max    Maximum size of the w2 stencil map
-!> @param[in]     smap_w2        Stencil map for the w2 fields
 !> @param[in]     wind_dir       Wind field used to determine direction,
 !>                               equal to wind when used in gungho
 !>                               but ls_wind when used in the linear model
+!> @param[in]     smap_w2_size   Size of the w2stencil map in each direction
+!> @param[in]     smap_w2_max    Maximum size of the w2 stencil map
+!> @param[in]     smap_w2        Stencil map for the w2 fields
 !> @param[in]     ndf_wt         Number of degrees of freedom per cell
 !> @param[in]     undf_wt        Number of unique degrees of freedom for the advective field
 !> @param[in]     map_wt         Dofmap for the cell at the base of the column
@@ -87,10 +87,10 @@ subroutine poly_adv_update_code( nlayers,                &
                                  smap_md_max,            &
                                  smap_md,                &
                                  wind,                   &
+                                 wind_dir,               &
                                  smap_w2_size,           &
                                  smap_w2_max,            &
                                  smap_w2,                &
-                                 wind_dir,               &
                                  ndf_wt,                 &
                                  undf_wt,                &
                                  map_wt,                 &

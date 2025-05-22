@@ -16,8 +16,12 @@ MODULE invoke_atl_poly_adv_update_mod
 
 CONTAINS
 
-    SUBROUTINE invoke_atl_poly_adv_update_kernel_type(advective, ls_reconstruction, wind, dummy_w2h, wind_dir, &
-&dummy_w2h_stencil_extent, ls_recon_stencil_extent, wind_stencil_extent)
+    SUBROUTINE invoke_atl_poly_adv_update_kernel_type( advective,               &
+                                                       ls_reconstruction,       &
+                                                       wind,                    &
+                                                       wind_dir,                &
+                                                       ls_recon_stencil_extent, &
+                                                       wind_dir_stencil_extent )
 
       USE constants_mod, ONLY: r_def, i_def
       USE field_mod, ONLY: field_type, field_proxy_type
@@ -25,25 +29,24 @@ CONTAINS
       USE mesh_mod, ONLY: mesh_type
       USE stencil_2D_dofmap_mod, ONLY: stencil_2D_dofmap_type, STENCIL_2D_CROSS
 
-      TYPE(field_type), intent(in) :: advective, ls_reconstruction, wind, dummy_w2h, wind_dir
-      INTEGER(KIND=i_def), intent(in) :: dummy_w2h_stencil_extent, ls_recon_stencil_extent, wind_stencil_extent
+      TYPE(field_type), intent(in) :: advective, ls_reconstruction, wind, wind_dir
+      INTEGER(KIND=i_def), intent(in) :: ls_recon_stencil_extent, wind_dir_stencil_extent
       INTEGER(KIND=i_def) cell
       INTEGER(KIND=i_def) loop0_start, loop0_stop
       INTEGER(KIND=i_def) nlayers
       REAL(KIND=r_def), pointer, dimension(:) :: wind_dir_data
-      REAL(KIND=r_def), pointer, dimension(:) :: dummy_w2h_data
       REAL(KIND=r_def), pointer, dimension(:) :: wind_data
       REAL(KIND=r_def), pointer, dimension(:) :: ls_reconstruction_data
       REAL(KIND=r_def), pointer, dimension(:) :: advective_data
-      TYPE(field_proxy_type) advective_proxy, ls_reconstruction_proxy, wind_proxy, dummy_w2h_proxy, wind_dir_proxy
+      TYPE(field_proxy_type) advective_proxy, ls_reconstruction_proxy, wind_proxy, wind_dir_proxy
       INTEGER(KIND=i_def), pointer :: map_adspc1_ls_reconstruction(:,:), map_w2(:,:), map_wtheta(:,:)
       INTEGER(KIND=i_def) ndf_wtheta, undf_wtheta, ndf_adspc1_ls_reconstruction, undf_adspc1_ls_reconstruction, ndf_w2, undf_w2
       INTEGER(KIND=i_def) max_halo_depth_mesh
       TYPE(mesh_type), pointer :: mesh
-      INTEGER(KIND=i_def) dummy_w2h_max_branch_length
-      INTEGER(KIND=i_def), pointer :: dummy_w2h_stencil_size(:,:)
-      INTEGER(KIND=i_def), pointer :: dummy_w2h_stencil_dofmap(:,:,:,:)
-      TYPE(stencil_2D_dofmap_type), pointer :: dummy_w2h_stencil_map
+      INTEGER(KIND=i_def) wind_dir_max_branch_length
+      INTEGER(KIND=i_def), pointer :: wind_dir_stencil_size(:,:)
+      INTEGER(KIND=i_def), pointer :: wind_dir_stencil_dofmap(:,:,:,:)
+      TYPE(stencil_2D_dofmap_type), pointer :: wind_dir_stencil_map
       INTEGER(KIND=i_def) ls_reconstruction_max_branch_length
       INTEGER(KIND=i_def), pointer :: ls_reconstruction_stencil_size(:,:)
       INTEGER(KIND=i_def), pointer :: ls_reconstruction_stencil_dofmap(:,:,:,:)
@@ -57,8 +60,6 @@ CONTAINS
       ls_reconstruction_data => ls_reconstruction_proxy%data
       wind_proxy = wind%get_proxy()
       wind_data => wind_proxy%data
-      dummy_w2h_proxy = dummy_w2h%get_proxy()
-      dummy_w2h_data => dummy_w2h_proxy%data
       wind_dir_proxy = wind_dir%get_proxy()
       wind_dir_data => wind_dir_proxy%data
       !
@@ -78,10 +79,10 @@ CONTAINS
       ls_reconstruction_max_branch_length = ls_recon_stencil_extent + 1_i_def
       ls_reconstruction_stencil_dofmap => ls_reconstruction_stencil_map%get_whole_dofmap()
       ls_reconstruction_stencil_size => ls_reconstruction_stencil_map%get_stencil_sizes()
-      dummy_w2h_stencil_map => dummy_w2h_proxy%vspace%get_stencil_2D_dofmap(STENCIL_2D_CROSS,dummy_w2h_stencil_extent)
-      dummy_w2h_max_branch_length = dummy_w2h_stencil_extent + 1_i_def
-      dummy_w2h_stencil_dofmap => dummy_w2h_stencil_map%get_whole_dofmap()
-      dummy_w2h_stencil_size => dummy_w2h_stencil_map%get_stencil_sizes()
+      wind_dir_stencil_map => wind_dir_proxy%vspace%get_stencil_2D_dofmap(STENCIL_2D_CROSS,wind_dir_stencil_extent)
+      wind_dir_max_branch_length = wind_dir_stencil_extent + 1_i_def
+      wind_dir_stencil_dofmap => wind_dir_stencil_map%get_whole_dofmap()
+      wind_dir_stencil_size => wind_dir_stencil_map%get_stencil_sizes()
       !
       ! Look-up dofmaps for each function space
       !
@@ -119,23 +120,34 @@ CONTAINS
         CALL ls_reconstruction_proxy%halo_exchange(depth=ls_recon_stencil_extent)
       END IF
       !
-      IF (dummy_w2h_proxy%is_dirty(depth=dummy_w2h_stencil_extent)) THEN
-        CALL dummy_w2h_proxy%halo_exchange(depth=dummy_w2h_stencil_extent)
-      END IF
-      !
-      IF (wind_dir_proxy%is_dirty(depth=wind_stencil_extent)) THEN
-        CALL wind_dir_proxy%halo_exchange(depth=wind_stencil_extent)
+      IF (wind_dir_proxy%is_dirty(depth=wind_dir_stencil_extent)) THEN
+        CALL wind_dir_proxy%halo_exchange(depth=wind_dir_stencil_extent)
       END IF
       !
       !$omp parallel default(shared), private(cell)
       !$omp do schedule(static)
       DO cell=loop0_start,loop0_stop
         !
-        CALL atl_poly_adv_update_code(nlayers, advective_data, ls_reconstruction_data, ls_reconstruction_stencil_size(:,cell), &
-&ls_reconstruction_max_branch_length, ls_reconstruction_stencil_dofmap(:,:,:,cell), wind_data, dummy_w2h_data, &
-&dummy_w2h_stencil_size(:,cell), dummy_w2h_max_branch_length, dummy_w2h_stencil_dofmap(:,:,:,cell), wind_dir_data, ndf_wtheta, &
-&undf_wtheta, map_wtheta(:,cell), ndf_adspc1_ls_reconstruction, undf_adspc1_ls_reconstruction, &
-&map_adspc1_ls_reconstruction(:,cell), ndf_w2, undf_w2, map_w2(:,cell))
+        CALL atl_poly_adv_update_code( nlayers,                                      &
+                                       advective_data,                               &
+                                       ls_reconstruction_data,                       &
+                                       ls_reconstruction_stencil_size(:,cell),       &
+                                       ls_reconstruction_max_branch_length,          &
+                                       ls_reconstruction_stencil_dofmap(:,:,:,cell), &
+                                       wind_data,                                    &
+                                       wind_dir_data,                                &
+                                       wind_dir_stencil_size(:,cell),                &
+                                       wind_dir_max_branch_length,                   &
+                                       wind_dir_stencil_dofmap(:,:,:,cell),          &
+                                       ndf_wtheta,                                   &
+                                       undf_wtheta,                                  &
+                                       map_wtheta(:,cell),                           &
+                                       ndf_adspc1_ls_reconstruction,                 &
+                                       undf_adspc1_ls_reconstruction,                &
+                                       map_adspc1_ls_reconstruction(:,cell),         &
+                                       ndf_w2,                                       &
+                                       undf_w2,                                      &
+                                       map_w2(:,cell) )
       END DO
       !$omp end do
       !$omp end parallel

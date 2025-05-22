@@ -100,10 +100,10 @@ contains
                                smap_md_max,  &
                                smap_md,      &
                                wind,         &
+                               wind_dir,     &
                                smap_w2_size, &
                                smap_w2_max,  &
                                smap_w2,      &
-                               wind_dir,     &
                                ndf_wt,       &
                                undf_wt,      &
                                map_wt,       &

@@ -99,7 +99,8 @@ module adjt_poly_adv_update_alg_mod
                  setval_random( wind ), setval_x( wind_dir, wind ),                                 &
                  poly_adv_update_kernel_type( advective,                                            &
                                               reconstruction, stencil_extent,                       &
-                                              wind, stencil_extent, wind_dir ),                     &
+                                              wind,                                                 &
+                                              wind_dir, stencil_extent ),                           &
                  x_innerproduct_x( advective_inner_prod, advective),                                &
                  x_innerproduct_x( reconstruction_inner_prod, reconstruction) )
 
@@ -125,8 +126,10 @@ module adjt_poly_adv_update_alg_mod
     reconstruction_reconstruction_input_inner_prod = 0.0_r_def
 
     call invoke( adj_poly_adv_update_kernel_type( advective,                                &
-                                                  reconstruction, dummy_md, stencil_extent, &
-                                                  wind, stencil_extent, wind_dir ),         &
+                                                  reconstruction,                           &
+                                                  dummy_md, stencil_extent,                 &
+                                                  wind,                                     &
+                                                  wind_dir, stencil_extent ),               &
                  x_innerproduct_y( advective_advective_input_inner_prod,                    &
                                    advective,                                               &
                                    advective_input ),                                       &
