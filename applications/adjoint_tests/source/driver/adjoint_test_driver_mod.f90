@@ -11,6 +11,7 @@ module adjoint_test_driver_mod
 
   use base_mesh_config_mod,        only : prime_mesh_name
   use extrusion_mod,               only : TWOD
+  use fs_continuity_mod,           only : Wtheta, W3
   use field_mod,                   only : field_type
   use driver_modeldb_mod,          only : modeldb_type
   use log_mod,                     only : log_event, LOG_LEVEL_INFO
@@ -148,7 +149,8 @@ contains
     call atlt_w3h_advective_update_alg( mesh )
     ! -- Lookup table solutions.
     call adjt_poly1d_recon_lookup_alg( mesh )
-    call adjt_poly2d_recon_lookup_alg( mesh )
+    call adjt_poly2d_recon_lookup_alg( mesh, Wtheta )
+    call adjt_poly2d_recon_lookup_alg( mesh, W3 )
     call adjt_poly_adv_upd_lookup_alg( mesh )
     call adjt_w3h_adv_upd_lookup_alg( mesh )
 
@@ -207,7 +209,7 @@ contains
     call reset_mass_matrices( mesh, m3_inv_copy, mt_lumped_inv_copy )
 
     ! ./solver
-    call adjt_pressure_precon_alg( modeldb,  mesh, modeldb%clock )
+    call adjt_pressure_precon_alg( modeldb, mesh, modeldb%clock )
     call adjt_mixed_operator_alg( mesh, modeldb%clock )
     call adjt_mixed_schur_preconditioner_alg( modeldb,  mesh, modeldb%clock )
     call adjt_mixed_solver_alg( modeldb, mesh, modeldb%clock )

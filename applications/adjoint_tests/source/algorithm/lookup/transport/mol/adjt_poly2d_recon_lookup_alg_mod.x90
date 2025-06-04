@@ -9,9 +9,9 @@ module adjt_poly2d_recon_lookup_alg_mod
     use function_space_mod,                   only : function_space_type
     use mesh_mod,                             only : mesh_type
     use function_space_collection_mod,        only : function_space_collection
+    use fs_continuity_mod,                    only : name_from_functionspace
     use finite_element_config_mod,            only : element_order_h, &
                                                      element_order_v
-    use fs_continuity_mod,                    only : wtheta
     use constants_mod,                        only : i_def, r_def, r_tran
     use log_mod,                              only : log_event,       &
                                                      LOG_LEVEL_ERROR, &
@@ -29,7 +29,8 @@ module adjt_poly2d_recon_lookup_alg_mod
   !>          Determined by testing the equality of inner products <Mx, Mx> and <AMx, x>,
   !>          where M is the tangent linear and A is the adjoint.
   !> @param[in]  mesh         The model mesh
-  subroutine adjt_poly2d_recon_lookup_alg( mesh )
+  !> @param[in]  fspace_enum  The function space to test.
+  subroutine adjt_poly2d_recon_lookup_alg( mesh, fspace_enum )
     use poly2d_reconstruction_kernel_mod,     only : poly2d_reconstruction_kernel_type
     use invoke_adj_poly2d_recon_lookup_mod,   only : invoke_adj_poly2d_recon_lookup
     use adj_lookup_table_mod,                 only : adj_lookup_table_type
@@ -39,6 +40,7 @@ module adjt_poly2d_recon_lookup_alg_mod
     implicit none
     ! Arguments
     type(mesh_type), pointer, intent(in) :: mesh
+    integer(kind=i_def),      intent(in) :: fspace_enum
     ! Internal arguments for kernels
     type(r_tran_field_type)             :: reconstruction
     type(r_tran_field_type)             :: tracer
@@ -81,14 +83,15 @@ module adjt_poly2d_recon_lookup_alg_mod
     else
       stencil_size = MAX(1, 4*fv_horizontal_order + fv_horizontal_order**2)
     end if
-    ndata = 4*stencil_size
+
+    ndata = 4
     coeff => get_hori_wt_mol_coeffs(mesh_id)
     stencil_extent = fv_horizontal_order/2_i_def
-    vector_space_wt_md_ptr => function_space_collection % get_fs(              &
-        mesh, element_order_h, element_order_v, wtheta, ndata=ndata            &
+    vector_space_wt_md_ptr => function_space_collection % get_fs( &
+      mesh, element_order_h, element_order_v, fspace_enum, ndata=ndata, ndata_first=.false. &
     )
-    vector_space_wtheta_ptr => function_space_collection % get_fs(             &
-        mesh, element_order_h, element_order_v, wtheta                         &
+    vector_space_wtheta_ptr => function_space_collection % get_fs( &
+      mesh, element_order_h, element_order_v, fspace_enum &
     )
     call reconstruction % initialise(vector_space=vector_space_wt_md_ptr, name='reconstruction')
     call tracer % initialise(vector_space=vector_space_wtheta_ptr, name='tracer', halo_depth=2)
@@ -131,6 +134,7 @@ module adjt_poly2d_recon_lookup_alg_mod
                                          lookup_field, num_sets_field, &
                                          coeff, nsets, nindices, &
                                          stencil_extent )
+
     reconstruction_reconstruction_input_inner_prod = 0.0_r_def
     tracer_tracer_input_inner_prod = 0.0_r_def
     call invoke( x_innerproduct_y( reconstruction_reconstruction_input_inner_prod, &
@@ -140,17 +144,17 @@ module adjt_poly2d_recon_lookup_alg_mod
 
     inner2 = 0.0_r_def
     inner2 = inner2 + real( reconstruction_reconstruction_input_inner_prod, r_tran )
-    print *, inner2
     inner2 = inner2 + real( tracer_tracer_input_inner_prod, r_tran )
-    print *, inner2
     ! Test the inner-product values for equality, allowing for the precision of the active variables
     machine_tol = spacing( max( abs(inner1), abs(inner2) ) )
     relative_diff = abs(inner1 - inner2) / machine_tol
     if ( relative_diff < overall_tolerance ) then
-      write( log_scratch_space, * ) "PASSED poly2d_recon_lookup_kernel_type:", inner1, inner2, relative_diff
+      write( log_scratch_space, * ) "PASSED poly2d_recon_lookup_kernel_type("//&
+        trim( name_from_functionspace(fspace_enum) )//"):", inner1, inner2, relative_diff
       call log_event( log_scratch_space, LOG_LEVEL_INFO )
     else
-      write( log_scratch_space, * ) "FAILED poly2d_recon_lookup_kernel_type:", inner1, inner2, relative_diff
+      write( log_scratch_space, * ) "FAILED poly2d_recon_lookup_kernel_type("//&
+        trim( name_from_functionspace(fspace_enum) )//"):", inner1, inner2, relative_diff
       call log_event( log_scratch_space, LOG_LEVEL_ERROR )
     end if
   end subroutine adjt_poly2d_recon_lookup_alg

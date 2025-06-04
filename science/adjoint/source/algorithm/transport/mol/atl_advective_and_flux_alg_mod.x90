@@ -26,7 +26,10 @@ module atl_advective_and_flux_alg_mod
   use horizontal_mass_flux_kernel_mod,     only: horizontal_mass_flux_kernel_type
   use vertical_mass_flux_kernel_mod,       only: vertical_mass_flux_kernel_type
   use atl_w3h_advective_update_kernel_mod, only: atl_w3h_advective_update_kernel_type
-  use adj_w3h_advective_update_kernel_mod, only: adj_w3h_advective_update_kernel_type
+  use invoke_adj_w3h_adv_upd_lookup_mod,   only: invoke_adj_w3h_adv_upd_lookup_kernel_type
+  use adj_lookup_table_generators_alg_mod, only: create_lookup_w3h_adv_upd
+  use adj_lookup_table_mod,                only: adj_lookup_table_type
+  use integer_field_mod,                   only: integer_field_type
   use atl_w3v_advective_update_kernel_mod, only: atl_w3v_advective_update_kernel_type
   use adj_w3v_advective_update_kernel_mod, only: adj_w3v_advective_update_kernel_type
   use atl_horizontal_mass_flux_kernel_mod, only: atl_horizontal_mass_flux_kernel_type
@@ -94,12 +97,19 @@ contains
     type(field_type)                   :: reconstruction_field, &
                                           ls_reconstruction_field, &
                                           ls_reconstruction_field_big_halo, &
-                                          ls_wind_big_halo, &
-                                          dummy_recon
+                                          ls_wind_big_halo
     logical(kind=l_def)                :: do_horizontal
     logical(kind=l_def)                :: do_vertical
     type(operator_type), pointer       :: m3_inv
     integer(kind=i_def), parameter     :: stencil_depth = 1
+
+    type(adj_lookup_table_type)        :: lookup_w3h
+    type(integer_field_type),  pointer :: lookup_w3h_field
+    type(integer_field_type),  pointer :: set_count_w3h_field
+    integer(kind=i_def)                :: nsets
+    integer(kind=i_def)                :: nindices
+
+    nullify(mesh, recon_fs, m3_inv, lookup_w3h_field, set_count_w3h_field)
 
     mesh => density%get_mesh()
 
@@ -185,7 +195,6 @@ contains
                                                                 halo_depth=stencil_depth + 1_i_def )
             call ls_wind_big_halo % initialise( ls_wind % get_function_space(), &
                                                 halo_depth=stencil_depth + 1_i_def )
-
             call invoke( setval_X( ls_reconstruction_field_big_halo, ls_reconstruction_field ),  &
                          setval_X( ls_wind_big_halo, ls_wind ),                                  &
                          atl_w3h_advective_update_kernel_type( adv_inc_2,                        &
@@ -196,10 +205,18 @@ contains
                                                                wind,                             &
                                                                m3_inv ) )
 
-            call reconstruction_field % copy_field_properties( dummy_recon )
-            call invoke( name = 'w3h_adv_upd', &
-                         adj_w3h_advective_update_kernel_type( adv_inc_1, reconstruction_field, dummy_recon, stencil_depth, &
-                                                               ls_wind, stencil_depth, m3_inv ) )
+            ! Lookup table adjoint solution. Creation of lookup table is essentially
+            ! a dry-run of the TL code.
+            call create_lookup_w3h_adv_upd( lookup_w3h, adv_inc_1, reconstruction_field, &
+                                            wind, m3_inv, stencil_depth )
+            lookup_w3h_field => lookup_w3h % get_lookup_field()
+            set_count_w3h_field => lookup_w3h % get_set_count_field()
+            nindices = lookup_w3h % get_nindices()
+            nsets = lookup_w3h % get_nsets_max()
+            call invoke_adj_w3h_adv_upd_lookup_kernel_type( adv_inc_1, reconstruction_field, &
+                                                            lookup_w3h_field, set_count_w3h_field, &
+                                                            ls_wind, stencil_depth, m3_inv, &
+                                                            nsets, nindices )
           end if
 
           call invoke( setval_c( adv_inc_1, 0.0_r_def ), &
