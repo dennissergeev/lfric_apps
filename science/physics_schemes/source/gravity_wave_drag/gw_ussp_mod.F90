@@ -510,7 +510,7 @@ call v_to_p(v,                                                                 &
 !     Initialize local arrays to zero
 ! ----------------------------------------------------------------------+-------
 ! ---------------------------------
-!     Set winds with haloes to zero
+!     Set winds with halos to zero
 ! ---------------------------------
 
 !$OMP do SCHEDULE(STATIC)

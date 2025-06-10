@@ -308,3 +308,21 @@ class vn21_t742(MacroUpgrade):
         self.add_setting(config, ["namelist:blayer", "bl_res_inv"], bl_res_inv)
 
         return config, self.reports
+
+
+class vn21_t4604(MacroUpgrade):
+    """Upgrade macro for ticket #4604 by Mike Hobson."""
+
+    BEFORE_TAG = "vn2.1_t742"
+    AFTER_TAG = "vn2.1_t4604"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        """Rename generate_inner_haloes to generate_inner_halos"""
+        self.rename_setting(
+            config,
+            ["namelist:partitioning", "generate_inner_haloes"],
+            ["namelist:partitioning", "generate_inner_halos"],
+        )
+
+        return config, self.reports

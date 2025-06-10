@@ -125,7 +125,7 @@ subroutine init_mesh( configuration,           &
   integer(kind=i_def)              :: panel_decomposition(2)
   integer(kind=i_def)              :: panel_xproc(2)
   integer(kind=i_def)              :: panel_yproc(2)
-  logical(l_def)                   :: generate_inner_haloes(2)
+  logical(l_def)                   :: generate_inner_halos(2)
 
   ! lfric2lfric namelist variables
   logical(kind=l_def)              :: prepartitioned
@@ -152,8 +152,8 @@ subroutine init_mesh( configuration,           &
   ! Read partitioning namelist for source and destination meshes
   src_partitioning_nml  => configuration%get_namelist('partitioning', &
                                                       'source')
-  call src_partitioning_nml%get_value( 'generate_inner_haloes', &
-                                        generate_inner_haloes(src) )
+  call src_partitioning_nml%get_value( 'generate_inner_halos', &
+                                        generate_inner_halos(src) )
   call src_partitioning_nml%get_value( 'panel_decomposition', &
                                         panel_decomposition(src) )
   if (panel_decomposition(src) == panel_decomposition_custom) then
@@ -165,8 +165,8 @@ subroutine init_mesh( configuration,           &
 
   dst_partitioning_nml  => configuration%get_namelist('partitioning', &
                                                       'destination')
-  call dst_partitioning_nml%get_value( 'generate_inner_haloes', &
-                                        generate_inner_haloes(dst) )
+  call dst_partitioning_nml%get_value( 'generate_inner_halos', &
+                                        generate_inner_halos(dst) )
   call dst_partitioning_nml%get_value( 'panel_decomposition', &
                                         panel_decomposition(dst) )
   if (panel_decomposition(dst) == panel_decomposition_custom) then
@@ -409,14 +409,14 @@ subroutine init_mesh( configuration,           &
                             local_rank, total_ranks,       &
                             xproc(dst), yproc(dst),        &
                             stencil_depth,                 &
-                            generate_inner_haloes(dst),    &
+                            generate_inner_halos(dst),    &
                             partitioner_dst )
 
     call create_local_mesh( mesh_names(src:src),           &
                             local_rank, total_ranks,       &
                             xproc(src), yproc(src),        &
                             stencil_depth,                 &
-                            generate_inner_haloes(src),    &
+                            generate_inner_halos(src),    &
                             partitioner_src )
 
     ! Read in the global intergrid mesh mappings,

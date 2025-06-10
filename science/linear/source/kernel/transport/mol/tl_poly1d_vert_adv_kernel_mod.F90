@@ -140,7 +140,7 @@ subroutine tl_poly1d_vert_adv_code( nlayers,              &
   ! Compute log of tracer. This code should only be used for a positive
   ! quantity, but adding in the abs ensures no errors are thrown
   ! if negative numbers are passed through in redundant calculations
-  ! in the haloes
+  ! in the halos
   if ( logspace ) then
     do k = 0, nlayers
       ls_log_tracer(k) = log(max(EPS,abs(ls_tracer(ij+k))))

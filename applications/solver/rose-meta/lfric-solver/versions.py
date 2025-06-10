@@ -43,5 +43,22 @@ class vn21_t708(MacroUpgrade):
         self.add_setting(
             config, ["namelist:logging", "log_to_rank_zero_only"], ".false."
         )
+        return config, self.reports
+
+
+class vn21_t4604(MacroUpgrade):
+    """Upgrade macro for ticket #4604 by Mike Hobson."""
+
+    BEFORE_TAG = "vn2.1_t708"
+    AFTER_TAG = "vn2.1_t4604"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-solver
+        """Rename generate_inner_haloes to generate_inner_halos"""
+        self.rename_setting(
+            config,
+            ["namelist:partitioning", "generate_inner_haloes"],
+            ["namelist:partitioning", "generate_inner_halos"],
+        )
 
         return config, self.reports

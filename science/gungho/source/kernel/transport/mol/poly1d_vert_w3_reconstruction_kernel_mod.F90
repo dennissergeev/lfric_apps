@@ -157,7 +157,7 @@ subroutine poly1d_vert_w3_reconstruction_code( nlayers,                         
         ! fractional power. This code should only be used for a positive
         ! quantity, but adding in the abs ensures no errors are thrown
         ! if negative numbers are passed through in redundant calculations
-        ! in the haloes
+        ! in the halos
         do p = 1, vertical_order + 1
           ik = p + f*(global_order+1) + k*ndata + map_c(1) - 1
           new_tracer = new_tracer * max(EPS_R_TRAN,abs(tracer(ij + stencil(p,k,f))))**coeff(ik)

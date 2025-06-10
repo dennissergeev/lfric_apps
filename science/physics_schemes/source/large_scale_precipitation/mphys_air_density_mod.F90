@@ -64,7 +64,7 @@ real(kind=real_umphys), intent(in)  ::                                         &
                              ! in Air density * earth radius**2
 
 ! Structure storing dimensions of the q arrays, to allow flexibility
-! to call this routine using arrays with or without haloes.
+! to call this routine using arrays with or without halos.
 type(array_dims), intent(in) :: qdims
 
 real(kind=real_umphys), intent(in) :: q    (qdims%i_start:qdims%i_end,         &

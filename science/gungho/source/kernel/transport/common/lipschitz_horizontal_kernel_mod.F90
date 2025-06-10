@@ -16,7 +16,7 @@
 !!
 !!          NB: as this kernel computes only the upwind values in the column,
 !!          to compute values at DoFs on the edge of a processor's local domain,
-!!          we would need this kernel to loop up to depth one in the haloes.
+!!          we would need this kernel to loop up to depth one in the halos.
 !!
 !!          This could be done by setting the metadata for the Lipschitz number
 !!          to be GH_INC, but this would force a halo exchange on the departure

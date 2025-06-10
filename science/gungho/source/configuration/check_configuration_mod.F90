@@ -597,7 +597,7 @@ contains
     stencil_depth = 2
 
     if (operators == operators_fv) then
-      ! Need larger haloes for fv operators
+      ! Need larger halos for fv operators
       stencil_depth  = max( stencil_depth, fv_horizontal_order/2 )
     end if
 

@@ -48,7 +48,7 @@ module dcmip200_orography_spherical_mod_test
 
   real(r_def), parameter :: surface_pressure = 1000.0e2_r_def
 
-  logical(l_def),     parameter   :: generate_inner_haloes = .true.
+  logical(l_def),     parameter   :: generate_inner_halos = .true.
 
 contains
 
@@ -179,7 +179,7 @@ contains
                                 xproc,                 &
                                 yproc,                 &
                                 1,                     &
-                                generate_inner_haloes, &
+                                generate_inner_halos, &
                                 local_rank,            &
                                 total_ranks )
     ! Create local mesh

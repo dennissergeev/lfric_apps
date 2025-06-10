@@ -41,7 +41,7 @@ implicit none
 
 type(array_dims), intent(in) ::                                                &
    dimsi,      & ! Array dimensions for the inputs
-   dimsi_s,    & ! Array dimensions for input u or v (has haloes).
+   dimsi_s,    & ! Array dimensions for input u or v (has halos).
    dimso         ! Array dimensions for the outputs and work variables
 
 integer, intent(in) :: bl_levels

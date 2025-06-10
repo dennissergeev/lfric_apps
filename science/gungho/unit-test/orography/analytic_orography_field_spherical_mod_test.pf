@@ -46,7 +46,7 @@ module analytic_orography_field_spherical_mod_test
 
   real(r_def),        parameter   :: radius                = 6371229.0_r_def
 
-  logical(l_def),     parameter   :: generate_inner_haloes = .true.
+  logical(l_def),     parameter   :: generate_inner_halos = .true.
 
 contains
 
@@ -209,7 +209,7 @@ contains
                                 xproc,                 &
                                 yproc,                 &
                                 1,                     &
-                                generate_inner_haloes, &
+                                generate_inner_halos, &
                                 local_rank,            &
                                 total_ranks )
     call local_mesh%initialise( global_mesh_ptr, partition )

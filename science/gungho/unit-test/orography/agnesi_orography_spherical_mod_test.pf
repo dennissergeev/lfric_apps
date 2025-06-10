@@ -44,7 +44,7 @@ module agnesi_orography_spherical_mod_test
   integer(i_def),     parameter   :: local_rank            = 0_i_def
   integer(i_def),     parameter   :: xproc                 = 1_i_def
   integer(i_def),     parameter   :: yproc                 = 1_i_def
-  logical(l_def),     parameter   :: generate_inner_haloes = .true.
+  logical(l_def),     parameter   :: generate_inner_halos = .true.
 
 contains
 
@@ -178,7 +178,7 @@ contains
                                 xproc,                 &
                                 yproc,                 &
                                 1,                     &
-                                generate_inner_haloes, &
+                                generate_inner_halos, &
                                 local_rank,            &
                                 total_ranks )
     ! Create local mesh

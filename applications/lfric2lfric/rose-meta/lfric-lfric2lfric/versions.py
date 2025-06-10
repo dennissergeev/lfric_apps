@@ -21,13 +21,10 @@ class UpgradeError(Exception):
 
 """
 Copy this template and complete to add your macro
-
 class vnXX_txxx(MacroUpgrade):
     # Upgrade macro for <TICKET> by <Author>
-
     BEFORE_TAG = "vnX.X"
     AFTER_TAG = "vnX.X_txxx"
-
     def upgrade(self, config, meta_config=None):
         # Add settings
         return config, self.reports
@@ -73,7 +70,6 @@ class vn21_t83(MacroUpgrade):
         )
         self.add_setting(config, ["namelist:theta_relax", "times"], "0.0")
         self.add_setting(config, ["namelist:theta_relax", "timescale"], "1.0")
-
         return config, self.reports
 
 
@@ -89,7 +85,6 @@ class vn21_t476(MacroUpgrade):
         self.add_setting(config, ["namelist:physics", "bl_segment"], "0")
         self.add_setting(config, ["namelist:physics", "gw_segment"], "0")
         self.add_setting(config, ["namelist:physics", "ussp_segment"], "0")
-
         return config, self.reports
 
 
@@ -103,7 +98,6 @@ class vn21_t663(MacroUpgrade):
         # Commands From: rose-meta/um-aerosol
         # Commands From: rose-meta/um-aerosol
         self.add_setting(config, ["namelist:aerosol", "murk_lbc"], ".false.")
-
         return config, self.reports
 
 
@@ -118,7 +112,6 @@ class vn21_t708(MacroUpgrade):
         self.add_setting(
             config, ["namelist:logging", "log_to_rank_zero_only"], ".false."
         )
-
         return config, self.reports
 
 
@@ -246,7 +239,6 @@ class vn21_t164(MacroUpgrade):
         self.add_setting(
             config, ["namelist:stochastic_physics", "rp_lsfc_z0v_max"], z0v_io
         )
-
         return config, self.reports
 
 
@@ -263,7 +255,6 @@ class vn21_t657(MacroUpgrade):
         self.remove_setting(config, [nml, "fsd_nonconv_const"])
         self.add_setting(config, [nml, "fsd_nonconv_ice_const"], fsd_nonconv)
         self.add_setting(config, [nml, "fsd_nonconv_liq_const"], fsd_nonconv)
-
         return config, self.reports
 
 
@@ -302,7 +293,6 @@ class vn21_t596(MacroUpgrade):
             ["namelist:surface", "z0m_specified"],
             ["namelist:jules_sea_seaice", "z0m_specified"],
         )
-
         return config, self.reports
 
 
@@ -322,5 +312,35 @@ class vn21_t742(MacroUpgrade):
         else:
             bl_res_inv = "'cosine_inv_flux'"
         self.add_setting(config, ["namelist:blayer", "bl_res_inv"], bl_res_inv)
+        return config, self.reports
+
+
+class vn21_t4604(MacroUpgrade):
+    """Upgrade macro for ticket #4604 by Mike Hobson."""
+
+    BEFORE_TAG = "vn2.1_t742"
+    AFTER_TAG = "vn2.1_t4604"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        """Rename generate_inner_haloes to generate_inner_halos"""
+        self.rename_setting(
+            config,
+            ["namelist:partitioning", "generate_inner_haloes"],
+            ["namelist:partitioning", "generate_inner_halos"],
+        )
+
+        # Commands From: rose-meta/lfric-lfric2lfric
+        """Rename generate_inner_haloes to generate_inner_halos"""
+        self.rename_setting(
+            config,
+            ["namelist:partitioning(destination)", "generate_inner_haloes"],
+            ["namelist:partitioning(destination)", "generate_inner_halos"],
+        )
+        self.rename_setting(
+            config,
+            ["namelist:partitioning(source)", "generate_inner_haloes"],
+            ["namelist:partitioning(source)", "generate_inner_halos"],
+        )
 
         return config, self.reports

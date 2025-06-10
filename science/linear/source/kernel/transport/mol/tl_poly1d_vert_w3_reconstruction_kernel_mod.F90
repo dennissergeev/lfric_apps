@@ -152,7 +152,7 @@ subroutine tl_poly1d_vert_w3_reconstruction_code(                &
         ! fractional power. This code should only be used for a positive
         ! quantity, but adding in the abs ensures no errors are thrown
         ! if negative numbers are passed through in redundant calculations
-        ! in the haloes
+        ! in the halos
         new_tracer = 0.0_r_def
         ls_new_tracer = 1.0_r_def
         do p = 1, vertical_order + 1

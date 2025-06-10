@@ -73,7 +73,7 @@ field_proxy = lfric_field%get_proxy()
 local_rank = global_mpi%get_comm_rank()
 total_ranks = global_mpi%get_comm_size()
 
-! The local size of single 2D level, just local domain, no haloes etc
+! The local size of single 2D level, just local domain, no halos etc
 local_size_2d = twod_mesh%get_last_edge_cell()
 allocate(local_data(local_size_2d))
 

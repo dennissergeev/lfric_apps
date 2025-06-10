@@ -252,7 +252,7 @@ contains
     integer(kind=i_def)            :: st, stage, mesh_id
     integer(kind=i_def), parameter :: exner_stencil_depth = 1
 
-    ! Fields with larger haloes
+    ! Fields with larger halos
     type(field_type) :: ls_exner_big_halo, &
                         exner_big_halo
 

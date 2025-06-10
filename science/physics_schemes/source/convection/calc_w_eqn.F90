@@ -213,7 +213,7 @@ case (method_simpsonwiggert)
   ! Note: Could use module to get the layer thicknesses,
   !       though the height in the modules have halos etc, and these
   !       pointare compressed... not a problem if the indexes are available
-  !       though how to relate the haloes.?
+  !       though how to relate the halos.?
   !
   ! For now pass down height levels like the rest of the convection scheme.
 
