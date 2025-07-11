@@ -11,6 +11,8 @@ lfric_apps jobs run on the Met Office EX systems.
 """
 
 import argparse
+import datetime
+import json
 import os
 import re
 import statistics
@@ -24,13 +26,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as tkr
 
 
-def numfmt(y, pos):
+def num_fmt(y, pos):
     """Helper function to allow y axis formatting of MiB to GiB."""
     label = f'{y/1024:,.0f}'
     return label
 
 
-yfmt = tkr.FuncFormatter(numfmt)
+yfmt = tkr.FuncFormatter(num_fmt)
 
 KB_TO_MIB = 1000/(1024**2)
 
@@ -59,6 +61,7 @@ def plot_run_job(run, out_filename):
 
     """
 
+    run_stats = {}
     # Parse run configuration information from the job & job.out PBS files.
     if not os.path.exists(run):
         raise FileNotFoundError(f'{run} does not exist')
@@ -69,7 +72,7 @@ def plot_run_job(run, out_filename):
     nnodes = 1
     # re pattern to fetch number of nodes from PBS config
     nnodes_rep = re.compile('#PBS -l select=([0-9]+)')
-    if nnodes_rep.match(jfr) is not None:
+    if len(nnodes_rep.findall(jfr)) == 1:
         nnodes, = nnodes_rep.findall(jfr)
     nnodes = int(nnodes)
     # re pattern to fetch number of nodes from PBS config
@@ -92,6 +95,13 @@ def plot_run_job(run, out_filename):
             mem_per_node.sort(key=lambda x: int(x.split()[1]))
             mem_per_node = [{'node': m.split()[0], 'ncount': m.split()[1],
                              'memMiB': m.split()[2]} for m in mem_per_node]
+        else:
+            raise ValueError('Failed to parse memory per node from job.out. '
+                             'Check that the PBS script has run and output '
+                             'and that both MEMORY_PROFILE is true & '
+                             'TARGET_PLATFORM = "meto-ex1a" in the environment '
+                             'variables passed to launch-exe.')
+
     run_env_vars = {}
     # parse environment variables from job.out
     for k, v in re.findall((f'({"|".join([e for e in run_env_keys])})='
@@ -104,7 +114,7 @@ def plot_run_job(run, out_filename):
     wclock_rep = re.compile('(?:"walltime": "|Elapsed Time:[ ]+)'
                             '([0-9]+:[0-9]+:[0-9]+)')
     wclock = "missing"
-    if wclock_rep.match(jofr) is not None:
+    if len(wclock_rep.findall(jofr)) == 1:
         wclock, = wclock_rep.findall(jofr)
     else:
         # but the job.out can be read before PBS has reported the wall clock
@@ -116,10 +126,20 @@ def plot_run_job(run, out_filename):
         # so only update wclock if it is found
         if wclock_rep.match(jofr) is not None:
             wclock, = wclock_rep.findall(jofr)
+    if wclock == "missing":
+        #wclock = "missing"
+        # 2025-06-04T13:50:31Z INFO - started
+        # 2025-06-04T14:48:33Z INFO - succeeded
+        start_pattern = re.compile(r'([0-9\-:T]+)Z INFO - started')
+        astart, = start_pattern.findall(jofr)
+        success_pattern = re.compile(r'([0-9\-:T]+)Z INFO - succeeded')
+        asuccess, = success_pattern.findall(jofr)
+        wt = datetime.datetime.fromisoformat(asuccess)-datetime.datetime.fromisoformat(astart)
+        wclock = str(wt)
 
     if mpiprocs is not None:
         mps = f"{mpiprocs} mpiprocs, "
-    runtitle = (f"{job_name}: wallclock: {wclock}\n"
+    runtitle = (f"{job_name}: wallclock= {wclock}\n"
                 f"{run_env_vars.get('TARGET_PLATFORM', '')} "
                 f"{nnodes} nodes, "
                 f"{mps}"
@@ -131,6 +151,14 @@ def plot_run_job(run, out_filename):
         rranks = run_env_vars.get('XIOS_SERVER_RANKS', '')
         runtitle = runtitle + f"xios_server {rranks} ranks, "
 
+    run_stats['run'] = {}
+    run_stats['run']['wallclock'] = wclock
+    run_stats['run']['nnodes'] = nnodes
+    tranks = int(run_env_vars.get('TOTAL_RANKS', '-1'))
+    run_stats['run'][f"{run_env_vars.get('EXEC_NAME', '')} ranks"] = tranks
+    run_stats['run']['OMP_threads'] = run_env_vars.get('OMP_NUM_THREADS', '')
+    if run_env_vars.get('XIOS_SERVER_MODE') == 'True':
+        run_stats['run']['xios_server ranks'] = int(run_env_vars.get('XIOS_SERVER_RANKS', ''))
     # Run configuration information is now encoded into the title to be used
     # for plotting.
     # Next, parse run configuration information from the job.err PBS file;
@@ -150,18 +178,11 @@ def plot_run_job(run, out_filename):
     for k, v in re.findall((r'(MPICH_RANK_REORDER_METHOD)[ ]*='
                             r'[ ]*([0-9a-zA-Z\-\_]+)'), jefr):
         run_env_vars[k] = v
-    rrmethod = run_env_vars.get('MPICH_RANK_REORDER_METHOD', '1')
-    runtitle = runtitle + f"MPICH_RANK_REORDER_METHOD {rrmethod}"
 
     # Now there is a multi-line title string, with information captured
     # from the run Environment.
     # There are also data objects: mem-per_node & mem_per_rank
     # which are now suitable to create a plot with.
-
-    nranks_lfric = int(run_env_vars.get('TOTAL_RANKS', '0'))
-    lf_rpn = int(nranks_lfric/nnodes)
-
-    runtitle = runtitle + f', {lf_rpn} lfric ranks per node'
 
     nodes = [m['node'] for m in mem_per_node]
 
@@ -177,25 +198,42 @@ def plot_run_job(run, out_filename):
     x = np.arange(len(nodes))
 
     # Create a bar chart of maximum memory reported to PBS per node.
-    ax.bar(x+offset, [int(m['memMiB']) for m in mem_per_node],
-           tick_label=nodes, width=width, color='purple', label='node')
+    nbar = ax.bar(x+offset, [int(m['memMiB']) for m in mem_per_node],
+                  tick_label=nodes, width=width, color='purple', label='node')
 
-    # Iiterate through each element of the memory per rank list.
+    # Iterate through each element of the memory per rank list.
     # Assign a label and colour, then plot this element as a stacked bar
     # updating the stacking container and adding labels.
+    # handle minimal legend for multi-bar stack with these flags
+    lfirst=True
+    xfirst=True
+    lfh = None
+    xfh = None
     for m in mem_per_rank:
         label = "executable"
         col = "black"
+        xval = nodes.index(m['node'])
+        y = m['memkB']*KB_TO_MIB
         if m['exec'] == 'lfric' or m['exec'] == 'lfric_atm':
             label = 'lfric_atm'
             col = 'green'
+            if lfirst:
+                lfirst = False
+                lfh = ax.bar(xval, y, width=width, bottom=bottom[xval], color=col,
+                             label=label, edgecolor='black')
+            else:
+                ax.bar(xval, y, width=width, bottom=bottom[xval], color=col,
+                       label=label, edgecolor='black')
         elif m['exec'] == 'xios' or m['exec'] == 'xios_server':
             label = 'xios_server'
             col = 'blue'
-        xval = nodes.index(m['node'])
-        y = m['memkB']*KB_TO_MIB
-        ax.bar(xval, y, width=width, bottom=bottom[xval], color=col,
-               label=label, edgecolor='black')
+            if xfirst:
+                xfirst = False
+                xfh = ax.bar(xval, y, width=width, bottom=bottom[xval], color=col,
+                             label=label, edgecolor='black')
+            else:
+                ax.bar(xval, y, width=width, bottom=bottom[xval], color=col,
+                       label=label, edgecolor='black')
         bottom[xval] += y
 
     # Rotate x axis labels for readability.
@@ -216,15 +254,27 @@ def plot_run_job(run, out_filename):
               f'{int(statistics.mean(all_lf))}'
               f' ± σ={int(statistics.stdev(all_lf))} '
               f'≤ {int(max(all_lf))}')
+
+    run_stats[run_env_vars.get('EXEC_NAME', '')] = {}
+    run_stats[run_env_vars.get('EXEC_NAME', '')]['mean'] = statistics.mean(all_lf)
+    run_stats[run_env_vars.get('EXEC_NAME', '')]['max'] = max(all_lf)
+    run_stats[run_env_vars.get('EXEC_NAME', '')]['min'] = min(all_lf)
+    run_stats[run_env_vars.get('EXEC_NAME', '')]['std_dev'] = statistics.stdev(all_lf)
+    run_stats[run_env_vars.get('EXEC_NAME', '')]['units'] = 'max mem MiB'
     if all_x:
         tstats = tstats + (f'\n{int(min(all_x))} ≤ xios_server (max mem MiB): '
                            f'{int(statistics.mean(all_x))} ± '
                            f'σ={int(statistics.stdev(all_x))}'
                            f' ≤ {int(max(all_x))}')
-        ax.legend([ax.patches[0], ax.patches[nnodes+1], ax.patches[-1]],
-                  ['node', 'lfric_atm', 'xios_server'])
+        ax.legend(handles=[nbar, lfh, xfh])
+        run_stats['xios_server'] = {}
+        run_stats['xios_server']['mean'] = statistics.mean(all_x)
+        run_stats['xios_server']['max'] = max(all_x)
+        run_stats['xios_server']['min'] = min(all_x)
+        run_stats['xios_server']['std_dev'] = statistics.stdev(all_x)
+        run_stats['xios_server']['units'] = 'max mem MiB'
     else:
-        ax.legend([ax.patches[0], ax.patches[nnodes+1]], ['node', 'lfric_atm'])
+        ax.legend(handles=[nbar, lfh])
     if len(all_n) > 1:
         tstats = tstats + (f'\n{int(min(all_n))} ≤ node (max mem GiB): '
                            f'{int(statistics.mean(all_n))} ± '
@@ -234,14 +284,23 @@ def plot_run_job(run, out_filename):
         tstats = tstats + (f'\nSingle node (max mem GiB): '
                            f'{int(statistics.mean(all_n))}')
 
+    run_stats['node'] = {}
+    run_stats['node']['mean'] = statistics.mean(all_n)
+    run_stats['node']['max'] = max(all_n)
+    run_stats['node']['min'] = min(all_n)
+    if len(all_n) > 1:
+        run_stats['node']['std_dev'] = statistics.stdev(all_n)
+    run_stats['node']['units'] = 'max mem MiB'
+
     # Add a horizontal line for Milan max memory
     ax.axhline(y=237*1024, color='r', linestyle='--')
     ax.text(0.5, 240*1024, 'EX Milan Estimated Usable Memory Threshold',
             color='black', va='center', ha='left',
             transform=ax.get_yaxis_transform())
     plt.title(runtitle + tstats)
-    fig.savefig(out_filename)
-
+    fig.savefig(out_filename + '.png')
+    with open(out_filename + '.json', 'w', encoding="utf-8") as jsonout:
+        jsonout.write(json.dumps(run_stats))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -250,5 +309,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     this_run = args.run_job
     plot_filename = os.path.join(os.environ['CYLC_TASK_LOG_DIR'],
-                                 "memory_profile.png")
+                                 "memory_profile")
     plot_run_job(this_run, plot_filename)
