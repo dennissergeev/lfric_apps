@@ -38,12 +38,6 @@ import sys
 
 from read_data import read_nodal_data
 
-# Use viridis colormap
-from python_maps import viridis_data
-from matplotlib.colors import ListedColormap
-viridis = ListedColormap(viridis_data, name='viridis')
-plt.register_cmap(name='viridis', cmap=viridis)
-
 levels = None
 data = None
 
@@ -69,8 +63,6 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
     ny = int(ny)
     nz = len(levels)
     zi = np.zeros([ny, nx, len(levels)])
-
-    c_map = viridis
 
     for p in range(len(levels)):
         p_data = data.loc[data['level'] == levels[p]]
@@ -108,7 +100,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
 
     matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
     cf = ax1.contourf(x_i * r2d, y_i * r2d, np.round(dz, 10),
-                      cc, cmap=c_map, extend='max')
+                      cc, cmap='viridis', extend='max')
     cl = ax1.contour(x_i * r2d, y_i * r2d, np.round(dz, 10), cc,
                      linewidths=2.0, colors='k', linestyle="", extend='min')
     ax1.plot([x2d[0], x2d[-1]], [zp, zp], 'k--', linewidth=2)
@@ -142,7 +134,7 @@ def make_figure(plotpath, nx, ny, field, component, timestep):
 
     matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
     cf = ax2.contourf(x_i * r2d, y_i * r2d, np.round(dz, 10),
-                      cc, cmap=c_map, extend='max')
+                      cc, cmap='viridis', extend='max')
     cl = ax2.contour(x_i * r2d, y_i * r2d, np.round(dz, 10), cc,
                      linewidths=2.0, colors='k', linestyle="", extend='min')
 

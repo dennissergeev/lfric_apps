@@ -104,11 +104,12 @@
         inherit = AZSPICE_BASE
         pre-script = """
                      module purge
-                     module load csc/2025.3.20
+                     ml use /home/users/andrew.coughtrie/testing
+                     module load csc_test/2025.8.20.pynetcdf
                      module load gcc/12.2.0
                      module load mpich/4.2.3
                      module load esmf/8.7.0
-                     module load scitools/production-os46-3
+                     module load py-netcdf4
                      module load um_tools/2023.08.1/openmp
                      module list 2>&1
                      """
