@@ -152,6 +152,8 @@ real :: ph_fit_intercept = rmdi ! cloud pH fit intercept
 
 integer :: chem_timestep = imdi         ! Chemical timestep in seconds for N-R
                                         ! and Offline oxidant schemes
+integer :: i_chem_timestep_halvings = imdi ! Integer number of times to half the
+                                        ! ASAD chemistry timestep
 integer :: dts0 = 300                   ! Default Backward Euler timestep
 integer :: nit  = 8                     ! Number of iterations of BE Solver
 
