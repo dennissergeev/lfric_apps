@@ -428,3 +428,19 @@ class vn22_t806(MacroUpgrade):
         # Commands From: rose-meta/lfric-name_transport
         # Blank Upgrade Macro
         return config, self.reports
+
+
+class vn22_t4020(MacroUpgrade):
+    """Upgrade macro for ticket #4020 by Andrew Coughtrie."""
+
+    BEFORE_TAG = "vn2.2_t806"
+    AFTER_TAG = "vn2.2_t4020"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: rose-meta/lfric-driver
+        self.add_setting(
+            config, ["namelist:io", "end_of_run_checkpoint"], ".true."
+        )
+        self.add_setting(config, ["namelist:io", "checkpoint_times"], "")
+
+        return config, self.reports
