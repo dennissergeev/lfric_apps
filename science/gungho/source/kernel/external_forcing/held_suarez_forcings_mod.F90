@@ -14,8 +14,10 @@
 
 module held_suarez_forcings_mod
 
-use constants_mod,            only: r_def
-use planet_config_mod,        only: scaling_factor, kappa
+use constants_mod,               only: r_def
+use planet_config_mod,           only: scaling_factor, kappa
+use external_forcing_config_mod, only: held_suarez_sigma_b, wind_relax_time_scale
+
 implicit none
 
 private
@@ -24,11 +26,11 @@ private
 ! local parameters
 !-------------------------------------------------------------------------------
 ! Held-Suarez parameters
-real(kind=r_def), parameter :: SIGMA_B = 0.7_r_def  ! non-dimensional pressure threshold
+! real(kind=r_def), parameter :: SIGMA_B = 0.97_r_def  ! non-dimensional pressure threshold
 ! relaxation and damping coefficients
-real(kind=r_def), parameter :: KF = 1._r_def/86400._r_def ! 1 day-1
-real(kind=r_def), parameter :: KA = KF/40.0_r_def         ! 1/40 day-1
-real(kind=r_def), parameter :: KS = KF/4.0_r_def          ! 1/4 day-1
+! real(kind=r_def), parameter :: KF = 1.0_r_def/(100.0_r_def * 86400._r_def) ! 1 day-1
+! real(kind=r_def), parameter :: KA = KF/40.0_r_def         ! 1/40 day-1
+! real(kind=r_def), parameter :: KS = KF/4.0_r_def          ! 1/4 day-1
 
 real(kind=r_def), parameter :: T_MIN            = 200.0_r_def ! Minimum/Stratospheric temperature
 real(kind=r_def), parameter :: T_SURF           = 315.0_r_def ! surface temperature
@@ -67,8 +69,15 @@ function held_suarez_newton_frequency(sigma, lat) result(held_suarez_frequency)
   real(kind=r_def), intent(in) :: lat
   real(kind=r_def)             :: held_suarez_frequency
   real(kind=r_def)             :: sigma_func
+  real(kind=r_def) :: KF
+  real(kind=r_def) :: KA
+  real(kind=r_def) :: KS
 
-  sigma_func = max((sigma - SIGMA_B)/(1.0_r_def - SIGMA_B), 0.0_r_def)
+  KF = 1.0_r_def / (wind_relax_time_scale * 86400.0_r_def)
+  KA = KF / 40.0_r_def
+  KS = KF / 4.0_r_def
+
+  sigma_func = max((sigma - held_suarez_sigma_b)/(1.0_r_def - held_suarez_sigma_b), 0.0_r_def)
   held_suarez_frequency = KA + (KS - KA)*sigma_func*(cos(lat)**4)
 
   ! If running on a scaled planet, then reduce the timescale...
@@ -85,9 +94,12 @@ function held_suarez_damping(sigma) result(held_suarez_damping_rate)
   real(kind=r_def), intent(in) :: sigma
   real(kind=r_def)             :: held_suarez_damping_rate
   real(kind=r_def) :: sigma_func
+  real(kind=r_def) :: KF
 
-  sigma_func = max((sigma - SIGMA_B)/(1.0_r_def - SIGMA_B), 0.0_r_def)
-  held_suarez_damping_rate = -KF*sigma_func
+  KF = 1.0_r_def / (wind_relax_time_scale * 86400.0_r_def)
+
+  sigma_func = max((sigma - held_suarez_sigma_b) / (1.0_r_def - held_suarez_sigma_b), 0.0_r_def)
+  held_suarez_damping_rate = - KF * sigma_func
 
   ! If running on a scaled planet, then reduce the timescale...
   held_suarez_damping_rate = held_suarez_damping_rate*scaling_factor
