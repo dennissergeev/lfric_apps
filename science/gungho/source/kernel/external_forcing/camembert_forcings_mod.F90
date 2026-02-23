@@ -63,7 +63,7 @@ function camembert_equilibrium_theta(theta_init, exner, lon, lat) result(theta_e
 
   ! Calculate pressure-dependent factors
   pressure = p_zero * exner ** (1.0_r_def / kappa)
-  dt_eq_factor = temp_diff_eq_pole * &
+  dt_eq_factor = DT_EQ_POLE * &
     max(0.0_r_def, min(1.0_r_def, 1.0_r_def - log10(pressure/ P_LOW) / log10(P_HIGH / P_LOW)))
 
   ! Night side
