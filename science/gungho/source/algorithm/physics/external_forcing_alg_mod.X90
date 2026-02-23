@@ -13,6 +13,7 @@ module external_forcing_alg_mod
                                              theta_forcing_tidally_locked_earth, &
                                              theta_forcing_shallow_hot_jupiter,  &
                                              theta_forcing_deep_hot_jupiter,     &
+                                             theta_forcing_camembert,            &
                                              theta_forcing_temp_tend,            &
                                              theta_relaxation,                   &
                                              vapour_forcing,                     &
@@ -41,6 +42,7 @@ module external_forcing_alg_mod
   use tidally_locked_earth_kernel_mod, only: tidally_locked_earth_kernel_type
   use shallow_hot_jupiter_kernel_mod,  only: shallow_hot_jupiter_kernel_type
   use deep_hot_jupiter_kernel_mod,     only: deep_hot_jupiter_kernel_type
+  use camembert_kernel_mod,            only: camembert_kernel_type
   use momentum_smagorinsky_kernel_mod, only: momentum_smagorinsky_kernel_type
 #ifdef UM_PHYSICS
   use pc2_force_response_alg_mod,      only: pc2_force_response_alg
@@ -74,6 +76,7 @@ module external_forcing_alg_mod
   use geostrophic_forcing_alg_mod,     only: geostrophic_forcing_alg
   use vapour_forcing_profile_alg_mod,  only: vapour_forcing_profile_alg
   use wind_forcing_profile_alg_mod,    only: wind_forcing_profile_alg
+  use init_thermo_profile_alg_mod,     only: init_thermo_profile_alg
 
   use timer_mod,                       only: timer
 
@@ -147,6 +150,7 @@ contains
     type( field_type ), pointer :: dx_at_w2 => null()
 
     type( field_type ) :: u_smoothed, dx, visc_m
+    type( field_type ) :: theta_init
 
     integer( kind=i_def ) :: order, nlayers
     real( kind=r_def )    :: diffusion_coefficient_scaled, dx_sum, dx_size
@@ -215,6 +219,16 @@ contains
 
           call invoke(deep_hot_jupiter_kernel_type(dtheta_forcing, theta, &
                                                    exner_in_wth, chi, panel_id, dt) )
+
+        case(theta_forcing_camembert)
+          call log_event( 'slow_physics: Running CAMEMBERT theta forcing', &
+                          LOG_LEVEL_INFO )
+
+          call theta%copy_field_properties( theta_init )
+          call init_thermo_profile_alg( theta_init )
+
+          call invoke(camembert_kernel_type(dtheta_forcing, theta, theta_init, &
+                                            exner_in_wth, chi, panel_id, dt) )
 
         case(theta_forcing_temp_tend)
 
