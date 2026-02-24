@@ -29,6 +29,8 @@ module camembert_forcings_mod
   real(kind=r_def), parameter :: DT_EQ_POLE = 600.0_r_def
   ! Pressure thresholds
   real(kind=r_def), parameter :: P_LOW = 10.0_r_def, P_HIGH = 1.0E6_r_def
+  ! Height thresholds (h_1 is higher)
+  real(kind=r_def), parameter :: H_1 = 3481339.3_r_def, H_2 = 364935.5_r_def
   ! Universal gas constant (J K-1 mol-1)
   real(kind=r_def), parameter :: GAS_CONST = 8.31446261815324_r_def 
 
@@ -43,16 +45,18 @@ contains
 !!          temperature using eqn. 4 Christie et al. (2022).
 !> @param[in] theta_init    Initial potential temperature profile (prescribed)
 !> @param[in] exner         Exner function
+!> @param[in] layer_height  Height of the kth layer above the surface
 !> @param[in] lon           Longitude
 !> @param[in] lat           Latitude
 !> @return    theta_eq      Equilibrium theta profile
-function camembert_equilibrium_theta(theta_init, exner, lon, lat) result(theta_eq)
+function camembert_equilibrium_theta(theta_init, exner, layer_height, lon, lat) result(theta_eq)
 
   implicit none
 
   ! Arguments
   real(kind=r_def), intent(in) :: theta_init   ! Initial potential temperature
   real(kind=r_def), intent(in) :: exner        ! Exner function
+  real(kind=r_def), intent(in) :: layer_height ! Height [m]
   real(kind=r_def), intent(in) :: lon, lat     ! Longitude and latitue [rad]
   real(kind=r_def)             :: temp_eq      ! Equilibrium temperature
   real(kind=r_def)             :: theta_eq     ! Equilibrium theta
@@ -63,8 +67,10 @@ function camembert_equilibrium_theta(theta_init, exner, lon, lat) result(theta_e
 
   ! Calculate pressure-dependent factors
   pressure = p_zero * exner ** (1.0_r_def / kappa)
+  ! dt_eq_factor = DT_EQ_POLE * &
+  !   max(0.0_r_def, min(1.0_r_def, 1.0_r_def - log10(pressure/ P_LOW) / log10(P_HIGH / P_LOW)))
   dt_eq_factor = DT_EQ_POLE * &
-    max(0.0_r_def, min(1.0_r_def, 1.0_r_def - log10(pressure/ P_LOW) / log10(P_HIGH / P_LOW)))
+    max(0.0_r_def, min(1.0_r_def, (layer_height - H_2) / (H_1 - h_2)))
 
   ! Night side
   temp_eq = -0.5_r_def * dt_eq_factor

@@ -39,8 +39,9 @@ module camembert_kernel_mod
   !>
   type, public, extends(kernel_type) :: camembert_kernel_type
     private
-    type(arg_type) :: meta_args(7) = (/                                          &
+    type(arg_type) :: meta_args(8) = (/                                          &
          arg_type(GH_FIELD,   GH_REAL, GH_READWRITE, Wtheta),                    &
+         arg_type(GH_FIELD,   GH_REAL, GH_READ,      Wtheta),                    &
          arg_type(GH_FIELD,   GH_REAL, GH_READ,      Wtheta),                    &
          arg_type(GH_FIELD,   GH_REAL, GH_READ,      Wtheta),                    &
          arg_type(GH_FIELD,   GH_REAL, GH_READ,      Wtheta),                    &
@@ -66,6 +67,7 @@ contains
 !> @param[in]     theta        Potential temperature data
 !> @param[in]     theta_init   Initial potential temperature (prescribed)
 !> @param[in]     exner_in_wth The Exner pressure in Wtheta
+!> @param[in]     height_wth   Height of Wtheta space levels above surface
 !> @param[in]     chi_1        First component of the chi coordinate field
 !> @param[in]     chi_2        Second component of the chi coordinate field
 !> @param[in]     chi_3        Third component of the chi coordinate field
@@ -82,7 +84,7 @@ contains
 !> @param[in]     map_pid      Dofmap for the cell at the base of the column for panel_id
 subroutine camembert_code(nlayers,                     &
                           dtheta, theta, theta_init,   &
-                          exner_in_wth,                &
+                          exner_in_wth, height_wth,    &
                           chi_1, chi_2, chi_3,         &
                           panel_id, dt,                &
                           ndf_wth, undf_wth, map_wth,  &
@@ -103,6 +105,7 @@ subroutine camembert_code(nlayers,                     &
   real(kind=r_def), dimension(undf_wth), intent(in)    :: theta
   real(kind=r_def), dimension(undf_wth), intent(in)    :: theta_init
   real(kind=r_def), dimension(undf_wth), intent(in)    :: exner_in_wth
+  real(kind=r_def), dimension(undf_wth), intent(in)    :: height_wth
   real(kind=r_def), dimension(undf_chi), intent(in)    :: chi_1, chi_2, chi_3
   real(kind=r_def), dimension(undf_pid), intent(in)    :: panel_id
   real(kind=r_def),                      intent(in)    :: dt
@@ -116,6 +119,7 @@ subroutine camembert_code(nlayers,                     &
 
   real(kind=r_def)    :: theta_eq
   real(kind=r_def)    :: lat, lon, radius
+  real(kind=r_def)    :: layer_height     ! Height of the kth layer above the surface
 
   real(kind=r_def) :: coords(3)
   real(kind=r_def), dimension(ndf_chi) :: chi_1_at_dof, chi_2_at_dof, chi_3_at_dof
@@ -138,6 +142,7 @@ subroutine camembert_code(nlayers,                     &
   call chi2llr(coords(1), coords(2), coords(3), ipanel, lon, lat, radius)
 
   do k = 0, nlayers
+    layer_height = height_wth(map_wth(1) + k)
 
     theta_eq = camembert_equilibrium_theta(theta_init(map_wth(1) + k), &
       exner_in_wth(map_wth(1) + k), lon, lat)
