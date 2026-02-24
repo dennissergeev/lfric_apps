@@ -119,7 +119,6 @@ subroutine camembert_code(nlayers,                     &
 
   real(kind=r_def)    :: theta_eq
   real(kind=r_def)    :: lat, lon, radius
-  real(kind=r_def)    :: layer_height     ! Height of the kth layer above the surface
 
   real(kind=r_def) :: coords(3)
   real(kind=r_def), dimension(ndf_chi) :: chi_1_at_dof, chi_2_at_dof, chi_3_at_dof
@@ -142,10 +141,9 @@ subroutine camembert_code(nlayers,                     &
   call chi2llr(coords(1), coords(2), coords(3), ipanel, lon, lat, radius)
 
   do k = 0, nlayers
-    layer_height = height_wth(map_wth(1) + k)
 
     theta_eq = camembert_equilibrium_theta(theta_init(map_wth(1) + k), &
-      exner_in_wth(map_wth(1) + k), lon, lat)
+      exner_in_wth(map_wth(1) + k), height_wth(map_wth(1) + k), lon, lat)
 
     dtheta(map_wth(1) + k) = &
       -camembert_newton_frequency(exner_in_wth(map_wth(1) + k)) &
