@@ -36,7 +36,7 @@ private
 ! Contains the metadata needed by the PSy layer.
 type, public, extends(kernel_type) :: sw_kernel_type
   private
-  type(arg_type) :: meta_args(99) = (/ &
+  type(arg_type) :: meta_args(101) = (/ &
     arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, Wtheta),                    & ! sw_heating_rate_rts
     arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1), & ! sw_down_surf_rts
     arg_type(GH_FIELD,  GH_REAL,    GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1), & ! sw_direct_surf_rts
@@ -61,6 +61,8 @@ type, public, extends(kernel_type) :: sw_kernel_type
     arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! o3
     arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! n2o
     arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! co
+    arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! c2h2
+    arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! c2h6
     arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! ch4
     arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! o2
     arg_type(GH_FIELD,  GH_REAL,    GH_READ,      Wtheta),                    & ! so2
@@ -176,6 +178,8 @@ contains
 !> @param[in]     o3                        Ozone
 !> @param[in]     n2o                       Dinitrogen oxide
 !> @param[in]     co                        Carbon monoxide
+!> @param[in]     c2h2                      Acetylene
+!> @param[in]     c2h6                      Ethane
 !> @param[in]     ch4                       Methane
 !> @param[in]     o2                        Oxygen
 !> @param[in]     so2                       Sulphur dioxide
@@ -287,8 +291,8 @@ subroutine sw_code(nlayers, n_profile, &
     d_mass, layer_heat_capacity, &
     cos_zenith_angle_rts, lit_fraction_rts, &
     stellar_irradiance_rts, orographic_correction_rts, &
-    h2o, co2, o3, n2o, co, ch4, o2, so2, nh3, n2, h2, he, hcn, &
-    cs, potassium, li, na, rb, tio, vo, &
+    h2o, co2, o3, n2o, co, c2h2, c2h6, ch4, o2, so2, nh3, n2, &
+    h2, he, hcn, cs, potassium, li, na, rb, tio, vo, &
     mcl, mcf, n_ice, conv_frozen_number, &
     conv_liquid_mmr, conv_frozen_mmr, &
     radiative_cloud_fraction, radiative_conv_fraction, &
@@ -345,6 +349,8 @@ subroutine sw_code(nlayers, n_profile, &
     cfc11_mix_ratio_now,  &
     cfc113_mix_ratio_now, &
     cfc12_mix_ratio_now,  &
+    c2h2_mix_ratio_now, c2h2_well_mixed, &
+    c2h6_mix_ratio_now, c2h6_well_mixed, &
     ch4_mix_ratio_now, ch4_well_mixed, &
     co_mix_ratio_now, co_well_mixed, &
     co2_mix_ratio_now, co2_well_mixed, &
@@ -412,7 +418,7 @@ subroutine sw_code(nlayers, n_profile, &
     liquid_fraction, frozen_fraction, &
     conv_liquid_fraction, conv_frozen_fraction, &
     sigma_ml, sigma_mi, cloud_drop_no_conc, &
-    h2o, co2, o3, n2o, co, ch4, o2, so2, nh3, n2, h2, he, hcn, &
+    h2o, co2, o3, n2o, co, c2h2, c2h6, ch4, o2, so2, nh3, n2, h2, he, hcn, &
     cs, potassium, li, na, rb, tio, vo
 
   integer(i_def), dimension(undf_2d), intent(in) :: rand_seed, n_cloud_layer
@@ -760,6 +766,8 @@ subroutine sw_code(nlayers, n_profile, &
           t_layer_1d             = temperature_in_wth(wth_1:wth_last),         &
           mass_1d                = d_mass(wth_1:wth_last),                     &
           density_1d             = rho_in_wth(wth_1:wth_last),                 &
+          c2h2_1d                = c2h2(wth_1:wth_last),                       &
+          c2h6_1d                = c2h6(wth_1:wth_last),                       &
           ch4_1d                 = ch4(wth_1:wth_last),                        &
           co_1d                  = co(wth_1:wth_last),                         &
           co2_1d                 = co2(wth_1:wth_last),                        &
@@ -783,6 +791,8 @@ subroutine sw_code(nlayers, n_profile, &
           cfc11_mix_ratio        = cfc11_mix_ratio_now,                        &
           cfc113_mix_ratio       = cfc113_mix_ratio_now,                       &
           cfc12_mix_ratio        = cfc12_mix_ratio_now,                        &
+          c2h2_mix_ratio         = c2h2_mix_ratio_now,                         &
+          c2h6_mix_ratio         = c2h6_mix_ratio_now,                         &
           ch4_mix_ratio          = ch4_mix_ratio_now,                          &
           co_mix_ratio           = co_mix_ratio_now,                           &
           co2_mix_ratio          = co2_mix_ratio_now,                          &
@@ -805,6 +815,8 @@ subroutine sw_code(nlayers, n_profile, &
           so2_mix_ratio          = so2_mix_ratio_now,                          &
           tio_mix_ratio          = tio_mix_ratio_now,                          &
           vo_mix_ratio           = vo_mix_ratio_now,                           &
+          l_c2h2_well_mixed      = c2h2_well_mixed,                            &
+          l_c2h6_well_mixed      = c2h6_well_mixed,                            &
           l_ch4_well_mixed       = ch4_well_mixed,                             &
           l_co_well_mixed        = co_well_mixed,                              &
           l_co2_well_mixed       = co2_well_mixed,                             &

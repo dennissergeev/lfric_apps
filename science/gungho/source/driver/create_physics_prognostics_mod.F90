@@ -102,6 +102,8 @@ module create_physics_prognostics_mod
                                              chem_scheme_offline_ox,           &
                                              l_ukca_ro2_ntp
   use radiative_gases_config_mod,     only : &
+    c2h2_rad_opt, c2h2_rad_opt_ancil, c2h2_rad_opt_prognostic, &
+    c2h6_rad_opt, c2h6_rad_opt_ancil, c2h6_rad_opt_prognostic, &
     ch4_rad_opt, ch4_rad_opt_ancil, ch4_rad_opt_prognostic, &
     co_rad_opt, co_rad_opt_ancil, co_rad_opt_prognostic, &
     co2_rad_opt, co2_rad_opt_ancil, co2_rad_opt_prognostic, &
@@ -1212,12 +1214,12 @@ contains
       adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
     call processor%apply(make_spec('hono2', main%chemistry, empty=is_empty,    &
       adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
-    is_rad = ( (ch4_rad_opt == ch4_rad_opt_ancil) .or. &
-               (ch4_rad_opt == ch4_rad_opt_prognostic) )
-    call processor%apply(make_spec('ch4', main%chemistry, &
+    is_rad = ( (c2h6_rad_opt == c2h6_rad_opt_ancil) .or. &
+               (c2h6_rad_opt == c2h6_rad_opt_prognostic) )
+    call processor%apply(make_spec('c2h6', main%chemistry, &
       empty=(is_empty .and. .not. is_rad), &
       adv_coll=if_adv((advection_flag .or. &
-      (ch4_rad_opt == ch4_rad_opt_prognostic)), adv%last_con), &
+      (c2h6_rad_opt == c2h6_rad_opt_prognostic)), adv%last_con), &
       ckp=(checkpoint_flag .or. is_rad)))
     is_rad = ( (co_rad_opt == co_rad_opt_ancil) .or. &
                (co_rad_opt == co_rad_opt_prognostic) )
@@ -1273,8 +1275,13 @@ contains
       adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
     call processor%apply(make_spec('hono', main%chemistry, empty=is_empty,     &
       adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
-    call processor%apply(make_spec('c2h6', main%chemistry, empty=is_empty,     &
-      adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+    is_rad = ( (ch4_rad_opt == ch4_rad_opt_ancil) .or. &
+               (ch4_rad_opt == ch4_rad_opt_prognostic) )
+    call processor%apply(make_spec('ch4', main%chemistry, &
+      empty=(is_empty .and. .not. is_rad), &
+      adv_coll=if_adv((advection_flag .or. &
+      (ch4_rad_opt == ch4_rad_opt_prognostic)), adv%last_con), &
+      ckp=(checkpoint_flag .or. is_rad)))
     call processor%apply(make_spec('etooh', main%chemistry, empty=is_empty,    &
       adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
     call processor%apply(make_spec('mecho', main%chemistry, empty=is_empty,    &
@@ -1435,6 +1442,12 @@ contains
     call processor%apply(make_spec('vo', main%chemistry, &
       empty=(.not. is_rad), &
       adv_coll=if_adv((vo_rad_opt == vo_rad_opt_prognostic), adv%last_con), &
+      ckp=is_rad))
+    is_rad = ( (c2h2_rad_opt == c2h2_rad_opt_ancil) .or. &
+               (c2h2_rad_opt == c2h2_rad_opt_prognostic) )
+    call processor%apply(make_spec('c2h2', main%chemistry, &
+      empty=(.not. is_rad), &
+      adv_coll=if_adv((c2h2_rad_opt == c2h2_rad_opt_prognostic), adv%last_con), &
       ckp=is_rad))
 
 

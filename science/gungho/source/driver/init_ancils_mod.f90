@@ -70,6 +70,8 @@ module init_ancils_mod
                                              chem_scheme_strat_test,           &
                                              chem_scheme_offline_ox
   use radiative_gases_config_mod,     only : &
+    c2h2_rad_opt, c2h2_rad_opt_ancil, &
+    c2h6_rad_opt, c2h6_rad_opt_ancil, &
     ch4_rad_opt, ch4_rad_opt_ancil, &
     cs_rad_opt, cs_rad_opt_ancil, &
     co_rad_opt, co_rad_opt_ancil, &
@@ -900,6 +902,14 @@ contains
 
     ! Here ancil fields are set up with a call to setup_ancil_field.
     if ( ancil_option == ancil_option_idealised ) then
+      if (c2h2_rad_opt == c2h2_rad_opt_ancil) then
+        call setup_ancil_field("c2h2", depository, ancil_fields, &
+          mesh, twod_mesh)
+      endif
+      if (c2h6_rad_opt == c2h6_rad_opt_ancil) then
+        call setup_ancil_field("c2h6", depository, ancil_fields, &
+          mesh, twod_mesh)
+      endif
       if (ch4_rad_opt == ch4_rad_opt_ancil) then
         call setup_ancil_field("ch4", depository, ancil_fields, &
           mesh, twod_mesh)

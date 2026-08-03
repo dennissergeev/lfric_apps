@@ -103,6 +103,8 @@ subroutine socrates_init()
     cfc11_rad_opt, cfc11_rad_opt_off, &
     cfc113_rad_opt, cfc113_rad_opt_off, &
     cfc12_rad_opt, cfc12_rad_opt_off, &
+    c2h2_rad_opt, c2h2_rad_opt_off, &
+    c2h6_rad_opt, c2h6_rad_opt_off, &
     ch4_rad_opt, ch4_rad_opt_off, &
     co_rad_opt, co_rad_opt_off, &
     co2_rad_opt, co2_rad_opt_off, &
@@ -149,6 +151,8 @@ subroutine socrates_init()
   logical(l_def) :: l_cfc11
   logical(l_def) :: l_cfc113
   logical(l_def) :: l_cfc12
+  logical(l_def) :: l_c2h2
+  logical(l_def) :: l_c2h6
   logical(l_def) :: l_ch4
   logical(l_def) :: l_co
   logical(l_def) :: l_co2
@@ -174,6 +178,8 @@ subroutine socrates_init()
   l_cfc11 = (cfc11_rad_opt /= cfc11_rad_opt_off)
   l_cfc113 = (cfc113_rad_opt /= cfc113_rad_opt_off)
   l_cfc12 = (cfc12_rad_opt /= cfc12_rad_opt_off)
+  l_c2h2 = (c2h2_rad_opt /= c2h2_rad_opt_off)
+  l_c2h6 = (c2h6_rad_opt /= c2h6_rad_opt_off)
   l_ch4 = (ch4_rad_opt /= ch4_rad_opt_off)
   l_co = (co_rad_opt /= co_rad_opt_off)
   l_co2 = (co2_rad_opt /= co2_rad_opt_off)
@@ -210,6 +216,8 @@ subroutine socrates_init()
       l_cfc11          = l_cfc11,                &
       l_cfc113         = l_cfc113,               &
       l_cfc12          = l_cfc12,                &
+      l_c2h2           = l_c2h2,                 &
+      l_c2h6           = l_c2h6,                 &
       l_ch4            = l_ch4,                  &
       l_co             = l_co,                   &
       l_co2            = l_co2,                  &
@@ -246,6 +254,8 @@ subroutine socrates_init()
       l_cfc11          = l_cfc11,                &
       l_cfc113         = l_cfc113,               &
       l_cfc12          = l_cfc12,                &
+      l_c2h2           = l_c2h2,                 &
+      l_c2h6           = l_c2h6,                 &
       l_ch4            = l_ch4,                  &
       l_co             = l_co,                   &
       l_co2            = l_co2,                  &
@@ -284,6 +294,8 @@ subroutine socrates_init()
     l_cfc11          = l_cfc11,             &
     l_cfc113         = l_cfc113,            &
     l_cfc12          = l_cfc12,             &
+    l_c2h2           = l_c2h2,              &
+    l_c2h6           = l_c2h6,              &
     l_ch4            = l_ch4,               &
     l_co             = l_co,                &
     l_co2            = l_co2,               &
@@ -333,6 +345,8 @@ subroutine socrates_init()
     l_cfc11          = l_cfc11,             &
     l_cfc113         = l_cfc113,            &
     l_cfc12          = l_cfc12,             &
+    l_c2h2           = l_c2h2,              &
+    l_c2h6           = l_c2h6,              &
     l_ch4            = l_ch4,               &
     l_co             = l_co,                &
     l_co2            = l_co2,               &

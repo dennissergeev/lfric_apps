@@ -144,6 +144,7 @@ contains
     type( field_type ), pointer :: rb => null()
     type( field_type ), pointer :: tio => null()
     type( field_type ), pointer :: vo => null()
+    type( field_type ), pointer :: c2h2 => null()
 
     call chemistry_fields%get_field('o3p',o3p)
     call chemistry_fields%get_field('o1d',o1d)
@@ -246,6 +247,7 @@ contains
     call chemistry_fields%get_field('rb', rb)
     call chemistry_fields%get_field('tio', tio)
     call chemistry_fields%get_field('vo', vo)
+    call chemistry_fields%get_field('c2h2',c2h2)
     if ( glomap_mode == glomap_mode_ukca ) then
       ! Upper limit for H2O2 (ancillary field) only active for glomap_mode and
       !  checkpointed for offline oxidants, never advected
@@ -256,6 +258,8 @@ contains
     ! (These gases are also can be used as 3D fields in radiation.)
     if ( chem_scheme == chem_scheme_flexchem ) then
       call invoke ( setval_c(ch4, 0.0_r_def), &
+                    setval_c(c2h2,0.0_r_def), &
+                    setval_c(c2h6,0.0_r_def), &
                     setval_c(co,  0.0_r_def), &
                     setval_c(h2o, 0.0_r_def), &
                     setval_c(co2, 0.0_r_def), &

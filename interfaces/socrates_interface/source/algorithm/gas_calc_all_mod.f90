@@ -15,6 +15,16 @@ module gas_calc_all_mod
     cfc12_clim_fcg_years, cfc12_clim_fcg_rates, &
     cfc12_mix_ratio, cfc12_rad_opt, cfc12_rad_opt_off, &
     cfc12_rad_opt_constant, cfc12_rad_opt_time_varying, &
+    c2h2_clim_fcg_levls, c2h2_clim_fcg_nyears, &
+    c2h2_clim_fcg_years, c2h2_clim_fcg_rates, &
+    c2h2_mix_ratio, c2h2_rad_opt, c2h2_rad_opt_off, &
+    c2h2_rad_opt_constant, c2h2_rad_opt_time_varying, &
+    c2h2_rad_opt_prognostic, c2h2_rad_opt_ancil, &
+    c2h6_clim_fcg_levls, c2h6_clim_fcg_nyears, &
+    c2h6_clim_fcg_years, c2h6_clim_fcg_rates, &
+    c2h6_mix_ratio, c2h6_rad_opt, c2h6_rad_opt_off, &
+    c2h6_rad_opt_constant, c2h6_rad_opt_time_varying, &
+    c2h6_rad_opt_prognostic, c2h6_rad_opt_ancil, &
     ch4_clim_fcg_levls, ch4_clim_fcg_nyears, &
     ch4_clim_fcg_years, ch4_clim_fcg_rates, &
     ch4_mix_ratio, ch4_rad_opt, ch4_rad_opt_off, &
@@ -127,6 +137,8 @@ module gas_calc_all_mod
   implicit none
 
   ! Flags for treating gas mixing ratios as well-mixed
+  logical(l_def), public :: c2h2_well_mixed
+  logical(l_def), public :: c2h6_well_mixed
   logical(l_def), public :: ch4_well_mixed
   logical(l_def), public :: co_well_mixed
   logical(l_def), public :: co2_well_mixed
@@ -152,6 +164,8 @@ module gas_calc_all_mod
   real(r_def), public :: cfc11_mix_ratio_now
   real(r_def), public :: cfc113_mix_ratio_now
   real(r_def), public :: cfc12_mix_ratio_now
+  real(r_def), public :: c2h2_mix_ratio_now
+  real(r_def), public :: c2h6_mix_ratio_now
   real(r_def), public :: ch4_mix_ratio_now
   real(r_def), public :: co_mix_ratio_now
   real(r_def), public :: co2_mix_ratio_now
@@ -221,6 +235,44 @@ contains
                      cfc12_clim_fcg_years,   &
                      cfc12_clim_fcg_levls,   &
                      cfc12_clim_fcg_rates )
+    end select
+
+    ! Set MMR for C2H2
+    select case ( c2h2_rad_opt )
+    case ( c2h2_rad_opt_off )
+      c2h2_mix_ratio_now = 0.0_r_def
+      c2h2_well_mixed = .true.
+    case ( c2h2_rad_opt_constant )
+      c2h2_mix_ratio_now = c2h2_mix_ratio
+      c2h2_well_mixed = .true.
+    case ( c2h2_rad_opt_time_varying )
+      call gas_calc( c2h2_mix_ratio_now,    &
+                     c2h2_clim_fcg_nyears,  &
+                     c2h2_clim_fcg_years,   &
+                     c2h2_clim_fcg_levls,   &
+                     c2h2_clim_fcg_rates )
+      c2h2_well_mixed = .true.
+    case ( c2h2_rad_opt_prognostic, c2h2_rad_opt_ancil )
+      c2h2_well_mixed = .false.
+    end select
+
+    ! Set MMR for C2H6
+    select case ( c2h6_rad_opt )
+    case ( c2h6_rad_opt_off )
+      c2h6_mix_ratio_now = 0.0_r_def
+      c2h6_well_mixed = .true.
+    case ( c2h6_rad_opt_constant )
+      c2h6_mix_ratio_now = c2h6_mix_ratio
+      c2h6_well_mixed = .true.
+    case ( c2h6_rad_opt_time_varying )
+      call gas_calc( c2h6_mix_ratio_now,    &
+                     c2h6_clim_fcg_nyears,  &
+                     c2h6_clim_fcg_years,   &
+                     c2h6_clim_fcg_levls,   &
+                     c2h6_clim_fcg_rates )
+      c2h6_well_mixed = .true.
+    case ( c2h6_rad_opt_prognostic, c2h6_rad_opt_ancil )
+      c2h6_well_mixed = .false.
     end select
 
     ! Set MMR for CH4

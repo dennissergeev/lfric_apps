@@ -229,6 +229,8 @@ subroutine radiation_alg(config, dtheta_rad, theta, exner, mr, moist_dyn,     &
   type( field_type ), pointer :: co2 => null()
   type( field_type ), pointer :: n2o => null()
   type( field_type ), pointer :: co => null()
+  type( field_type ), pointer :: c2h2 => null()
+  type( field_type ), pointer :: c2h6 => null()
   type( field_type ), pointer :: ch4 => null()
   type( field_type ), pointer :: o2 => null()
   type( field_type ), pointer :: so2 => null()
@@ -367,6 +369,8 @@ subroutine radiation_alg(config, dtheta_rad, theta, exner, mr, moist_dyn,     &
   call microphysics_fields%get_field('ns_mphys', ns_mphys)
 
   ! Radiatively active gases
+  call chemistry_fields%get_field('c2h2', c2h2)
+  call chemistry_fields%get_field('c2h6', c2h6)
   call chemistry_fields%get_field('ch4', ch4)
   call chemistry_fields%get_field('co', co)
   call chemistry_fields%get_field('co2', co2)
@@ -519,8 +523,8 @@ subroutine radiation_alg(config, dtheta_rad, theta, exner, mr, moist_dyn,     &
       d_mass, layer_heat_capacity, &
       cos_zenith_angle_rts, lit_fraction_rts, &
       stellar_irradiance_rts, orographic_correction_rts, &
-      h2o, co2, o3, n2o, co, ch4, o2, so2, nh3, n2, h2, he, hcn, &
-      cs, k, li, na, rb, tio, vo, &
+      h2o, co2, o3, n2o, co, c2h2, c2h6, ch4, o2, so2, nh3, n2, &
+      h2, he, hcn, cs, k, li, na, rb, tio, vo, &
       mr(imr_cl), mr_ice, n_ice, conv_frozen_number, &
       conv_liquid_mmr, conv_frozen_mmr, &
       radiative_cloud_fraction, radiative_conv_fraction, &
@@ -568,8 +572,8 @@ subroutine radiation_alg(config, dtheta_rad, theta, exner, mr, moist_dyn,     &
       d_mass, layer_heat_capacity,                                  &
       cos_zenith_angle_rts, lit_fraction_rts,                       &
       stellar_irradiance_rts, orographic_correction_rts,            &
-      h2o, co2, o3, n2o, co, ch4, o2, so2, nh3, n2, h2, he, hcn,    &
-      cs, k, li, na, rb, tio, vo,                                   &
+      h2o, co2, o3, n2o, co, c2h2, c2h6, ch4, o2, so2, nh3, n2,     &
+      h2, he, hcn, cs, k, li, na, rb, tio, vo,                      &
       mr(imr_cl), mr_ice, n_ice, conv_frozen_number,                &
       conv_liquid_mmr, conv_frozen_mmr,                             &
       radiative_cloud_fraction, radiative_conv_fraction,            &
@@ -620,8 +624,8 @@ subroutine radiation_alg(config, dtheta_rad, theta, exner, mr, moist_dyn,     &
       lw_up_toa_rts, lw_up_tile_rts, &
       rho_in_wth, pressure_in_wth, temperature_in_wth, &
       t_layer_boundaries, d_mass, layer_heat_capacity, &
-      h2o, co2, o3, n2o, co, ch4, o2, so2, nh3, n2, h2, he, hcn, &
-      cs, k, li, na, rb, tio, vo, &
+      h2o, co2, o3, n2o, co, c2h2, c2h6, ch4, o2, so2, nh3, n2, &
+      h2, he, hcn, cs, k, li, na, rb, tio, vo, &
       mr(imr_cl), mr_ice, n_ice, conv_frozen_number, &
       conv_liquid_mmr, conv_frozen_mmr, &
       radiative_cloud_fraction, radiative_conv_fraction, &
@@ -661,8 +665,8 @@ subroutine radiation_alg(config, dtheta_rad, theta, exner, mr, moist_dyn,     &
       lw_up_toa_rtsi, lw_up_tile_rtsi,                           &
       rho_in_wth, pressure_in_wth, temperature_in_wth,           &
       t_layer_boundaries, d_mass, layer_heat_capacity,           &
-      h2o, co2, o3, n2o, co, ch4, o2, so2, nh3, n2, h2, he, hcn, &
-      cs, k, li, na, rb, tio, vo,                                &
+      h2o, co2, o3, n2o, co, c2h2, c2h6, ch4, o2, so2, nh3, n2,  &
+      h2, he, hcn, cs, k, li, na, rb, tio, vo,                   &
       mr(imr_cl), mr_ice, n_ice, conv_frozen_number,             &
       conv_liquid_mmr, conv_frozen_mmr,                          &
       radiative_cloud_fraction, radiative_conv_fraction,         &
