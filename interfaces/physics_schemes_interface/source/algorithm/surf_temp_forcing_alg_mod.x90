@@ -14,6 +14,7 @@ use log_mod,                       only: log_event, &
                                          LOG_LEVEL_DEBUG, &
                                          LOG_LEVEL_WARNING, &
                                          LOG_LEVEL_ERROR
+use sci_field_minmax_alg_mod,      only: log_field_minmax
 use timing_mod,                    only: start_timing, stop_timing, tik, LPROF
 use specified_surface_config_mod,  only: surf_temp_forcing, &
                                          surf_temp_forcing_none, &
@@ -147,6 +148,8 @@ contains
                                         random_phase )
 
             end if
+
+            call log_field_minmax( LOG_LEVEL_DEBUG, 'internal_flux', internal_flux )
 
             call invoke( internal_flux_kernel_type( tile_temperature, &
                                                     lw_down_surf,     &
