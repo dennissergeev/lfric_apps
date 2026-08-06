@@ -3,25 +3,39 @@
 ! The file LICENCE, distributed with this code, contains details of the terms
 ! under which the code may be used.
 !-----------------------------------------------------------------------------
-!> @brief Builds the internal_flux field from a superposition of random
-!>        spherical harmonics.
+!> @brief Evolves the internal_flux field as a Markov process driven by
+!>        random spherical harmonics.
 !>
-!> @details Kernel that sets the prescribed internal flux at the surface as a
-!!          horizontally isotropic superposition of spherical harmonics of a
-!!          single characteristic total wavenumber, n_f, following equation 6
-!!          of Showman, Tan & Zhang (2019, ApJ, arXiv:1807.08433):
+!> @details Kernel that updates the prescribed internal flux at the surface
+!!          following equations 4-6 of Showman, Tan & Zhang (2019, ApJ,
+!!          arXiv:1807.08433). The instantaneous random spatial pattern
+!!          (equation 6) is
 !!
 !!            F = f_amp * sum_{m=1}^{n_f} N_{n_f}^m(sin(phi)) * cos[m(lambda + psi_m)]
 !!
 !!          where phi and lambda are latitude and longitude, N_n^m are the
 !!          normalised associated Legendre polynomials, f_amp is the forcing
 !!          amplitude and psi_m is a randomly chosen phase, different for
-!!          each zonal wavenumber m. The random phases are generated once per
-!!          call at the algorithm layer (identically on every PE) and passed
-!!          in as a plain array, giving a forcing pattern that is refreshed
-!!          each time this kernel is invoked. The slow, AR(1) time-decorrelation
-!!          of the phases described by equations 4-5 of the same paper is not
-!!          implemented here.
+!!          each zonal wavenumber m and redrawn every call (identically on
+!!          every PE) at the algorithm layer, since the paper notes that new
+!!          phases are drawn each time equation 4 is evaluated. This
+!!          instantaneous pattern is then blended into internal_flux (which
+!!          therefore plays the role of the paper's S_h) as a Markov/AR(1)
+!!          process, equation 4:
+!!
+!!            internal_flux(t+dt) = r * internal_flux(t) + sqrt(1-r^2) * F
+!!
+!!          with the memory coefficient r given by equation 5:
+!!
+!!            r = 1 - dt / tau_for
+!!
+!!          where dt is the model timestep and tau_for is the forcing
+!!          decorrelation timescale. Both dt and tau_for only enter via the
+!!          scalar r, which is computed once at the algorithm layer (it does
+!!          not vary from point to point) and passed in here. Persistence of
+!!          internal_flux, and hence of this Markov process, across
+!!          timesteps and restarts relies entirely on internal_flux being a
+!!          checkpointed prognostic field; no separate state is kept.
 !!
 !!          The Legendre polynomials are evaluated locally at each point using
 !!          the same stable recurrence relations as get_Pnm_star_kernel_mod,
@@ -32,7 +46,7 @@ module random_harmonics_forcing_kernel_mod
 use argument_mod,      only : arg_type,                  &
                               GH_FIELD, GH_SCALAR,       &
                               GH_INTEGER, GH_REAL,       &
-                              GH_READ, GH_WRITE,         &
+                              GH_READ, GH_READWRITE,     &
                               ANY_DISCONTINUOUS_SPACE_1, &
                               ANY_DISCONTINUOUS_SPACE_2, &
                               ANY_DISCONTINUOUS_SPACE_3, &
@@ -59,12 +73,13 @@ public :: random_harmonics_forcing_code
 ! invoke_random_harmonics_forcing_kernel_type in psykal_lite_phys_mod.
 type, extends(kernel_type) :: random_harmonics_forcing_kernel_type
   private
-  type(arg_type) :: meta_args(5) = (/                                 &
-    arg_type(GH_FIELD, GH_REAL, GH_WRITE, ANY_DISCONTINUOUS_SPACE_1), & ! internal_flux
-    arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_2), & ! latitude
-    arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_3), & ! longitude
-    arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                         & ! forcing_wavenumber
-    arg_type(GH_SCALAR, GH_REAL, GH_READ)                             & ! forcing_amplitude
+  type(arg_type) :: meta_args(6) = (/                                     &
+    arg_type(GH_FIELD, GH_REAL, GH_READWRITE, ANY_DISCONTINUOUS_SPACE_1), & ! internal_flux
+    arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_2), & ! latitude
+    arg_type(GH_FIELD, GH_REAL, GH_READ,      ANY_DISCONTINUOUS_SPACE_3), & ! longitude
+    arg_type(GH_SCALAR, GH_INTEGER, GH_READ),                             & ! forcing_wavenumber
+    arg_type(GH_SCALAR, GH_REAL, GH_READ),                                & ! forcing_amplitude
+    arg_type(GH_SCALAR, GH_REAL, GH_READ)                                 & ! ar1_memory_coeff
     /)
   integer :: operates_on = CELL_COLUMN
 contains
@@ -77,11 +92,12 @@ end type
 contains
 
 !> @param[in]     nlayers            Number of layers
-!> @param[in,out] internal_flux      Internal flux at the surface
+!> @param[in,out] internal_flux      Internal flux at the surface (the paper's S_h)
 !> @param[in]     latitude           Latitude of each point (radians)
 !> @param[in]     longitude          Longitude of each point (radians)
 !> @param[in]     forcing_wavenumber Characteristic total wavenumber, n_f
 !> @param[in]     forcing_amplitude  Forcing amplitude, f_amp
+!> @param[in]     ar1_memory_coeff   AR(1) memory coefficient, r = 1 - dt/tau_for
 !> @param[in]     random_phase       Random phase psi_m for m = 1, forcing_wavenumber
 !> @param[in]     ndf_1              No. of DOFs per cell for internal_flux space
 !> @param[in]     undf_1             No. of unique DOFs for internal_flux space
@@ -98,6 +114,7 @@ subroutine random_harmonics_forcing_code(nlayers,                    &
                                          longitude,                  &
                                          forcing_wavenumber,         &
                                          forcing_amplitude,          &
+                                         ar1_memory_coeff,           &
                                          random_phase,               &
                                          ndf_1, undf_1, map_1,       &
                                          ndf_2, undf_2, map_2,       &
@@ -120,6 +137,7 @@ subroutine random_harmonics_forcing_code(nlayers,                    &
 
   integer(i_def), intent(in) :: forcing_wavenumber
   real(r_def),    intent(in) :: forcing_amplitude
+  real(r_def),    intent(in) :: ar1_memory_coeff
   real(r_def),    intent(in) :: random_phase(forcing_wavenumber)
 
   ! Local variables
@@ -188,7 +206,14 @@ subroutine random_harmonics_forcing_code(nlayers,                    &
       cos( real(m, r_def) * (longitude(map_3(1)) + random_phase(m)) )
   end do
 
-  internal_flux(map_1(1)) = forcing_amplitude * harmonic_sum
+  ! Equation 4: blend the new random pattern into internal_flux (S_h) as an
+  ! AR(1) process, using the memory coefficient r from equation 5. The
+  ! sqrt argument is clamped at zero: r can go negative if tau_for is set
+  ! shorter than the model timestep, which equation 5 does not itself rule
+  ! out, but 1 - r^2 must stay non-negative for the process to be defined.
+  internal_flux(map_1(1)) = ar1_memory_coeff * internal_flux(map_1(1)) +   &
+    sqrt(max(0.0_r_def, 1.0_r_def - ar1_memory_coeff * ar1_memory_coeff)) * &
+    forcing_amplitude * harmonic_sum
 
 end subroutine random_harmonics_forcing_code
 

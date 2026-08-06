@@ -330,6 +330,7 @@ contains
                                                           longitude,      &
                                                           forcing_wavenumber, &
                                                           forcing_amplitude,  &
+                                                          ar1_memory_coeff,   &
                                                           random_phase)
 
   use random_harmonics_forcing_kernel_mod, ONLY: random_harmonics_forcing_code
@@ -339,6 +340,7 @@ contains
 
   integer(kind=i_def), intent(in) :: forcing_wavenumber
   real(kind=r_def), intent(in) :: forcing_amplitude
+  real(kind=r_def), intent(in) :: ar1_memory_coeff
   type(field_type), intent(in) :: internal_flux, latitude, longitude
   integer(kind=i_def) cell
   integer(kind=i_def) nlayers
@@ -390,6 +392,7 @@ contains
                               latitude_proxy%data, longitude_proxy%data, &
                               ! Add scalars
                               forcing_wavenumber, forcing_amplitude,     &
+                              ar1_memory_coeff,                          &
                               ! Add array
                               random_phase,                              &
                               ! Add fields' assoc. space variables

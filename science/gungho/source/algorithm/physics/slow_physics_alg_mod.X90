@@ -834,7 +834,7 @@ contains
     !---------------------------------------------------------------------
     if ( l_planet_grey_surface .and. &
          surf_temp_forcing /= surf_temp_forcing_none ) then
-      call surf_temp_forcing_alg(radiation_fields, surface_fields)
+      call surf_temp_forcing_alg(radiation_fields, surface_fields, dt)
     end if
 
     !--------------------------------------------------------------------

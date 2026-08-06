@@ -47,5 +47,8 @@ class vn31_tXXXX(MacroUpgrade):
         nml = "namelist:specified_surface"
         self.add_setting(config, [nml, "internal_flux_forcing_amplitude"], "0.0")
         self.add_setting(config, [nml, "internal_flux_forcing_wavenumber"], "20")
+        self.add_setting(
+            config, [nml, "internal_flux_forcing_decorr_timescale"], "100000.0"
+        )
 
         return config, self.reports

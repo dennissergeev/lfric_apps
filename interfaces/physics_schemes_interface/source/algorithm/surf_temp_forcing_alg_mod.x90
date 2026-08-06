@@ -21,14 +21,13 @@ use specified_surface_config_mod,  only: surf_temp_forcing, &
                                          internal_flux_method, &
                                          internal_flux_method_random_harmonics, &
                                          internal_flux_forcing_amplitude, &
-                                         internal_flux_forcing_wavenumber
+                                         internal_flux_forcing_wavenumber, &
+                                         internal_flux_forcing_decorr_timescale
 use internal_flux_kernel_mod,      only: internal_flux_kernel_type
 use jules_control_init_mod,        only: n_surf_tile
 use radiation_config_mod,          only: planet_emissivity
-use extrusion_mod,                 only: TWOD
 use fs_continuity_mod,             only: W3
 use mesh_mod,                      only: mesh_type
-use mesh_collection_mod,           only: mesh_collection
 use sci_geometric_constants_mod,   only: get_latitude_fv, get_longitude_fv
 use random_seed_gen_alg_mod,       only: random_seed_gen_alg
 use psykal_lite_phys_mod,          only: invoke_random_harmonics_forcing_kernel_type
@@ -45,12 +44,14 @@ contains
 
   !> @param[in]     radiation_fields   Fields for radiation scheme
   !> @param[in,out] surface_fields     Fields for surface scheme
-  subroutine surf_temp_forcing_alg(radiation_fields, surface_fields)
+  !> @param[in]     dt                 The model timestep length
+  subroutine surf_temp_forcing_alg(radiation_fields, surface_fields, dt)
 
     implicit none
 
     type( field_collection_type ), intent(in) :: radiation_fields
     type( field_collection_type ), intent(inout) :: surface_fields
+    real( kind=r_def ), intent(in) :: dt
 
     ! Fields unpacked from radiation and surface collections
     type( field_type ), pointer :: lw_down_surf
@@ -65,12 +66,12 @@ contains
     type( field_type ), pointer :: latitude => null()
     type( field_type ), pointer :: longitude => null()
     type( mesh_type ),  pointer :: mesh => null()
-    type( mesh_type ),  pointer :: twod_mesh => null()
     real(r_def), allocatable    :: random_phase(:)
     real(r_def), allocatable    :: raw_random(:)
     integer(i_def), allocatable, save :: ranseed(:)
     logical, save                :: l_rand_harmonics_seeded = .false.
     integer(i_def)                :: random_seed_size
+    real(r_def)                  :: ar1_memory_coeff
 
     if ( LPROF ) call start_timing( id, 'surf_temp_forcing' )
 
@@ -108,24 +109,39 @@ contains
               end if
 
               ! Latitude/longitude of the internal_flux points (cached per
-              ! mesh, so this is cheap after the first call)
+              ! mesh, so this is cheap after the first call). internal_flux
+              ! is itself a twod=.true. field, so its own mesh is already
+              ! the 2D mesh - no mesh_collection%get_mesh(..., TWOD)
+              ! conversion is needed here (cf. cos_zenith_angle in
+              ! illuminate_alg_mod.x90, another twod W3 field).
               mesh => internal_flux%get_mesh()
-              twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
-              latitude => get_latitude_fv(W3, twod_mesh%get_id())
-              longitude => get_longitude_fv(W3, twod_mesh%get_id())
+              latitude => get_latitude_fv(W3, mesh%get_id())
+              longitude => get_longitude_fv(W3, mesh%get_id())
 
               ! Draw a fresh random phase psi_m, uniform in [0, 2*pi), for
               ! each zonal wavenumber m = 1, internal_flux_forcing_wavenumber
+              ! (new phases are drawn every call, as in the paper: "new
+              ! random phases psi_m are chosen each time [equation 4] is
+              ! evaluated")
               allocate( raw_random(internal_flux_forcing_wavenumber) )
               allocate( random_phase(internal_flux_forcing_wavenumber) )
               call random_number( raw_random )
               random_phase = 2.0_r_def * pi * raw_random
 
-              ! Equation 6: build internal_flux from the random harmonics
+              ! Equation 5: AR(1) memory coefficient. internal_flux plays
+              ! the role of the paper's S_h and, being a checkpointed
+              ! prognostic field, already carries this Markov process'
+              ! state across timesteps and restarts with no extra work.
+              ar1_memory_coeff = 1.0_r_def - &
+                dt / internal_flux_forcing_decorr_timescale
+
+              ! Equations 4 and 6: evolve internal_flux towards a fresh
+              ! random harmonic pattern via the AR(1) process
               call invoke_random_harmonics_forcing_kernel_type(              &
                                         internal_flux, latitude, longitude,  &
                                         internal_flux_forcing_wavenumber,    &
                                         internal_flux_forcing_amplitude,     &
+                                        ar1_memory_coeff,                    &
                                         random_phase )
 
             end if
