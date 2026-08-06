@@ -20,7 +20,7 @@ use specified_surface_config_mod,  only: surf_temp_forcing, &
                                          surf_temp_forcing_int_flux, &
                                          internal_flux_method, &
                                          internal_flux_method_random_harmonics, &
-                                         internal_flux_forcing_amplitude, &
+                                         internal_flux_value, &
                                          internal_flux_forcing_wavenumber, &
                                          internal_flux_forcing_decorr_timescale
 use internal_flux_kernel_mod,      only: internal_flux_kernel_type
@@ -136,11 +136,13 @@ contains
                 dt / internal_flux_forcing_decorr_timescale
 
               ! Equations 4 and 6: evolve internal_flux towards a fresh
-              ! random harmonic pattern via the AR(1) process
+              ! random harmonic pattern via the AR(1) process. internal_flux_value
+              ! (also used as the constant flux for internal_flux_method='uniform')
+              ! doubles up as the forcing amplitude f_amp here.
               call invoke_random_harmonics_forcing_kernel_type(              &
                                         internal_flux, latitude, longitude,  &
                                         internal_flux_forcing_wavenumber,    &
-                                        internal_flux_forcing_amplitude,     &
+                                        internal_flux_value,                 &
                                         ar1_memory_coeff,                    &
                                         random_phase )
 

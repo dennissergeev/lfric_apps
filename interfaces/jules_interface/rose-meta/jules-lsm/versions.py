@@ -45,7 +45,6 @@ class vn31_tXXXX(MacroUpgrade):
     def upgrade(self, config, meta_config=None):
         # Commands From: interfaces/jules_interface/rose-meta/jules-lsm
         nml = "namelist:specified_surface"
-        self.add_setting(config, [nml, "internal_flux_forcing_amplitude"], "0.0")
         self.add_setting(config, [nml, "internal_flux_forcing_wavenumber"], "20")
         self.add_setting(
             config, [nml, "internal_flux_forcing_decorr_timescale"], "100000.0"
