@@ -31,3 +31,21 @@ class vnXX_txxx(MacroUpgrade):
         # Add settings
         return config, self.reports
 """
+
+
+class vn31_tXXXX(MacroUpgrade):
+    """Upgrade macro for ticket #XXXX: random spherical harmonic internal
+    flux forcing (equation 6 of Showman, Tan & Zhang, 2019, ApJ,
+    arXiv:1807.08433)."""
+    # TODO: replace tXXXX/vn3.1_tXXXX with the real ticket number.
+
+    BEFORE_TAG = "vn3.1"
+    AFTER_TAG = "vn3.1_tXXXX"
+
+    def upgrade(self, config, meta_config=None):
+        # Commands From: interfaces/jules_interface/rose-meta/jules-lsm
+        nml = "namelist:specified_surface"
+        self.add_setting(config, [nml, "internal_flux_forcing_amplitude"], "0.0")
+        self.add_setting(config, [nml, "internal_flux_forcing_wavenumber"], "20")
+
+        return config, self.reports

@@ -7,6 +7,7 @@
 
 module surf_temp_forcing_alg_mod
 
+use constants_mod,                 only: r_def, i_def, pi
 use field_mod,                     only: field_type
 use field_collection_mod,          only: field_collection_type
 use log_mod,                       only: log_event, &
@@ -16,10 +17,21 @@ use log_mod,                       only: log_event, &
 use timing_mod,                    only: start_timing, stop_timing, tik, LPROF
 use specified_surface_config_mod,  only: surf_temp_forcing, &
                                          surf_temp_forcing_none, &
-                                         surf_temp_forcing_int_flux
+                                         surf_temp_forcing_int_flux, &
+                                         internal_flux_method, &
+                                         internal_flux_method_random_harmonics, &
+                                         internal_flux_forcing_amplitude, &
+                                         internal_flux_forcing_wavenumber
 use internal_flux_kernel_mod,      only: internal_flux_kernel_type
 use jules_control_init_mod,        only: n_surf_tile
 use radiation_config_mod,          only: planet_emissivity
+use extrusion_mod,                 only: TWOD
+use fs_continuity_mod,             only: W3
+use mesh_mod,                      only: mesh_type
+use mesh_collection_mod,           only: mesh_collection
+use sci_geometric_constants_mod,   only: get_latitude_fv, get_longitude_fv
+use random_seed_gen_alg_mod,       only: random_seed_gen_alg
+use psykal_lite_phys_mod,          only: invoke_random_harmonics_forcing_kernel_type
 
 implicit none
 private
@@ -48,6 +60,18 @@ contains
     type( field_type ), pointer :: tile_temperature
     integer( tik )              :: id
 
+    ! Fields and workspace for the random harmonics internal flux forcing
+    ! (equation 6 of Showman, Tan & Zhang, 2019, ApJ, arXiv:1807.08433)
+    type( field_type ), pointer :: latitude => null()
+    type( field_type ), pointer :: longitude => null()
+    type( mesh_type ),  pointer :: mesh => null()
+    type( mesh_type ),  pointer :: twod_mesh => null()
+    real(r_def), allocatable    :: random_phase(:)
+    real(r_def), allocatable    :: raw_random(:)
+    integer(i_def), allocatable, save :: ranseed(:)
+    logical, save                :: l_rand_harmonics_seeded = .false.
+    integer(i_def)                :: random_seed_size
+
     if ( LPROF ) call start_timing( id, 'surf_temp_forcing' )
 
       if (surf_temp_forcing /= surf_temp_forcing_none) then
@@ -66,6 +90,45 @@ contains
 
             call surface_fields%get_field('internal_flux', internal_flux)
             call surface_fields%get_field('tile_temperature', tile_temperature)
+
+            if ( internal_flux_method == internal_flux_method_random_harmonics ) then
+
+              ! Seed the RNG once, identically on every PE (the seed depends
+              ! only on the model date, not on the MPI rank), so that
+              ! subsequent calls to random_number stay in lockstep across
+              ! the whole domain and give a globally-consistent forcing
+              ! pattern rather than one that is discontinuous at PE/panel
+              ! boundaries.
+              if ( .not. l_rand_harmonics_seeded ) then
+                call random_seed( size=random_seed_size )
+                allocate( ranseed(random_seed_size) )
+                call random_seed_gen_alg( ranseed, 0_i_def )
+                call random_seed( put=ranseed )
+                l_rand_harmonics_seeded = .true.
+              end if
+
+              ! Latitude/longitude of the internal_flux points (cached per
+              ! mesh, so this is cheap after the first call)
+              mesh => internal_flux%get_mesh()
+              twod_mesh => mesh_collection%get_mesh(mesh, TWOD)
+              latitude => get_latitude_fv(W3, twod_mesh%get_id())
+              longitude => get_longitude_fv(W3, twod_mesh%get_id())
+
+              ! Draw a fresh random phase psi_m, uniform in [0, 2*pi), for
+              ! each zonal wavenumber m = 1, internal_flux_forcing_wavenumber
+              allocate( raw_random(internal_flux_forcing_wavenumber) )
+              allocate( random_phase(internal_flux_forcing_wavenumber) )
+              call random_number( raw_random )
+              random_phase = 2.0_r_def * pi * raw_random
+
+              ! Equation 6: build internal_flux from the random harmonics
+              call invoke_random_harmonics_forcing_kernel_type(              &
+                                        internal_flux, latitude, longitude,  &
+                                        internal_flux_forcing_wavenumber,    &
+                                        internal_flux_forcing_amplitude,     &
+                                        random_phase )
+
+            end if
 
             call invoke( internal_flux_kernel_type( tile_temperature, &
                                                     lw_down_surf,     &

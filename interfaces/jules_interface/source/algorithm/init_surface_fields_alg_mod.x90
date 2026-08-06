@@ -212,7 +212,9 @@ contains
       if ( internal_flux_method == internal_flux_method_uniform ) then
         call invoke( setval_c(internal_flux, internal_flux_value) )
       else
-        ! Set to zero here and populated with values from ancil later
+        ! Non-uniform (populated from an ancillary later) or random_harmonics
+        ! (recalculated from random spherical harmonics every timestep by
+        ! surf_temp_forcing_alg): just set to zero here.
         call invoke( setval_c(internal_flux, 0.0_r_def) )
       end if
     end if

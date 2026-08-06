@@ -320,6 +320,90 @@ contains
   !
   end subroutine invoke_spectral_2_cs_kernel_type
   !---------------------------------------------------------------------
+  !> invoke_random_harmonics_forcing_kernel_type: Hand-written PSy layer for
+  !> random_harmonics_forcing_kernel_mod, needed because the per-mode
+  !> random_phase array cannot yet be expressed in PSyclone kernel metadata
+  !> (GH_ARRAY is not supported, see PSyclone ticket #1312). This mirrors
+  !> invoke_spectral_2_cs_kernel_type above.
+  subroutine invoke_random_harmonics_forcing_kernel_type(internal_flux,   &
+                                                          latitude,       &
+                                                          longitude,      &
+                                                          forcing_wavenumber, &
+                                                          forcing_amplitude,  &
+                                                          random_phase)
+
+  use random_harmonics_forcing_kernel_mod, ONLY: random_harmonics_forcing_code
+  use mesh_mod, ONLY: mesh_type
+
+  implicit none
+
+  integer(kind=i_def), intent(in) :: forcing_wavenumber
+  real(kind=r_def), intent(in) :: forcing_amplitude
+  type(field_type), intent(in) :: internal_flux, latitude, longitude
+  integer(kind=i_def) cell
+  integer(kind=i_def) nlayers
+  type(field_proxy_type) internal_flux_proxy, latitude_proxy, longitude_proxy
+  integer(KIND=i_def), pointer :: map_1(:,:) => null(), map_2(:,:) => null(), &
+  &map_3(:,:) => null()
+  integer(KIND=i_def) ndf_1, undf_1, ndf_2, undf_2, ndf_3, undf_3
+  type(mesh_type), pointer :: mesh => null()
+
+  ! Add array random_phase by hand
+  real(kind=r_def), intent(in), dimension(:) :: random_phase
+
+  !
+  ! Initialise field and/or operator proxies
+  !
+  internal_flux_proxy = internal_flux%get_proxy()
+  latitude_proxy      = latitude%get_proxy()
+  longitude_proxy     = longitude%get_proxy()
+  !
+  ! Initialise number of layers
+  !
+  nlayers = internal_flux_proxy%vspace%get_nlayers()
+  !
+  ! Create a mesh object
+  !
+  mesh => internal_flux_proxy%vspace%get_mesh()
+  !
+  ! Look-up dofmaps for each function space
+  !
+  map_1 => internal_flux_proxy%vspace%get_whole_dofmap()
+  map_2 => latitude_proxy%vspace%get_whole_dofmap()
+  map_3 => longitude_proxy%vspace%get_whole_dofmap()
+  !
+  ! Initialise number of DoFs for each space
+  !
+  ndf_1  = internal_flux_proxy%vspace%get_ndf()
+  undf_1 = internal_flux_proxy%vspace%get_undf()
+  ndf_2  = latitude_proxy%vspace%get_ndf()
+  undf_2 = latitude_proxy%vspace%get_undf()
+  ndf_3  = longitude_proxy%vspace%get_ndf()
+  undf_3 = longitude_proxy%vspace%get_undf()
+  !
+  ! Call kernels and communication routines
+  !
+  do cell=1,mesh%get_last_edge_cell()
+      call random_harmonics_forcing_code(nlayers,                        &
+                              ! Add fields
+                              internal_flux_proxy%data,                  &
+                              latitude_proxy%data, longitude_proxy%data, &
+                              ! Add scalars
+                              forcing_wavenumber, forcing_amplitude,     &
+                              ! Add array
+                              random_phase,                              &
+                              ! Add fields' assoc. space variables
+                              ndf_1, undf_1, map_1(:,cell),               &
+                              ndf_2, undf_2, map_2(:,cell),               &
+                              ndf_3, undf_3, map_3(:,cell))
+  end do
+  !
+  ! Set halos dirty/clean for fields modified in the above loop
+  !
+  call internal_flux_proxy%set_dirty()
+  !
+  end subroutine invoke_random_harmonics_forcing_kernel_type
+  !---------------------------------------------------------------------
   ! PSyclone currently doesn't work for DOMAIN kernels with stencil fields
   ! See PSyclone #1948
     SUBROUTINE invoke_jules_exp_kernel_type(ncells, ncells_halo, theta, exner_in_wth, u_in_w3, v_in_w3, mr_n, mr_n_1, mr_n_2, height_w3, height_wth, &
