@@ -146,6 +146,25 @@ module gungho_setup_io_mod
                                        internal_flux_method_non_uniform, &
                                        surf_temp_forcing, &
                                        surf_temp_forcing_int_flux
+  use radiative_gases_config_mod, only: &
+    ch4_rad_opt, ch4_rad_opt_ancil, &
+    cs_rad_opt, cs_rad_opt_ancil, &
+    co_rad_opt, co_rad_opt_ancil, &
+    co2_rad_opt, co2_rad_opt_ancil, &
+    h2_rad_opt, h2_rad_opt_ancil, &
+    h2o_rad_opt, h2o_rad_opt_ancil, &
+    hcn_rad_opt, hcn_rad_opt_ancil, &
+    he_rad_opt, he_rad_opt_ancil, &
+    k_rad_opt, k_rad_opt_ancil, &
+    li_rad_opt, li_rad_opt_ancil, &
+    n2_rad_opt, n2_rad_opt_ancil, &
+    na_rad_opt, na_rad_opt_ancil, &
+    nh3_rad_opt, nh3_rad_opt_ancil, &
+    o2_rad_opt, o2_rad_opt_ancil, &
+    rb_rad_opt, rb_rad_opt_ancil, &
+    so2_rad_opt, so2_rad_opt_ancil, &
+    tio_rad_opt, tio_rad_opt_ancil, &
+    vo_rad_opt, vo_rad_opt_ancil
   use jules_radiation_config_mod, only: l_sea_alb_var_chl, l_albedo_obs
   use aerosol_config_mod,        only: glomap_mode,               &
                                        glomap_mode_climatology,   &
@@ -729,7 +748,25 @@ module gungho_setup_io_mod
    endif
 
     ! Radiatively active gases
-    if ( ancil_option == ancil_option_idealised ) then
+    if ( ancil_option == ancil_option_idealised .and. &
+         ( ch4_rad_opt  == ch4_rad_opt_ancil  .or. &
+           co_rad_opt   == co_rad_opt_ancil   .or. &
+           co2_rad_opt  == co2_rad_opt_ancil  .or. &
+           h2_rad_opt   == h2_rad_opt_ancil   .or. &
+           h2o_rad_opt  == h2o_rad_opt_ancil  .or. &
+           hcn_rad_opt  == hcn_rad_opt_ancil  .or. &
+           he_rad_opt   == he_rad_opt_ancil   .or. &
+           n2_rad_opt   == n2_rad_opt_ancil   .or. &
+           nh3_rad_opt  == nh3_rad_opt_ancil  .or. &
+           o2_rad_opt   == o2_rad_opt_ancil   .or. &
+           so2_rad_opt  == so2_rad_opt_ancil  .or. &
+           cs_rad_opt   == cs_rad_opt_ancil   .or. &
+           k_rad_opt    == k_rad_opt_ancil    .or. &
+           li_rad_opt   == li_rad_opt_ancil   .or. &
+           na_rad_opt   == na_rad_opt_ancil   .or. &
+           rb_rad_opt   == rb_rad_opt_ancil   .or. &
+           tio_rad_opt  == tio_rad_opt_ancil  .or. &
+           vo_rad_opt   == vo_rad_opt_ancil ) ) then
       write(ancil_fname,'(A)') trim(ancil_directory)//'/'// &
                                trim(gas_mmr_ancil_path)
       call files_list%insert_item( lfric_xios_file_type( ancil_fname, &
