@@ -243,6 +243,9 @@ contains
     ! ...for external forcing
     type( field_type ) :: dtheta_forcing, du_forcing, dmv_forcing, &
          dmcl_forcing, dcfl_forcing, dbcf_forcing
+    ! ... for the random harmonics internal flux forcing's vertical
+    ! structure (S_v(p), Showman, Tan & Zhang, 2019, ApJ, arXiv:1807.08433)
+    type( field_type ) :: dtheta_internal_flux
     ! ... for energy correction
     type( field_type ) :: dtheta_encorr
     ! ...for microphysics
@@ -346,6 +349,7 @@ contains
     logical( kind=l_def ) :: boundary_layer_done
     logical( kind=l_def ) :: leonard_term_done
     logical( kind=l_def ) :: evap_condense_done
+    logical( kind=l_def ) :: internal_flux_forcing_done
 #ifdef UM_PHYSICS
     ! Variables for extracting horizontal number of cells from mesh
     integer( kind=i_def ) :: ncells
@@ -402,6 +406,7 @@ contains
     boundary_layer_done  = .false.
     leonard_term_done    = .false.
     evap_condense_done   = .false.
+    internal_flux_forcing_done = .false.
 
     !--------------------------------------------------------------------
     ! External forcing options
@@ -834,7 +839,9 @@ contains
     !---------------------------------------------------------------------
     if ( l_planet_grey_surface .and. &
          surf_temp_forcing /= surf_temp_forcing_none ) then
-      call surf_temp_forcing_alg(radiation_fields, surface_fields, dt)
+      call surf_temp_forcing_alg(radiation_fields, surface_fields, dt, &
+                                 theta, exner_in_wth, dtheta_internal_flux)
+      internal_flux_forcing_done = .true.
     end if
 
     !--------------------------------------------------------------------
@@ -1015,6 +1022,11 @@ contains
 
     if (theta_forcing_done) then
       call invoke(inc_X_plus_Y(dtheta, dtheta_forcing))
+    end if
+
+    if (internal_flux_forcing_done) then
+      call invoke(inc_X_plus_Y(dtheta, dtheta_internal_flux))
+      call dtheta_internal_flux%field_final()
     end if
 
     if (vapour_forcing_done) then

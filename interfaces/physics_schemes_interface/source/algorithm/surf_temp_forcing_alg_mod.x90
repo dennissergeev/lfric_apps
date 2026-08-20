@@ -23,10 +23,14 @@ use specified_surface_config_mod,  only: surf_temp_forcing, &
                                          internal_flux_method_random_harmonics, &
                                          internal_flux_value, &
                                          internal_flux_forcing_wavenumber, &
-                                         internal_flux_forcing_decorr_timescale
+                                         internal_flux_forcing_decorr_timescale, &
+                                         l_internal_flux_heating, &
+                                         internal_flux_heating_amplitude
 use internal_flux_kernel_mod,      only: internal_flux_kernel_type
+use internal_flux_heating_kernel_mod, only: internal_flux_heating_kernel_type
 use jules_control_init_mod,        only: n_surf_tile
 use radiation_config_mod,          only: planet_emissivity
+use planet_config_mod,             only: kappa
 use fs_continuity_mod,             only: W3
 use mesh_mod,                      only: mesh_type
 use sci_geometric_constants_mod,   only: get_latitude_fv, get_longitude_fv
@@ -43,16 +47,26 @@ public :: surf_temp_forcing_alg
 
 contains
 
-  !> @param[in]     radiation_fields   Fields for radiation scheme
-  !> @param[in,out] surface_fields     Fields for surface scheme
-  !> @param[in]     dt                 The model timestep length
-  subroutine surf_temp_forcing_alg(radiation_fields, surface_fields, dt)
+  !> @param[in]     radiation_fields    Fields for radiation scheme
+  !> @param[in,out] surface_fields      Fields for surface scheme
+  !> @param[in]     dt                  The model timestep length
+  !> @param[in]     theta               Potential temperature, used only for its
+  !!                                    function space (Wtheta)
+  !> @param[in]     exner_in_wth        Exner pressure on Wtheta levels
+  !> @param[out]    dtheta_internal_flux Potential temperature increment from
+  !!                                    the random harmonics internal flux
+  !!                                    forcing's vertical structure S_v(p)
+  subroutine surf_temp_forcing_alg(radiation_fields, surface_fields, dt, &
+                                   theta, exner_in_wth, dtheta_internal_flux)
 
     implicit none
 
     type( field_collection_type ), intent(in) :: radiation_fields
     type( field_collection_type ), intent(inout) :: surface_fields
     real( kind=r_def ), intent(in) :: dt
+    type( field_type ), intent(in) :: theta
+    type( field_type ), intent(in) :: exner_in_wth
+    type( field_type ), intent(out) :: dtheta_internal_flux
 
     ! Fields unpacked from radiation and surface collections
     type( field_type ), pointer :: lw_down_surf
@@ -73,6 +87,7 @@ contains
     logical, save                :: l_rand_harmonics_seeded = .false.
     integer(i_def)                :: random_seed_size
     real(r_def)                  :: ar1_memory_coeff
+    real(r_def)                  :: heating_ratio
 
     if ( LPROF ) call start_timing( id, 'surf_temp_forcing' )
 
@@ -92,6 +107,13 @@ contains
 
             call surface_fields%get_field('internal_flux', internal_flux)
             call surface_fields%get_field('tile_temperature', tile_temperature)
+
+            ! Always define the (intent-out) 3D heating increment, even when
+            ! l_internal_flux_heating is off, so it is safe for the caller
+            ! to add it into the running theta increment unconditionally.
+            call dtheta_internal_flux%initialise( &
+              vector_space = theta%get_function_space() )
+            call invoke( setval_c(dtheta_internal_flux, 0.0_r_def) )
 
             if ( internal_flux_method == internal_flux_method_random_harmonics ) then
 
@@ -146,6 +168,29 @@ contains
                                         internal_flux_value,                 &
                                         ar1_memory_coeff,                    &
                                         random_phase )
+
+              ! Vertical structure of the forcing, S_v(p), described just
+              ! before equation 4 of Showman, Tan & Zhang (2019, ApJ,
+              ! arXiv:1807.08433): apply the same random realisation that
+              ! now drives internal_flux, rescaled to
+              ! internal_flux_heating_amplitude, as a 3D potential
+              ! temperature increment near the base of the domain.
+              if ( l_internal_flux_heating ) then
+                if ( internal_flux_value == 0.0_r_def ) then
+                  call log_event( 'slow_physics: l_internal_flux_heating '//&
+                    'requires a non-zero internal_flux_value to rescale '// &
+                    'from - skipping', LOG_LEVEL_ERROR )
+                else
+                  heating_ratio = internal_flux_heating_amplitude / &
+                    internal_flux_value
+                  call invoke( internal_flux_heating_kernel_type(          &
+                                          dtheta_internal_flux,            &
+                                          exner_in_wth,                    &
+                                          internal_flux,                   &
+                                          kappa,                           &
+                                          heating_ratio ) )
+                end if
+              end if
 
             end if
 
