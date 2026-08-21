@@ -25,6 +25,11 @@ module compute_total_aam_kernel_mod
   use fs_continuity_mod, only : W2, W3
   use kernel_mod,        only : kernel_type
 
+  ! Configuration modules
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   private
@@ -168,7 +173,9 @@ subroutine compute_total_aam_code(                                           &
       chi_3_e(df) = chi_3( loc )
     end do
 
-    call coordinate_jacobian(ndf_chi, nqp_h, nqp_v,             &
+    call coordinate_jacobian(coord_system, geometry,            &
+                             topology, scaled_radius,           &
+                             ndf_chi, nqp_h, nqp_v,             &
                              chi_1_e, chi_2_e, chi_3_e, ipanel, &
                              chi_basis, chi_diff_basis, jac, dj)
     do df = 1, ndf_w3
@@ -189,10 +196,15 @@ subroutine compute_total_aam_code(                                           &
         end do
 
         ! Obtain (X,Y,Z) and (lon,lat,r) coords
-        call chi2xyz(coords(1), coords(2), coords(3),  &
-                     ipanel, x_vec(1), x_vec(2), x_vec(3))
-        call chi2llr(coords(1), coords(2), coords(3),  &
-                     ipanel, llr_vec(1), llr_vec(2), llr_vec(3))
+        call chi2xyz( coords(1), coords(2), coords(3), &
+                      ipanel, geometry, topology,      &
+                      coord_system, scaled_radius,     &
+                      x_vec(1), x_vec(2), x_vec(3) )
+
+        call chi2llr( coords(1), coords(2), coords(3), &
+                      ipanel, geometry, topology,      &
+                      coord_system, scaled_radius,     &
+                      llr_vec(1), llr_vec(2), llr_vec(3) )
 
         ! get position vector with spherical components
         r_vec(:) = cart2sphere_vector(x_vec, x_vec)

@@ -9,18 +9,26 @@
 LFRic atmosphere checkpoint/restart system
 ==========================================
 
-The LFRic atmosphere ``lfric_atm`` application can be configured to generate a
-checkpoint dump at the end of each model run. The checkpoint dump can be read in
-by a new integration of the model allowing further timesteps to be run. The dump
+The LFRic atmosphere ``lfric_atm`` application can be configured to generate
+checkpoint dumps at multiple points within a model run. A checkpoint dump can be read in
+by a new integration of the model allowing further timesteps to be run. Each dump
 is written using XIOS.
 
 Requesting checkpoint restart
 -----------------------------
 
 Set ``checkpoint_write=.true.`` in the ``io`` namelist of the model
-configuration to generate a checkpoint dump at the end of a model run. The
-checkpoint dump will be named after the ``checkpoint_stem_name`` string in the
-``files`` namelist appended with the number of the last timestep of the run.
+configuration to turn on checkpoint writing. The times when checkpoint files
+will be written are defined by the ``checkpoint_times`` list. The
+``checkpoint_times`` must be real values in seconds corresponding to an integer
+number of timesteps in the model run (e.g. if ``dt=0.5`` the
+``checkpoint_times`` can include ``0.5`` and ``1.0`` etc. but **not** ``0.3``).
+Setting ``end_of_run_checkpoint=.true.`` will write a checkpoint file at the end
+of the run. Only one checkpoint file will be written at the end of a run even if
+both the final timestep is included in the ``checkpoint_times`` list and the
+``end_of_run_checkpoint`` flag is set to ``.true.``. The checkpoint dumps will
+be named after the ``checkpoint_stem_name`` string in the ``files`` namelist
+appended with timestep number of the checkpoint time.
 
 Set ``checkpoint_read=.true.`` in the ``io`` namelist to restart a run from an
 existing checkpoint dump. The expected start timestep will be defined by
@@ -238,74 +246,78 @@ Simplified call tree for setting up I/O in LFRic_atm
 
 
 .. code-block:: rst
+  :class: small-code
 
-  lfric_atm							(lfric_atm/lfric_atm.f90)
+  lfric_atm                                            (lfric_atm/lfric_atm.f90)
+  │
+  └─initialise                                         (gungho/driver/gungho_driver_mod.F90)
     │
-    └──initialise						(gungho/driver/gungho_driver_mod.F90)
+    ├─initialise_infrastructure                        (gungho/driver/gungho_model_mod.F90)
+    │ │
+    │ └─init_io                                        (components/driver/driver_io_mod.F90)
+    │   │
+    │   ├─init_xios_io_context                         (components/driver/driver_io_mod.F90)
+    │   │ │
+    │   │ ├─populate_filelist (=> init_gungho_files)   (gungho/driver/gungho_setup_io_mod.F90)
+    │   │ │
+    │   │ └─io_context%initialise_xios_context         (components/lfric_xios/lfric_xios_context_mod.f90)
+    │   │   │
+    │   │   ├─xios_context_initialise                  xios
+    │   │   │
+    │   │   ├─xios_get_handle                          xios
+    │   │   │
+    │   │   ├─xios_set_current_context                 xios
+    │   │   │
+    │   │   ├─init_xios_calendar                       (components/lfric_xios/lfric_xios_setup_mod.x90)
+    │   │   │
+    │   │   ├─init_xios_dimensions                     (components/lfric_xios/lfric_xios_setup_mod.x90)
+    │   │   │
+    │   │   └─setup_xios_files                         (components/lfric_xios/lfric_xios_setup_mod.x90)
+    │   │
+    │   ├─before_close (=> before_context_close)       (gungho/driver/gungho_model_mod.F90)
+    │   │ │
+    │   │ ├─persistor%init                             (gungho/driver/gungho_model_mod.F90)
+    │   │ │
+    │   │ ├─process_gungho_prognostics(persistor)      (gungho/driver/create_gungho_prognostics_mod.F90)
+    │   │ │ │
+    │   │ │ └─persistor%apply(makespec())              (gungho/driver/gungho_model_mod.F90)
+    │   │ │   │
+    │   │ │   └─add_field                              (components/lfric-xios/lfric_xios_metafile_mod.F90)
+    │   │ │      │
+    │   │ │      ├─(various xios calls...)             xios
+    │   │ │      │
+    │   │ │      └─handle_legacy_field                 (components/lfric-xios/lfric_xios_metafile_mod.F90)
+    │   │ │
+    │   │ └─process_physics_prognostics(persistor)     (gungho/driver/create_physics_prognostics_mod.F90)
+    │   │    │
+    │   │    └─(…)
+    │   │
+    │   └─io_context%close_context_definition          (components/lfric_xios/lfric_xios_context_mod.f90)
+    │       │
+    │       └─xios_close_context_definition            xios
+    │
+    │
+    └─create_model_data                                (gungho/driver/gungho_init_fields_mod.X90)
+      │
+      ├─field_mapper%init                              (gungho/driver/field_mapper_mod.F90)
+      │
+      └─create_gungho_prognostics                      (gungho/driver/create_gungho_prognostics_mod.F90)
         │
-        ├──initialise_infrastructure				(gungho/driver/gungho_model_mod.F90)
-        │   │
-        │   └──init_io						(components/driver/driver_io_mod.F90)
-        │       │
-        │       └──init_xios_io_context				(components/driver/driver_io_mod.F90)
-        │           │
-        │           ├──populate_filelist (=> init_gungho_files)	(gungho/driver/gungho_setup_io_mod.F90)
-        │           │
-        │           └──io_context%initialise_xios_context	(components/lfric_xios/lfric_xios_context_mod.f90)
-        │               │
-        │               ├──xios_context_initialise		xios
-        │               │
-        │               ├──xios_get_handle			xios
-        │               │
-        │               ├──xios_set_current_context		xios
-        │               │
-        │               ├──init_xios_calendar			(components/lfric_xios/lfric_xios_setup_mod.x90)
-        │               │
-        │               ├──init_xios_dimensions			(components/lfric_xios/lfric_xios_setup_mod.x90)
-        │               │
-        │               ├──setup_xios_files			(components/lfric_xios/lfric_xios_setup_mod.x90)
-        │               │
-        │               ├──before_close (=> before_context_close) 	(gungho/driver/gungho_model_mod.F90)
-        │               │   │
-        │               │   ├──persistor%init           		(gungho/driver/gungho_model_mod.F90)
-        │               │   │
-        │               │   ├──process_gungho_prognostics(persistor)
-        │               │   │   │					(gungho/driver/create_gungho_prognostics_mod.F90)
-        │               │   │   └──persistor%apply(makespec())		(gungho/driver/gungho_model_mod.F90)
-        │               │   │       │
-        │               │   │       └──add_field			(components/lfric-xios/lfric_xios_metafile_mod.F90)
-        │               │   │           │
-        │               │   │           ├──(various xios calls…) 	xios
-        │               │   │           │
-        │               │   │           └──handle_legacy_field 		(components/lfric-xios/lfric_xios_metafile_mod.F90)
-        │               │   │
-        │               │   └──process_physics_prognostics(persistor)
-        │               │       │					(gungho/driver/create_physics_prognostics_mod.F90)
-        │               │       └──(…)
-        │               │
-        │               └──xios_close_context_definitions 	xios
+        ├─creator%init                                 (gungho/driver/field_maker_mod.F90)
         │
-        │
-        └──create_model_data					(gungho/driver/gungho_init_fields_mod.X90)
+        └─process_gungho_prognostics(creator)          (gungho/driver/create_gungho_prognostics_mod.F90)
+          │
+          └─creator%apply(makespec())                  (gungho/driver/field_maker_mod.F90)
             │
-            ├──field_mapper%init				(gungho/driver/field_mapper_mod.F90)          │
-            └──create_gungho_prognostics			(gungho/driver/create_gungho_prognostics_mod.F90)
-                │
-                ├──creator%init					(gungho/driver/field_maker_mod.F90)
-                │
-                └──process_gungho_prognostics(creator)		(gungho/driver/create_gungho_prognostics_mod.F90)
-                    │
-                    └──creator%apply(makespec())		(gungho/driver/field_maker_mod.F90)
-                        │
-                        └──add_real_field			(gungho/driver/field_maker_mod.F90)
-                            │
-                            ├──field%initialise			(infrastructure/field/field_mod.t90)
-                            │
-                            ├──field%set_read/write_behaviour	(infrastructure/field/field_mod.t90)
-                            │
-                            ├──depository%add_field		(infrastructure/field/field_collection_mod.F90)
-                            │
-                            └──prognostic_fields%add_field	(infrastructure/field/field_collection_mod.F90)
+            └─add_real_field                           (gungho/driver/field_maker_mod.F90)
+              │
+              ├─field%initialise                       (infrastructure/field/field_mod.t90)
+              │
+              ├─field%set_read/write_behaviour         (infrastructure/field/field_mod.t90)
+              │
+              ├─depository%add_field                   (infrastructure/field/field_collection_mod.F90)
+              │
+              └─prognostic_fields%add_field            (infrastructure/field/field_collection_mod.F90)
 
-(For brevity, the paths are shortened. Some prefix directories and the “source”
+(For brevity, the paths are shortened. Some prefix directories and the "source"
 directory have been omitted.)

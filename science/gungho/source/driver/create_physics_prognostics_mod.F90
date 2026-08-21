@@ -10,7 +10,7 @@ module create_physics_prognostics_mod
   use energy_correction_config_mod,   only : encorr_usage,                      &
                                              encorr_usage_none
   use clock_mod,                      only : clock_type
-  use constants_mod,                  only : i_def, l_def
+  use constants_mod,                  only : i_def, l_def, str_def
   use field_mod,                      only : field_type
   use integer_field_mod,              only : integer_field_type
   use field_spec_mod,                 only : main_coll_dict,                    &
@@ -42,6 +42,7 @@ module create_physics_prognostics_mod
                                              topography_horizon,                &
                                              n_horiz_layer, n_horiz_ang,        &
                                              l_inc_radstep
+  use cosp_config_mod,                only : l_cosp, n_cosp_step
   use aerosol_config_mod,             only : glomap_mode,                       &
                                              glomap_mode_climatology,           &
                                              glomap_mode_dust_and_clim,         &
@@ -51,23 +52,41 @@ module create_physics_prognostics_mod
                                              easyaerosol_sw, easyaerosol_lw,    &
                                              murk_prognostic, murk
   use section_choice_config_mod,      only : cloud, cloud_um,                   &
+                                             cloud_none,                        &
                                              aerosol, aerosol_um,               &
+                                             aerosol_none,                      &
                                              radiation, radiation_socrates,     &
+                                             radiation_none,                    &
                                              boundary_layer,                    &
                                              boundary_layer_um,                 &
+                                             boundary_layer_none,               &
                                              electric, electric_um,             &
+                                             electric_none,                     &
                                              iau_sst,                           &
                                              surface, surface_jules,            &
+                                             surface_none,                      &
                                              orographic_drag,                   &
                                              orographic_drag_um,                &
+                                             orographic_drag_none,              &
                                              convection, convection_um,         &
+                                             convection_none,                   &
+                                             microphysics,                      &
+                                             microphysics_none,                 &
                                              stochastic_physics,                &
-                                             stochastic_physics_um
+                                             stochastic_physics_um,             &
+                                             stochastic_physics_none
   use cloud_config_mod,               only : scheme,                            &
                                              scheme_pc2
   use convection_config_mod,          only : cv_scheme, cv_scheme_comorph
+  use external_forcing_config_mod,    only : theta_forcing_nudging,             &
+                                             theta_forcing,                     &
+                                             wind_forcing_nudging,              &
+                                             wind_forcing
   use microphysics_config_mod,        only : microphysics_casim
-  use multires_coupling_config_mod,   only : coarse_rad_aerosol
+  use multires_coupling_config_mod,   only : coarse_rad_aerosol,                &
+                                             coarse_nudging,                    &
+                                             aerosol_mesh_name,                 &
+                                             nudging_mesh_name
 
   use jules_surface_config_mod,       only : srf_ex_cnv_gust, l_vary_z0m_soil, &
                                              l_urban2t
@@ -153,6 +172,7 @@ contains
     logical(l_def) :: is_rad ! Flag for chemistry fields
                              ! that are radiatively active
     logical(l_def) :: sst_pert_flag
+    character(len=str_def) :: mesh_name
 #endif
 
     class(clock_type), pointer :: clock
@@ -170,13 +190,7 @@ contains
     call processor%apply(make_spec('wetrho_in_wth', main%derived, Wtheta))
     call processor%apply(make_spec('exner_in_wth', main%derived, Wtheta))
     call processor%apply(make_spec('exner_wth_n', main%derived, Wtheta))
-
-    if ( boundary_layer == boundary_layer_um .or.                              &
-         convection     == convection_um ) then
-
-      call processor%apply(make_spec('theta_star', main%derived, Wtheta))
-
-    end if
+    call processor%apply(make_spec('theta_star', main%derived, Wtheta))
 
     if ( boundary_layer == boundary_layer_um .or.                              &
          convection     == convection_um     .or.                              &
@@ -191,6 +205,14 @@ contains
 
     end if
 
+    if ( theta_forcing == theta_forcing_nudging ) then
+      call processor%apply(make_spec(                                          &
+              'theta_nudging_ref', main%derived, Wtheta,                       &
+              coarse=coarse_nudging,                                           &
+              coarse_mesh_name=nudging_mesh_name                               &
+      ))
+    end if
+
     ! W3 fields
     call processor%apply(make_spec('u_in_w3', main%derived, W3))
     call processor%apply(make_spec('v_in_w3', main%derived, W3))
@@ -198,13 +220,17 @@ contains
     call processor%apply(make_spec('theta_in_w3', main%derived, W3))
     call processor%apply(make_spec('wetrho_in_w3', main%derived, W3))
 
-    if ( boundary_layer               == boundary_layer_um .or.                &
-         convection                   == convection_um     .or.                &
-         stochastic_physics_placement == stochastic_physics_placement_fast ) then
-
-      call processor%apply(make_spec('u_in_w3_star', main%derived, W3))
-      call processor%apply(make_spec('v_in_w3_star', main%derived, W3))
-
+    if ( wind_forcing == wind_forcing_nudging ) then
+      call processor%apply(make_spec(                                          &
+              'u_in_w3_nudging_ref', main%derived, W3,                         &
+              coarse=coarse_nudging,                                           &
+              coarse_mesh_name=nudging_mesh_name                               &
+      ))
+      call processor%apply(make_spec(                                          &
+              'v_in_w3_nudging_ref', main%derived, W3,                         &
+              coarse=coarse_nudging,                                           &
+              coarse_mesh_name=nudging_mesh_name                               &
+      ))
     end if
 
     ! W2 fields
@@ -223,6 +249,13 @@ contains
     end if
 
 #ifdef UM_PHYSICS
+
+  if ( surface            /= surface_none             .or. &
+       radiation          /= radiation_none           .or. &
+       orographic_drag    /= orographic_drag_none     .or. &
+       stochastic_physics /= stochastic_physics_none  .or. &
+       boundary_layer     /= boundary_layer_none ) then
+
     !========================================================================
     ! Fields owned by the radiation scheme
     !========================================================================
@@ -470,6 +503,38 @@ contains
          ckp=checkpoint_flag))
     call processor%apply(make_spec('aer_lw_asymmetry', main%radiation,          &
          ckp=checkpoint_flag))
+
+    ! Fields which need checkpointing for time sampling of COSP diagnostics.
+    ! Checkpoint unless both the first timestep of this run and the
+    ! first timestep of the next run are COSP timesteps
+    if (l_cosp) then
+      checkpoint_flag = &
+        mod(clock%get_first_step()-1, n_cosp_step) /= 0 .or. &
+        mod(clock%get_last_step(),    n_cosp_step) /= 0
+
+      if (checkpoint_read .or. init_option == init_option_checkpoint_dump) then
+        ! If the first timestep of this run IS a COSP timestep, but the
+        ! first timestep of the next run IS NOT, then checkpoint_flag
+        ! must be false to allow model to start running, as the COSP
+        ! prognostics will not be in the initial dump
+        if (mod(clock%get_first_step()-1, n_cosp_step) == 0 .and. &
+            mod(clock%get_last_step(),    n_cosp_step) /= 0) then
+          checkpoint_flag = .false.
+          if (checkpoint_write) then
+            call log_event('Danger: start of this run is a COSP ' // &
+                           'timestep, but start of next run is not. ' // &
+                           'Written dump will be incomplete. Next run ' // &
+                           'must start with a COSP timestep', &
+                           LOG_LEVEL_WARNING)
+          end if
+        endif
+      end if
+    else
+      checkpoint_flag = .false.
+    end if
+
+    call processor%apply(make_spec('lit_fraction_cosp', main%radiation, &
+      W3, twod=.true., ckp=checkpoint_flag))
 
     !========================================================================
     ! Fields owned by the microphysics scheme
@@ -923,6 +988,7 @@ contains
                                    empty = (.not. l_urban2t) ))
     call processor%apply(make_spec('urbemisc', main%surface, W3, twod=.true., &
                                    empty = (.not. l_urban2t)))
+
     ! 2D fields, need checkpointing for urban-2-tile schemes
     call processor%apply(make_spec('urbwrr', main%surface, twod=.true., &
                                    ckp=l_urban2t, empty = (.not. l_urban2t) ))
@@ -1020,6 +1086,8 @@ contains
     ! 2D fields, don't need checkpointing
     call processor%apply(make_spec('soil_moist_avail', main%soil, W3, twod=.true.))
     call processor%apply(make_spec('thermal_cond_wet_soil', main%soil, W3,      &
+        twod=.true.))
+    call processor%apply(make_spec('inland_basin_flow', main%soil, W3,          &
         twod=.true.))
 
     !========================================================================
@@ -1489,7 +1557,7 @@ contains
     ! Fields owned by the aerosol scheme
     !========================================================================
 
-    ! 2D fields, might need checkpointing
+    ! Flags for some 2D and 3D fields
     if ( aerosol == aerosol_um .and. glomap_mode == glomap_mode_ukca ) then
       checkpoint_flag = .true.
       checkpoint_GC3 = (emissions == emissions_GC3)
@@ -1501,6 +1569,7 @@ contains
       checkpoint_GC5 = .false.
       is_empty = .true.
     end if
+    ! 2D fields, might need checkpointing
     if ( aerosol == aerosol_um .and.            &
          ( glomap_mode == glomap_mode_ukca .or. &
            glomap_mode == glomap_mode_dust_and_clim ) ) then
@@ -1533,15 +1602,11 @@ contains
       call processor%apply(make_spec('surf_wetness', main%aerosol,             &
            empty=is_empty, ckp=checkpoint_flag))
     end if
-    call processor%apply(make_spec('soil_clay', main%aerosol,                  &
-        ckp=checkpoint_flag))
-    call processor%apply(make_spec('soil_sand', main%aerosol,                  &
-        ckp=checkpoint_flag))
 
+    ! 3D fields, might need checkpointing - flags set above
     if ( aerosol == aerosol_um .and.                                           &
          ( glomap_mode == glomap_mode_ukca .or.                                &
            glomap_mode == glomap_mode_dust_and_clim ) ) then
-      ! 3D fields, might need checkpointing
       call processor%apply(make_spec('emiss_bc_biomass', main%aerosol,         &
            empty=is_empty, ckp=checkpoint_GC3))
       call processor%apply(make_spec('emiss_om_biomass', main%aerosol,         &
@@ -1549,6 +1614,19 @@ contains
       call processor%apply(make_spec('emiss_so2_nat', main%aerosol,            &
            empty=is_empty, ckp=checkpoint_flag))
     end if
+
+    ! Flags for more 2D fields
+    if (aerosol == aerosol_um .and. (glomap_mode == glomap_mode_ukca .or.             &
+                                     glomap_mode == glomap_mode_dust_and_clim )) then
+      checkpoint_flag = .true.
+    else
+      checkpoint_flag = .false.
+    end if
+
+    call processor%apply(make_spec('soil_clay', main%aerosol,                  &
+        ckp=checkpoint_flag))
+    call processor%apply(make_spec('soil_sand', main%aerosol,                  &
+        ckp=checkpoint_flag))
 
     ! 3D fields, might need checkpointing and/or advecting
     ! Nucleation mode is only used with UKCA
@@ -1598,57 +1676,80 @@ contains
 
     end if
 
+    if (coarse_rad_aerosol) then
+      mesh_name = aerosol_mesh_name
+    else
+      mesh_name = ''
+    end if
+
     ! Aitken soluble mode number mixing ratio
     call processor%apply(make_spec('n_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Aitken soluble H2SO4 aerosol mmr
     call processor%apply(make_spec('ait_sol_su', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Aitken soluble black carbon aerosol mmr
     call processor%apply(make_spec('ait_sol_bc', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Aitken soluble organic carbon aerosol mmr
     call processor%apply(make_spec('ait_sol_om', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Accumulation soluble mode number mixing ratio
     call processor%apply(make_spec('n_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Accumulation soluble H2SO4 aerosol mmr
     call processor%apply(make_spec('acc_sol_su', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Accumulation soluble black carbon aerosol mmr
     call processor%apply(make_spec('acc_sol_bc', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Accumulation soluble organic carbon aerosol mmr
     call processor%apply(make_spec('acc_sol_om', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Accumulation soluble sea salt aerosol mmr
     call processor%apply(make_spec('acc_sol_ss', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Coarse soluble mode number mixing ratio
     call processor%apply(make_spec('n_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol, &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),               &
+        ckp=checkpoint_flag))
     ! Coarse soluble H2SO4 aerosol mmr
     call processor%apply(make_spec('cor_sol_su', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Coarse soluble black carbon aerosol mmr
     call processor%apply(make_spec('cor_sol_bc', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Coarse soluble organic carbon aerosol mmr
     call processor%apply(make_spec('cor_sol_om', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Coarse soluble sea salt aerosol mmr
     call processor%apply(make_spec('cor_sol_ss', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Aitken insoluble mode number mixing ratio
     call processor%apply(make_spec('n_ait_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Aitken insoluble black carbon aerosol mmr
     call processor%apply(make_spec('ait_ins_bc', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Aitken insoluble organic carbon aerosol mmr
     call processor%apply(make_spec('ait_ins_om', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,  &
-        adv_coll=if_adv(advection_flag, adv%last_con), ckp=checkpoint_flag))
+        coarse_mesh_name=mesh_name, adv_coll=if_adv(advection_flag, adv%last_con),                 &
+        ckp=checkpoint_flag))
     ! Accumulation insoluble mode number mixing ratio
     call processor%apply(make_spec('n_acc_ins', main%aerosol, Wtheta, coarse=.false.,   &
         adv_coll=if_adv(advection_flag_dust, adv%last_con), ckp=checkpoint_flag))
@@ -1674,110 +1775,116 @@ contains
         ckp=checkpoint_flag))
 
     if (aerosol == aerosol_um) then
+
         ! Dry diameter Aitken mode (Soluble)
-        call processor%apply(make_spec('drydp_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('drydp_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Dry diameter Accumulation mode (Soluble)
-        call processor%apply(make_spec('drydp_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('drydp_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Dry diameter Coarse mode (Soluble)
-        call processor%apply(make_spec('drydp_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('drydp_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Dry diameter Aitken mode (Insoluble)
-        call processor%apply(make_spec('drydp_ait_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('drydp_ait_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Dry diameter Accumulation mode (Insoluble)
-        call processor%apply(make_spec('drydp_acc_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('drydp_acc_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Dry diameter Coarse mode (Insoluble)
-        call processor%apply(make_spec('drydp_cor_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('drydp_cor_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Wet diameter Aitken mode (Soluble)
-        call processor%apply(make_spec('wetdp_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('wetdp_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Wet diameter Accumulation mode (Soluble)
-        call processor%apply(make_spec('wetdp_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('wetdp_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Wet diameter Coarse mode (Soluble)
-        call processor%apply(make_spec('wetdp_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('wetdp_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Particle density Aitken mode (Soluble)
-        call processor%apply(make_spec('rhopar_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('rhopar_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Particle density Accumulation mode (Soluble)
-        call processor%apply(make_spec('rhopar_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('rhopar_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Particle density Coarse mode (Soluble)
-        call processor%apply(make_spec('rhopar_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('rhopar_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Particle density Aitken mode (Insoluble)
-        call processor%apply(make_spec('rhopar_ait_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('rhopar_ait_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Particle density Accumulation mode (Insoluble)
-        call processor%apply(make_spec('rhopar_acc_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('rhopar_acc_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Particle density Coarse mode (Insoluble)
-        call processor%apply(make_spec('rhopar_cor_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('rhopar_cor_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume of water Aitken mode (Soluble)
-        call processor%apply(make_spec('pvol_wat_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_wat_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume of water Accumulation mode (Soluble)
-        call processor%apply(make_spec('pvol_wat_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_wat_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume of water Coarse mode (Soluble)
-        call processor%apply(make_spec('pvol_wat_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_wat_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Sulphate Aitken mode (Soluble)
-        call processor%apply(make_spec('pvol_su_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_su_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Black Carbon Aitken mode (Soluble)
-        call processor%apply(make_spec('pvol_bc_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_bc_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Organic Matter Aitken mode (Soluble)
-        call processor%apply(make_spec('pvol_om_ait_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_om_ait_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Sulphate Accumulation mode (Soluble)
-        call processor%apply(make_spec('pvol_su_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_su_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Black Carbon Accumulation mode (Soluble)
-        call processor%apply(make_spec('pvol_bc_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_bc_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Organic Matter Accumulation mode (Soluble)
-        call processor%apply(make_spec('pvol_om_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_om_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Sea Salt Accumulation mode (Soluble)
-        call processor%apply(make_spec('pvol_ss_acc_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_ss_acc_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Sulphate Coarse mode (Soluble)
-        call processor%apply(make_spec('pvol_su_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_su_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Black Carbon Coarse mode (Soluble)
-        call processor%apply(make_spec('pvol_bc_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_bc_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Organic Matter Coarse mode (Soluble)
-        call processor%apply(make_spec('pvol_om_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_om_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Sea Salt Coarse mode (Soluble)
-        call processor%apply(make_spec('pvol_ss_cor_sol', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_ss_cor_sol', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Black Carbon Aitken mode (Insoluble)
-        call processor%apply(make_spec('pvol_bc_ait_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_bc_ait_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Organic Matter Aitken mode (Insoluble)
-        call processor%apply(make_spec('pvol_om_ait_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_om_ait_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Dust Accumulation mode (Insoluble)
-        call processor%apply(make_spec('pvol_du_acc_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_du_acc_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
         ! Partial volume component Dust Coarse mode (Insoluble)
-        call processor%apply(make_spec('pvol_du_cor_ins', main%aerosol, Wtheta, coarse=coarse_rad_aerosol,   &
-            ckp=checkpoint_flag))
+        call processor%apply(make_spec('pvol_du_cor_ins', main%aerosol, Wtheta,   &
+            coarse=coarse_rad_aerosol, coarse_mesh_name=mesh_name, ckp=checkpoint_flag))
     end if
 
     ! Fields on dust space, might need checkpointing
-    ! vector_space => function_space_collection%get_fs(twod_mesh, 0, 0, W3,
-    !     get_ndata_val('dust_divisions'))
+    if (aerosol == aerosol_um .and. (glomap_mode == glomap_mode_ukca .or.             &
+                                     glomap_mode == glomap_mode_dust_and_clim )) then
+      checkpoint_flag = .true.
+    else
+      checkpoint_flag = .false.
+    end if
+
     call processor%apply(make_spec('dust_mrel', main%aerosol,                   &
           ckp=checkpoint_flag))
 
@@ -1849,6 +1956,8 @@ contains
           twod=.true., is_int=.true., ckp=checkpoint_flag, empty=is_empty))
     end if
 
+  end if
+
 #endif
 
 
@@ -1859,22 +1968,16 @@ contains
   !>@brief Routine to initialise the field objects required by the physics
   !> @param[in]    mesh                 The current 3d mesh
   !> @param[in]    twod_mesh            The current 2d mesh
-  !> @param[in]    coarse_mesh          The coarse 3d mesh
-  !> @param[in]    coarse_twod_mesh     The coarse 2d mesh
   !> @param[in]    field_mapper         Provides access to the field collections
   !> @param[in]    clock                Model clock
   subroutine create_physics_prognostics( mesh,                  &
                                          twod_mesh,             &
-                                         coarse_mesh,           &
-                                         coarse_twod_mesh,      &
                                          field_mapper,          &
                                          clock )
     implicit none
 
     type( mesh_type ), intent(in), pointer         :: mesh
     type( mesh_type ), intent(in), pointer         :: twod_mesh
-    type( mesh_type ), intent(in), pointer         :: coarse_mesh
-    type( mesh_type ), intent(in), pointer         :: coarse_twod_mesh
     type( field_mapper_type ), intent(in)          :: field_mapper
     class( clock_type ), intent(in)                :: clock
 
@@ -1882,7 +1985,7 @@ contains
 
     call log_event( 'Create physics prognostics', LOG_LEVEL_INFO )
 
-    call creator%init(mesh, twod_mesh, coarse_mesh, coarse_twod_mesh, field_mapper, clock)
+    call creator%init(mesh, twod_mesh, field_mapper, clock)
 
     call field_mapper%sanity_check()
 

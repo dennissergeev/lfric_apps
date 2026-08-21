@@ -19,13 +19,15 @@ module initial_swe_u_kernel_mod
                                       ANY_DISCONTINUOUS_SPACE_3
   use constants_mod,           only : r_def, PI, i_def
   use fs_continuity_mod,       only : W2
-  use initial_wind_config_mod, only : profile_sin_uv,                        &
-                                      profile, sbr_angle_lat, sbr_angle_lon, &
-                                      u0, v0, shear, wavelength
-
   use kernel_mod,              only : kernel_type
-  use shallow_water_settings_config_mod, &
-                               only : swe_test
+
+  ! Configuration modules
+  use base_mesh_config_mod,      only: geometry, topology, &
+                                       geometry_spherical
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
+  use shallow_water_settings_config_mod, only: swe_test
 
   implicit none
 
@@ -94,8 +96,6 @@ subroutine initial_swe_u_code( nlayers, rhs,                       &
                                nqp_h, nqp_v, wqp_h, wqp_v )
 
   use analytic_swe_wind_profiles_mod, only : analytic_swe_wind
-  use base_mesh_config_mod,           only : geometry, &
-                                             geometry_spherical
   use sci_coordinate_jacobian_mod,    only : coordinate_jacobian
   use coord_transform_mod,            only : sphere2cart_vector
   use sci_chi_transform_mod,          only : chi2llr, chi2xyz
@@ -142,7 +142,11 @@ subroutine initial_swe_u_code( nlayers, rhs,                       &
     chi_3_cell(df) = chi_3( map_chi(df) )
   end do
 
-  call coordinate_jacobian(ndf_chi,         &
+  call coordinate_jacobian( coord_system,   &
+                            geometry,       &
+                            topology,       &
+                            scaled_radius,  &
+                            ndf_chi,        &
                             nqp_h,          &
                             nqp_v,          &
                             chi_1_cell,     &
@@ -163,12 +167,22 @@ subroutine initial_swe_u_code( nlayers, rhs,                       &
         coord(3) = coord(3) + chi_3_cell(df)*chi_basis(1,df,qp1,qp2)
       end do
       if ( geometry == geometry_spherical ) then
-        call chi2llr(coord(1), coord(2), coord(3), ipanel, llr(1), llr(2), llr(3))
+
+        call chi2llr( coord(1), coord(2), coord(3), &
+                      ipanel, geometry, topology,   &
+                      coord_system, scaled_radius,  &
+                      llr(1), llr(2), llr(3) )
         u_spherical = analytic_swe_wind(llr, swe_test, domain_x)
         u_physical = sphere2cart_vector(u_spherical,llr)
+
       else
-        call chi2xyz(coord(1), coord(2), coord(3), ipanel, xyz(1), xyz(2), xyz(3))
+
+        call chi2xyz( coord(1), coord(2), coord(3), &
+                      ipanel, geometry, topology,   &
+                      coord_system, scaled_radius,  &
+                      xyz(1), xyz(2), xyz(3) )
         u_physical = analytic_swe_wind(xyz, swe_test, domain_x)
+
       end if
       do df = 1, ndf
         integrand = dot_product(matmul(jacobian(:,:,qp1,qp2),&

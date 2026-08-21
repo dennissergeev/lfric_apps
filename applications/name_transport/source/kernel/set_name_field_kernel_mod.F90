@@ -21,6 +21,10 @@ module set_name_field_kernel_mod
   use kernel_mod,           only : kernel_type
   use log_mod,              only : log_event, LOG_LEVEL_ERROR
 
+  use base_mesh_config_mod,      only: geometry, topology
+  use finite_element_config_mod, only: coord_system
+  use planet_config_mod,         only: scaled_radius
+
   implicit none
 
   private
@@ -143,7 +147,9 @@ subroutine set_name_field_code(nlayers, tracer,                        &
       chi_2_e(df1) = chi_2( map_chi(df1) + k )
       chi_3_e(df1) = chi_3( map_chi(df1) + k )
     end do
-    call coordinate_jacobian(ndf_chi, nqp_h, nqp_v,             &
+    call coordinate_jacobian(coord_system, geometry,            &
+                             topology, scaled_radius,           &
+                             ndf_chi, nqp_h, nqp_v,             &
                              chi_1_e, chi_2_e, chi_3_e,         &
                              ipanel, chi_basis, chi_diff_basis, &
                              jac, dj)
@@ -161,8 +167,10 @@ subroutine set_name_field_code(nlayers, tracer,                        &
           end do
 
           ! Need (X,Y,Z) coordinate
-          call chi2xyz(coords(1), coords(2), coords(3), &
-                       ipanel, xyz(1), xyz(2), xyz(3))
+          call chi2xyz( coords(1), coords(2), coords(3), &
+                        ipanel, geometry, topology,      &
+                        coord_system, scaled_radius,     &
+                        xyz(1), xyz(2), xyz(3) )
 
           ! Set tracer field based on namelist
           tracer_ref = analytic_name_field(xyz, test, domain_max_x)

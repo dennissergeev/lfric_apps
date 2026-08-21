@@ -7,7 +7,8 @@
 
 module aerosol_ukca_alg_mod
 
-  use mesh_mod, only: mesh_type
+  use config_mod,      only: config_type
+  use mesh_mod,        only: mesh_type
   use model_clock_mod, only: model_clock_type
 
   implicit none
@@ -22,6 +23,7 @@ contains
   !>         species provided by UKCA's Offline Oxidants chemistry scheme
   !>         to calculate cloud droplet number concentration (CDNC) and the
   !>         aerosol fields required by RADAER
+  !>@param[in] config                Application namelist configuration object
   !>@param[in] chemistry_fields      Fields for UKCA chemistry schemes
   !>@param[in] aerosol_fields        Fields for GLOMAP aerosol scheme
   !>@param[in] radiation_fields      Fields for radiation scheme
@@ -36,7 +38,8 @@ contains
   !>@param[in] mr                    Mixing ratios
   !>@param[in] model_clock           Time in model
 
-  subroutine aerosol_ukca_alg( chemistry_fields,                               &
+  subroutine aerosol_ukca_alg( config,                                         &
+                               chemistry_fields,                               &
                                aerosol_fields,                                 &
                                radiation_fields,                               &
                                derived_fields,                                 &
@@ -69,12 +72,11 @@ contains
                                              get_detj_at_w3_fv
     use physics_constants_mod,         only: get_rdz_w3
     use aerosol_ukca_kernel_mod,       only: aerosol_ukca_kernel_type
-
-    use io_config_mod,                 only: subroutine_timers, use_xios_io,   &
-                                             write_diag
+    use io_config_mod,                 only: use_xios_io, write_diag
     use xios,                          only: xios_date, xios_get_current_date, &
                                              xios_date_get_day_of_year
-    use timer_mod,                     only: timer
+    use timing_mod,                    only: start_timing, stop_timing, &
+                                             tik, LPROF
     use log_mod,                       only: log_event, LOG_LEVEL_DEBUG
 
     use chemistry_config_mod,          only: chem_scheme,                      &
@@ -118,7 +120,6 @@ contains
     use um_sizes_init_mod,             only: um_sizes_init
     use um_ukca_init_mod,              only: n_phot_spc, ratj_varnames
     use ukca_photol_param_mod,         only: jppj, jrate_fac, jp_names
-  
     use pseudo_photol_kernel_mod,      only: pseudo_photol_kernel_type
     use map_pseudophotol_kernel_mod,   only: map_pseudophotol_kernel_type
     use calc_albedo_kernel_mod,        only: calc_albedo_kernel_type
@@ -129,6 +130,7 @@ contains
     implicit none
 
     ! -- Arguments --
+    type(config_type), intent(in) :: config
 
     type( field_collection_type ), intent(in) :: derived_fields
     type( field_collection_type ), intent(in) :: radiation_fields
@@ -429,7 +431,7 @@ contains
     type( field_type ) :: sulp_aitken
     type( field_type ) :: aod_sulp_accum
     type( field_type ) :: aod_sulp_aitken
-    
+
     ! Photolysis rates from Socrates - expected to be linked with
     ! photolysis_rates_rts field, which is currently a diagnostic
     type( field_type ) :: photol_rates_rts_jo2
@@ -466,8 +468,9 @@ contains
     integer( kind=i_def)  :: jp1, jp2  ! Indices for photolysis fields
 
     type( field_type ) :: mr_ice
+    integer( tik ) :: id, id_photo, id_chem, id_diags
 
-    if ( subroutine_timers ) call timer('aerosol_ukca_alg')
+    if ( LPROF ) call start_timing( id, 'ukca' )
 
     call log_event( 'Running UKCA aerosol', LOG_LEVEL_DEBUG )
 
@@ -970,19 +973,20 @@ contains
     ! Get location, level heights, cell area and volume data
 
     mesh => sin_stellar_declination_rts%get_mesh()   ! 2-D mesh
-    latitude_w3  => get_latitude_fv(W3, mesh%get_id())
-    longitude_w3 => get_longitude_fv(W3, mesh%get_id())
-    cell_area => get_da_msl_proj(mesh%get_id())
+
+    latitude_w3  => get_latitude_fv(config, mesh, W3)
+    longitude_w3 => get_longitude_fv(config, mesh, W3)
+
+    cell_area => get_da_msl_proj(config, mesh)
 
     mesh => state(igh_t)%get_mesh()                  ! 3-D mesh
-    height_wth => get_height_fv( Wtheta, mesh%get_id() )
-    height_w3 => get_height_fv( W3, mesh%get_id() )
-    rdz_w3    => get_rdz_w3( mesh%get_id() )
-
+    height_wth => get_height_fv(config, mesh, Wtheta)
+    height_w3  => get_height_fv(config, mesh, W3)
+    rdz_w3     => get_rdz_w3(config, mesh%get_id())
 
     ! Get detj on shifted W3 grid (to use as grid_volume)
     shifted_mesh => mesh_collection%get_mesh(mesh, SHIFTED)
-    detj_shifted => get_detj_at_w3_fv(shifted_mesh%get_id())
+    detj_shifted => get_detj_at_w3_fv(shifted_mesh)
 
     ! The call to um_sizes_init is required to ensure that the parent
     ! callback routine bl_tracer_mix passed to UKCA is compatible with
@@ -999,14 +1003,14 @@ contains
     if (microphysics_casim) then
       call invoke(inc_X_plus_Y(mr_ice, mr(imr_ci)))
     end if
-    
+
     ! Fields needed by UKCA and Photolysis
     call zh%copy_field_properties(conv_cloud_lwp)
     call zh%copy_field_properties(surf_albedo)
 
     call invoke( setval_c(conv_cloud_lwp, 0.0_r_def),                          &
                        setval_c(surf_albedo, 0.0_r_def) )
-  
+
     ! Multi-dimensional field: photol_rates
     vector_space=>function_space_collection%get_fs(mesh,0,0,Wtheta,            &
                    get_ndata_val('photol_species') )
@@ -1030,7 +1034,7 @@ contains
       if (mod( model_clock%get_step(),                                         &
             chem_timestep/int(model_clock%get_seconds_per_step()) ) == 0) then
 
-        if ( subroutine_timers ) call timer('ukca_photolysis_alg')
+        if ( LPROF ) call start_timing( id_photo, 'ukca.photolysis_alg' )
         ! FastJX scheme
         if (photol_scheme == photol_scheme_fastjx )  then
 
@@ -1150,7 +1154,7 @@ contains
 
         end if  ! photol_scheme = fastjx/ prescribed
 
-        if ( subroutine_timers ) call timer('ukca_photolysis_alg')
+        if ( LPROF ) call stop_timing( id_photo, 'ukca.photolysis_alg' )
         
       end if  ! Chem timestep
     
@@ -1158,7 +1162,7 @@ contains
 
     ! Do UKCA time step
 
-    if ( subroutine_timers ) call timer('ukca_chemistry_alg')
+    if ( LPROF ) call start_timing( id_chem, 'ukca.chemistry_alg' )
     call invoke(aerosol_ukca_kernel_type( o3p,                                 &
                                           o1d,                                 &
                                           o3,                                  &
@@ -1440,7 +1444,7 @@ contains
                                           emiss_so2_nat,                       &
                                           photol_rates  ))
 
-    if ( subroutine_timers ) call timer('ukca_chemistry_alg')
+    if ( LPROF ) call stop_timing( id_chem, 'ukca.chemistry_alg' )
     call um_sizes_init(1_i_def)
 
     ! Save time for reference at next step
@@ -1457,7 +1461,11 @@ contains
       call log_field_minmax( LOG_LEVEL_DEBUG, ' CH4 Aft Chem ', ch4 )
     end if
 
+    if ( LPROF ) call stop_timing( id, 'ukca' )
+
     if ( write_diag .and. use_xios_io ) then
+      if ( LPROF ) call start_timing( id_diags, 'diags.ukca' )
+
       ! Diagnostic output
 
       ! Chemistry diagnostics
@@ -1652,11 +1660,11 @@ contains
       call pvol_du_acc_ins%write_field('aerosol__pvol_du_acc_ins')
       call pvol_du_cor_ins%write_field('aerosol__pvol_du_cor_ins')
 
+      if ( LPROF ) call stop_timing( id_diags, 'diags.ukca' )
     end if      ! write diag
 
     nullify( mesh )
 
-    if ( subroutine_timers ) call timer('aerosol_ukca_alg')
 
   end subroutine aerosol_ukca_alg
 

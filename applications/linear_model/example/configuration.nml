@@ -13,8 +13,24 @@ transport_overwrite_freq='final'
 limit_cfl=.false.,
 /
 &section_choice
+aerosol='none',
+boundary_layer='none'
+chemistry='none',
+cloud='none',
+convection='none',
 dynamics='gungho',
+electric='none',
 external_forcing=.false.,
+iau=.false.,
+iau_sst=.false.,
+iau_surf=.false.,
+methane_oxidation=.false.,
+microphysics='none',
+orographic_drag='none',
+radiation='none',
+spectral_gwd='none',
+stochastic_physics='none',
+surface='none'
 /
 &departure_points
 horizontal_limit='none',
@@ -47,7 +63,9 @@ ls_filename='',
 /
 &finite_element
 cellshape='quadrilateral',
-coord_order=1,
+coord_order=2,
+coord_order_nonprime=1,
+coord_space='Wchi',
 coord_system='native',
 element_order_h=0,
 element_order_v=0,
@@ -93,7 +111,6 @@ ancil_option='none',
 init_option='analytic',
 lbc_option='none',
 ls_option='analytic',
-n_orog_smooth=0,
 read_w2h_wind=.false.,
 zero_w2v_wind=.false.,
 /
@@ -148,12 +165,14 @@ diag_always_on_sampling=.false.,
 write_diag=.true.,
 write_dump=.false.,
 write_fluxes=.true.,
+write_initial=.true.,
 write_minmax_tseries=.false.,
 /
 &linear
 fixed_ls=.false.
 pert_option='analytic',
 l_stabilise_bl=.false.,
+transport_efficiency=.false.,
 /
 &logging
 run_log_level='info',
@@ -183,11 +202,17 @@ l_esm_couple_test=.false.,
 /
 &orography
 orog_init_option='none',
+orography_order=2,
+n_orog_smooth=0,
+w0_multigrid_mapping=.true.
 /
 &partitioning
 panel_decomposition='auto',
 panel_xproc=1,
 panel_yproc=1,
+tile_size_x = 1
+tile_size_y = 1
+inner_halo_tiles = .false.
 /
 &physics
 /
@@ -226,6 +251,7 @@ spinup_alpha=.false.,
 &transport
 adjust_theta=.false.
 adjust_theta_above=0.0
+adjust_tracer_equation=.false.
 adjust_vhv_wind=.false.
 broken_w2_projection=.false.
 calculate_detj = 'upwind',
@@ -262,11 +288,11 @@ panel_edge_high_order=.true.,
 panel_edge_treatment='none'
 reversible=.false.,.false.,.false.,.false.,.false.
 runge_kutta_method='ssp3'
-scheme=1,1,1,1,1
+scheme=5*3
 si_outer_transport='none',
 slice_order='parabola'
 special_edges_monotone=5*1
-splitting=1,1,1,1,1
+splitting=5*2
 substep_transport='off'
 theta_dispersion_correction=.false.
 theta_variable='dry'
@@ -278,3 +304,4 @@ vertical_sl_order='cubic'
 wind_mono_top=.false.
 wind_mono_top_depth=5
 /
+

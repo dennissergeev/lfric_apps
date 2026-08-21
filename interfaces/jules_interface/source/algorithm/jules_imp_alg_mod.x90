@@ -7,7 +7,8 @@
 
 module jules_imp_alg_mod
 
-  use constants_mod,                 only: i_def
+  use config_mod,                    only: config_type
+  use constants_mod,                 only: i_def, r_def
   use model_clock_mod,               only: model_clock_type
   use field_mod,                     only: field_type
   use integer_field_mod,             only: integer_field_type
@@ -18,8 +19,8 @@ module jules_imp_alg_mod
   use mr_indices_mod,                only: imr_ci, nummr
   use timestepping_config_mod,       only: outer_iterations
 
-  use io_config_mod, only: subroutine_timers
-  use timer_mod,     only: timer
+  use timing_mod,                    only: start_timing, stop_timing, &
+                                           tik, LPROF
   ! xios output
   use io_config_mod, only: write_diag, use_xios_io, diagnostic_frequency
   use jules_imp_diags_mod, only: initialise_diags_for_jules_imp,     &
@@ -39,6 +40,7 @@ contains
   !>             vertical mixing of heat, momentum and moisture,
   !>             as documented in UMDP24
   !>         NB This version uses winds in w3 space (i.e. A-grid)
+  !>@param[in]     config            Application namelist configuration object
   !>@param[in,out] mr                Mixing ratios
   !>@param[in,out] surf_heat_flux    Net surface heat flux
   !>@param[in,out] canopy_evap       Canopy evaporation from land tiles
@@ -63,7 +65,8 @@ contains
   !>@param[in,out] fqw               total water flux
   !>@param[in,out] rhokh             Heat eddy diffusivity
   !>@param[in]     mr_ice            Mixing ratio for ice cloud
-  subroutine jules_imp_alg(mr, surf_heat_flux, canopy_evap,              &
+  subroutine jules_imp_alg(config,                                       &
+                           mr, surf_heat_flux, canopy_evap,              &
                            water_extraction, lake_evap,                  &
                            derived_fields, radiation_fields,             &
                            turbulence_fields, cloud_fields,              &
@@ -79,6 +82,7 @@ contains
 
     implicit none
 
+    type(config_type),  intent(in)      :: config
     type( field_type ), intent( inout ) :: qw, tl, ftl, fqw, rhokh,           &
                                            surf_heat_flux, canopy_evap,       &
                                            water_extraction, lake_evap,       &
@@ -166,8 +170,9 @@ contains
 
     type( mesh_type ), pointer :: mesh => null()
     integer(i_def) :: loop, ncells
+    integer(tik)   :: id
 
-    if ( subroutine_timers ) call timer("jules_imp_alg")
+    if ( LPROF ) call start_timing( id, 'jules.implicit' )
 
     call log_event( 'Running implicit Jules', LOG_LEVEL_DEBUG )
 
@@ -232,10 +237,9 @@ contains
     call snow_fields%get_field('snow_depth', snow_depth)
 
     mesh       => exner_in_wth%get_mesh()
-    height_wth => get_height_fv(Wtheta, mesh%get_id())
-
+    height_wth => get_height_fv(config, mesh, Wtheta)
     mesh       => ustar%get_mesh()
-    latitude   => get_latitude_fv(W3, mesh%get_id())
+    latitude   => get_latitude_fv(config, mesh, W3)
 
     if ( loop == 1 ) then
 
@@ -304,8 +308,7 @@ contains
                                        surf_radnet, surf_lw_up, surf_lw_down,&
                                        ocn_cpl_point) )
 
-
-    if ( subroutine_timers ) call timer("jules_imp_alg")
+    if ( LPROF ) call stop_timing( id, 'jules.implicit' )
 
     ! Output the BL diagnostics
     if (use_xios_io .and. write_diag .and. outer == outer_iterations) then

@@ -9,7 +9,7 @@
 !> @brief Module containing adjoint test for scaled_matrix_vector_kernel
 module adjt_scaled_matrix_vector_alg_mod
 
-  use constants_mod,                 only: i_def, r_def, l_def, r_solver
+  use constants_mod,                 only: i_def, r_def, l_def, r_solver, EPS
   use field_mod,                     only: field_type
   use finite_element_config_mod,     only: element_order_h, element_order_v
   use fs_continuity_mod,             only: W2, W3, Wtheta
@@ -26,6 +26,9 @@ module adjt_scaled_matrix_vector_alg_mod
   use si_operators_alg_mod,          only: compute_si_operators, get_div_star, get_Hb_lumped_inv
   use solver_constants_mod,          only: get_normalisation_r_solver
 
+  ! Object types
+  use config_type, only: config_type
+
   implicit none
 
   private
@@ -39,14 +42,17 @@ module adjt_scaled_matrix_vector_alg_mod
   !!          the result stored in the other, so we use three vectors to save on
   !!          variables. This differs from other adjoint tests as most adjoint
   !!          routines would increment one argument and set the other to zero.
-  !> @param[in] mesh The model mesh
+  !> @param[in] config      Application namelist configuration object
+  !> @param[in] mesh        The model mesh
   !> @param[in] model_clock The model clock
-  subroutine adjt_scaled_matrix_vector_alg( mesh, model_clock )
+  subroutine adjt_scaled_matrix_vector_alg( config, mesh, model_clock )
 
     use scaled_matrix_vector_kernel_mod,     only: scaled_matrix_vector_kernel_type
     use adj_scaled_matrix_vector_kernel_mod, only: adj_scaled_matrix_vector_kernel_type
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     ! Arguments
     type(mesh_type), pointer, intent(in) :: mesh
@@ -77,7 +83,6 @@ module adjt_scaled_matrix_vector_alg_mod
     real(kind=r_def)            :: machine_tolerance
     real(kind=r_def)            :: relative_diff
     real(kind=r_def), parameter :: overall_tolerance = 1500.0_r_def
-    real(kind=r_def), parameter :: eps = 1e-30_r_def
 
     ! Setup
 
@@ -101,7 +106,8 @@ module adjt_scaled_matrix_vector_alg_mod
       call invoke(setval_random(init_op_moist_dyn(idx)))
     end do
 
-    call compute_si_operators( init_op_t, init_op_d, init_op_p, model_clock, init_op_moist_dyn )
+    call compute_si_operators( config, init_op_t, init_op_d, init_op_p, &
+                               model_clock, init_op_moist_dyn )
 
     call vector_x%initialise(vector_space_w3_ptr)
     call vector_mx%initialise(vector_space_w2_ptr)
@@ -128,7 +134,7 @@ module adjt_scaled_matrix_vector_alg_mod
     write(log_scratch_space, *) "vector inner product = ", vector_inner_prod
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
 
-    vector_sf = 1.0_r_def / (vector_inner_prod + eps)
+    vector_sf = 1.0_r_def / (vector_inner_prod + EPS)
 
     inner1 = 0.0_r_def
     inner1 = inner1 + vector_inner_prod * vector_sf

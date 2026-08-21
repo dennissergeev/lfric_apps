@@ -7,7 +7,8 @@
 
 module adjt_semi_implicit_solver_step_alg_mod
 
-  use constants_mod,                    only: i_def, r_def, l_def, r_solver
+  use adj_solver_lookup_cache_mod,      only: adj_solver_lookup_cache_type
+  use constants_mod,                    only: i_def, r_def, l_def, r_solver, EPS
   use log_mod,                          only: log_event,         &
                                               log_scratch_space, &
                                               LOG_LEVEL_INFO,    &
@@ -18,8 +19,8 @@ module adjt_semi_implicit_solver_step_alg_mod
   use derived_config_mod,               only: bundle_size
   use field_indices_mod,                only: isol_p, isol_u, isol_w, isol_uv, &
                                               igh_p, igh_t, igh_d, igh_u
-  use io_config_mod,                    only: subroutine_timers
-  use timer_mod,                        only: timer
+  use timing_mod,                       only: start_timing, stop_timing, &
+                                              tik, LPROF
   use finite_element_config_mod,        only: element_order_h, element_order_v
   use adj_semi_implicit_solver_alg_mod, only: adj_semi_implicit_solver_type
   use semi_implicit_solver_alg_mod,     only: semi_implicit_solver_alg_step
@@ -32,18 +33,8 @@ module adjt_semi_implicit_solver_step_alg_mod
   use sci_enforce_bc_kernel_mod,        only: enforce_bc_kernel_type
   use model_clock_mod,                  only: model_clock_type
   use function_space_mod,               only: function_space_type
-  use initial_theta_ref_kernel_mod,     only: initial_theta_ref_kernel_type
-  use init_gungho_prognostics_alg_mod,  only: init_u_field,     &
-                                              init_exner_field, &
-                                              init_rho_field,   &
-                                              init_mr_fields
   use field_array_mod,                  only: field_array_type
   use field_collection_mod,             only: field_collection_type
-  use sci_geometric_constants_mod,      only: get_coordinates, &
-                                              get_panel_id
-  use idealised_config_mod,             only: test
-  use sci_field_bundle_builtins_mod,    only: set_bundle_scalar
-  use moist_dyn_factors_alg_mod,        only: moist_dyn_factors_alg
 
   implicit none
 
@@ -57,38 +48,38 @@ contains
   !> @brief Adjoint test for semi_implicit_solver_alg_mod subroutine step
   !> @details Does some setup, then calls the actual test via a private subroutine
   !!          twice with different flag values
-  !> @param[in,out] modeldb     Structure containing the model state
-  !> @param[in]     mesh        The model mesh
-  !> @param[in]     model_clock The model clock
-  subroutine adjt_semi_implicit_solver_step_alg( modeldb, mesh, model_clock )
+  !> @param[in,out] modeldb                 Structure containing the model state
+  !> @param[in]     mesh                    The model mesh
+  !> @param[in]     model_clock             The model clock
+  !> @param[in]     adj_lookup_table_cache  Lookup table cache
+  subroutine adjt_semi_implicit_solver_step_alg( modeldb, mesh, model_clock, adj_lookup_table_cache )
 
     implicit none
 
-    type(modeldb_type), target, intent(inout) :: modeldb
-    type(mesh_type), pointer,   intent(in)    :: mesh
-    type(model_clock_type),     intent(in)    :: model_clock
+    type(modeldb_type),         target, intent(inout) :: modeldb
+    type(mesh_type),           pointer, intent(in)    :: mesh
+    type(model_clock_type),             intent(in)    :: model_clock
+    type(adj_solver_lookup_cache_type), intent(in)    :: adj_lookup_table_cache
 
     ! Prognostic fields
     type(field_type), dimension(bundle_size) :: state
     type(field_type), dimension(bundle_size) :: rhs
+    type(field_type)                         :: dry_flux_solver
     type(field_type)                         :: moist_dyn_gas_law
     type(field_type), dimension(nummr)       :: mr
     type(field_type), dimension(bundle_size) :: state_in
     type(field_type), dimension(bundle_size) :: rhs_in
+    type(field_type)                         :: dry_flux_solver_in
     type(field_type)                         :: moist_dyn_gas_law_in
     type(field_type), dimension(nummr)       :: mr_in
 
     ! LS
-    type(field_type), dimension(bundle_size) :: ls_rdef
-    type(field_type),            pointer     :: ls_u
     type(field_type),            pointer     :: ls_rho
     type(field_type),            pointer     :: ls_theta
     type(field_type),            pointer     :: ls_exner
-    type(field_type),            pointer     :: ls_mr(:)
     type(field_type),            pointer     :: ls_moist_dyn(:)
     type(field_collection_type), pointer     :: ls_fields
     type(field_collection_type), pointer     :: moisture_fields
-    type(field_array_type),      pointer     :: ls_mr_array
     type(field_array_type),      pointer     :: ls_moist_dyn_array
 
     ! Variables for initialisation etc.
@@ -96,12 +87,10 @@ contains
     type(function_space_type), pointer  :: vector_space_wtheta_ptr
     type(function_space_type), pointer  :: vector_space_w2_ptr
     type(function_space_type), pointer  :: vector_space_w3_ptr
-    type(field_type),          pointer  :: chi(:)
-    type(field_type),          pointer  :: panel_id
-    real(kind=r_def)                    :: initial_time
     integer(kind=i_def)                 :: i
+    integer(kind=tik)                   :: id
 
-    if (subroutine_timers) call timer('adjt_semi_implicit_solver_step_alg')
+    if ( LPROF ) call start_timing( id, 'adjt_semi_implicit_solver_step_alg' )
 
     ! --------------------------------------------------------------------------
     ! Setup
@@ -121,6 +110,8 @@ contains
     call rhs(igh_t)%copy_field_properties(rhs_in(igh_t))
     call rhs(igh_d)%copy_field_properties(rhs_in(igh_d))
     call rhs(igh_p)%copy_field_properties(rhs_in(igh_p))
+
+    call rhs(igh_u)%copy_field_properties(dry_flux_solver_in)
 
     call invoke( name="adjt_siss_1",                    &
                  setval_random(rhs(igh_u)),             &
@@ -144,67 +135,37 @@ contains
     call rhs(igh_d)%copy_field_properties(state_in(igh_d))
     call rhs(igh_p)%copy_field_properties(state_in(igh_p))
 
-    call invoke( name="adjt_siss_2",                        &
-                 setval_random(state(igh_u)),               &
-                 setval_random(state(igh_t)),               &
-                 setval_random(state(igh_p)),               &
-                 setval_random(state(igh_d)),               &
-                 enforce_bc_kernel_type(state(igh_u)),      &
-                 setval_x( state_in(igh_u), state(igh_u) ), &
-                 setval_x( state_in(igh_t), state(igh_t) ), &
-                 setval_x( state_in(igh_p), state(igh_p) ), &
-                 setval_x( state_in(igh_d), state(igh_d) ) )
+    call rhs(igh_u)%copy_field_properties(dry_flux_solver)
+
+    call invoke( name="adjt_siss_2",                          &
+                 setval_random(state(igh_u)),                 &
+                 setval_random(state(igh_t)),                 &
+                 setval_random(state(igh_p)),                 &
+                 setval_random(state(igh_d)),                 &
+                 setval_random(dry_flux_solver),              &
+                 enforce_bc_kernel_type(state(igh_u)),        &
+                 enforce_bc_kernel_type(dry_flux_solver),     &
+                 setval_x( state_in(igh_u), state(igh_u) ),   &
+                 setval_x( state_in(igh_t), state(igh_t) ),   &
+                 setval_x( state_in(igh_p), state(igh_p) ),   &
+                 setval_x( state_in(igh_d), state(igh_d) ),   &
+                 setval_x( dry_flux_solver_in, dry_flux_solver ) )
 
     ! LS
 
-    ls_fields => modeldb%fields%get_field_collection("prognostic_fields")
+    ls_fields => modeldb%fields%get_field_collection("ls_fields")
 
     call ls_fields%get_field( 'ls_theta', ls_theta )
-    call ls_fields%get_field( 'ls_u', ls_u )
     call ls_fields%get_field( 'ls_rho', ls_rho )
     call ls_fields%get_field( 'ls_exner', ls_exner )
 
     moisture_fields => modeldb%fields%get_field_collection("moisture_fields")
-    call moisture_fields%get_field( "ls_mr", ls_mr_array )
     call moisture_fields%get_field( "ls_moist_dyn", ls_moist_dyn_array )
-    ls_mr => ls_mr_array%bundle
     ls_moist_dyn => ls_moist_dyn_array%bundle
 
-    chi => get_coordinates(ls_theta%get_mesh_id())
-    panel_id => get_panel_id(ls_theta%get_mesh_id())
-
-    ! Define reference field
-    initial_time = 0.0_r_def
-    call init_u_field( ls_u , initial_time )
-    call set_bundle_scalar( 0.0_r_def, ls_mr, nummr )
-
-    call invoke( name="adjt_siss_3", &
-                 initial_theta_ref_kernel_type( ls_theta, chi, panel_id, test ) )
-
-    call moist_dyn_factors_alg( ls_moist_dyn, ls_mr )
-    call init_exner_field( ls_exner, ls_theta, ls_moist_dyn, initial_time )
-    call init_rho_field( ls_rho, ls_theta, ls_exner, ls_moist_dyn, initial_time )
-    call init_mr_fields( ls_mr, ls_theta, ls_exner, ls_rho, ls_moist_dyn )
-
-    call invoke( name="adjt_siss_4", &
-                 enforce_bc_kernel_type(ls_u) )
-
-    call rhs(igh_u)%copy_field_properties(ls_rdef(igh_u))
-    call rhs(igh_t)%copy_field_properties(ls_rdef(igh_t))
-    call rhs(igh_d)%copy_field_properties(ls_rdef(igh_d))
-    call rhs(igh_p)%copy_field_properties(ls_rdef(igh_p))
-
-    call invoke( name="adjt_siss_5",                   &
-                 setval_x( ls_rdef(igh_u), ls_u ),     &
-                 setval_x( ls_rdef(igh_t), ls_theta ), &
-                 setval_x( ls_rdef(igh_p), ls_exner ), &
-                 setval_x( ls_rdef(igh_d), ls_rho ) )
-
-    ! End LS
-
-    call compute_si_operators( ls_rdef(igh_t), ls_rdef(igh_d), ls_rdef(igh_p), &
+    call compute_si_operators( modeldb%config, ls_theta, ls_rho, ls_exner, &
                                model_clock, ls_moist_dyn )
-    call adj_semi_implicit_solver%initialise(rhs)
+    call adj_semi_implicit_solver%initialise(rhs, adj_lookup_table_cache)
 
     ! Set up moist_dyn_gas_law & mr
     call moist_dyn_gas_law%initialise(vector_space=vector_space_wtheta_ptr)
@@ -228,8 +189,10 @@ contains
     ! Test with first_iteration = .true.
     ! --------------------------------------------------------------------------
 
-    call adjt_semi_implicit_solver_step_alg_common( state, rhs, moist_dyn_gas_law, mr,             &
-                                                    state_in, rhs_in, moist_dyn_gas_law_in, mr_in, &
+    call adjt_semi_implicit_solver_step_alg_common( state, rhs, dry_flux_solver,          &
+                                                    moist_dyn_gas_law, mr,                &
+                                                    state_in, rhs_in, dry_flux_solver_in, &
+                                                    moist_dyn_gas_law_in, mr_in,          &
                                                     adj_semi_implicit_solver, .true. )
 
     ! --------------------------------------------------------------------------
@@ -243,6 +206,7 @@ contains
     end do
     call invoke( name="adjt_siss_9",                                 &
                  setval_x( moist_dyn_gas_law, moist_dyn_gas_law_in ), &
+                 setval_x( dry_flux_solver, dry_flux_solver_in ),     &
                  setval_x( rhs(igh_u), rhs_in(igh_u) ),               &
                  setval_x( rhs(igh_t), rhs_in(igh_t) ),               &
                  setval_x( rhs(igh_p), rhs_in(igh_p) ),               &
@@ -252,29 +216,35 @@ contains
                  setval_x( state(igh_p), state_in(igh_p) ),           &
                  setval_x( state(igh_d), state_in(igh_d) ) )
 
-    call adjt_semi_implicit_solver_step_alg_common( state, rhs, moist_dyn_gas_law, mr,             &
-                                                    state_in, rhs_in, moist_dyn_gas_law_in, mr_in, &
+    call adjt_semi_implicit_solver_step_alg_common( state, rhs, dry_flux_solver,          &
+                                                    moist_dyn_gas_law, mr,                &
+                                                    state_in, rhs_in, dry_flux_solver_in, &
+                                                    moist_dyn_gas_law_in, mr_in,          &
                                                     adj_semi_implicit_solver, .false. )
 
     call adj_semi_implicit_solver%finalise()
 
-    if (subroutine_timers) call timer('adjt_semi_implicit_solver_step_alg')
+    if ( LPROF ) call stop_timing( id, 'adjt_semi_implicit_solver_step_alg' )
 
   end subroutine adjt_semi_implicit_solver_step_alg
 
   !> @brief Actual code for adjoint test for semi_implicit_solver_alg_mod subroutine step
   !> @param[in,out] state                    Prognostic state
   !> @param[in,out] rhs                      Prognostic rhs
+  !> @param[in,out] dry_flux_solver          Dry flux solver
   !> @param[in,out] moist_dyn_gas_law        Prognostic moist_dyn_gas_law
   !> @param[in,out] mr                       Prognostic mr
   !> @param[in,out] state_in                 Input state
   !> @param[in,out] rhs_in                   Input rhs
+  !> @param[in,out] dry_flux_solver_in       Input dry flux solver
   !> @param[in,out] moist_dyn_gas_law_in     Input moist_dyn_gas_law
   !> @param[in,out] mr_in                    Input mr
   !> @param[in,out] adj_semi_implicit_solver Adjoint semi-implicit solver
   !> @param[in]     first_iteration          Switch to control which test to do
-  subroutine adjt_semi_implicit_solver_step_alg_common( state, rhs, moist_dyn_gas_law, mr,             &
-                                                        state_in, rhs_in, moist_dyn_gas_law_in, mr_in, &
+  subroutine adjt_semi_implicit_solver_step_alg_common( state, rhs, dry_flux_solver,          &
+                                                        moist_dyn_gas_law, mr,                &
+                                                        state_in, rhs_in, dry_flux_solver_in, &
+                                                        moist_dyn_gas_law_in, mr_in,          &
                                                         adj_semi_implicit_solver, first_iteration )
 
     implicit none
@@ -284,6 +254,8 @@ contains
     type(field_type), dimension(bundle_size), intent(inout) :: rhs
     type(field_type), dimension(bundle_size), intent(inout) :: state_in
     type(field_type), dimension(bundle_size), intent(inout) :: rhs_in
+    type(field_type),                         intent(inout) :: dry_flux_solver
+    type(field_type),                         intent(inout) :: dry_flux_solver_in
     type(field_type),                         intent(inout) :: moist_dyn_gas_law
     type(field_type),                         intent(inout) :: moist_dyn_gas_law_in
     type(field_type), dimension(nummr),       intent(inout) :: mr
@@ -297,16 +269,17 @@ contains
 
     ! Inner product test variables
     real(kind=r_def) :: state_inner_prod(bundle_size), rhs_inner_prod(bundle_size), &
-                        moist_dyn_gas_law_inner_prod, mr_inner_prod(nummr)
+                        dry_flux_solver_inner_prod, moist_dyn_gas_law_inner_prod, &
+                        mr_inner_prod(nummr)
     real(kind=r_def) :: state_sf(bundle_size), rhs_sf(bundle_size), &
-                        moist_dyn_gas_law_sf, mr_sf(nummr)
+                        moist_dyn_gas_law_sf, mr_sf(nummr), dry_flux_solver_sf
     real(kind=r_def) :: state_state_inp_inner_prod(bundle_size), rhs_rhs_inp_inner_prod(bundle_size), &
-                        moist_dyn_gas_law_moist_dyn_gas_law_inp_inner_prod, mr_mr_inp_inner_prod(nummr)
+                        moist_dyn_gas_law_moist_dyn_gas_law_inp_inner_prod, mr_mr_inp_inner_prod(nummr), &
+                        dry_flux_solver_dry_flux_solver_inp_inner_prod
     real(kind=r_def) :: inner1, inner2
     real(kind=r_def), parameter :: overall_tolerance = 1000.0_r_def
     real(kind=r_def) :: machine_tol, machine_tol_r_solver
     real(kind=r_def) :: relative_diff, relative_diff_r_solver
-    real(kind=r_def), parameter :: eps = 1e-30_r_def
 
     integer(kind=i_def) :: i
 
@@ -314,8 +287,8 @@ contains
     ! Step the semi-implicit solver (i.e., forward code, Mx)
     ! --------------------------------------------------------------------------
 
-    call semi_implicit_solver_alg_step( state, rhs, moist_dyn_gas_law, mr, &
-                                        .false., first_iteration )
+    call semi_implicit_solver_alg_step( state, rhs, dry_flux_solver, &
+                                        moist_dyn_gas_law, mr, first_iteration )
 
     ! --------------------------------------------------------------------------
     ! Compute <Mx,Mx>
@@ -330,6 +303,7 @@ contains
                  X_innerproduct_X( rhs_inner_prod(igh_t), rhs(igh_t) ),     &
                  X_innerproduct_X( rhs_inner_prod(igh_d), rhs(igh_d) ),     &
                  X_innerproduct_X( rhs_inner_prod(igh_p), rhs(igh_p) ),     &
+                 X_innerproduct_X( dry_flux_solver_inner_prod, dry_flux_solver ), &
                  X_innerproduct_X( moist_dyn_gas_law_inner_prod, moist_dyn_gas_law ) )
     do i = 1, nummr
       call invoke( name="adjt_siss_11", &
@@ -354,6 +328,8 @@ contains
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
     write(log_scratch_space, *) "rhs(igh_p) inner product = ", rhs_inner_prod(igh_p)
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
+    write(log_scratch_space, *) "dry_flux_solver inner product = ", dry_flux_solver_inner_prod
+    call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
     write(log_scratch_space, *) "moist_dyn_gas_law inner product = ", moist_dyn_gas_law_inner_prod
     call log_event( log_scratch_space, LOG_LEVEL_DEBUG )
     do i = 1, nummr
@@ -362,17 +338,18 @@ contains
     end do
 
     ! Scaling factors are scaled up a bit to avoid numerical issues
-    state_sf(igh_u) = 1.0E4_r_def / (state_inner_prod(igh_u) + eps)
-    state_sf(igh_t) = 1.0E4_r_def / (state_inner_prod(igh_t) + eps)
-    state_sf(igh_d) = 1.0E4_r_def / (state_inner_prod(igh_d) + eps)
-    state_sf(igh_p) = 1.0E4_r_def / (state_inner_prod(igh_p) + eps)
-    rhs_sf(igh_u) = 1.0E4_r_def / (rhs_inner_prod(igh_u) + eps)
-    rhs_sf(igh_t) = 1.0E4_r_def / (rhs_inner_prod(igh_t) + eps)
-    rhs_sf(igh_d) = 1.0E4_r_def / (rhs_inner_prod(igh_d) + eps)
-    rhs_sf(igh_p) = 1.0E4_r_def / (rhs_inner_prod(igh_p) + eps)
-    moist_dyn_gas_law_sf = 1.0E4_r_def / (moist_dyn_gas_law_inner_prod + eps)
+    state_sf(igh_u) = 1.0E4_r_def / (state_inner_prod(igh_u) + EPS)
+    state_sf(igh_t) = 1.0E4_r_def / (state_inner_prod(igh_t) + EPS)
+    state_sf(igh_d) = 1.0E4_r_def / (state_inner_prod(igh_d) + EPS)
+    state_sf(igh_p) = 1.0E4_r_def / (state_inner_prod(igh_p) + EPS)
+    rhs_sf(igh_u) = 1.0E4_r_def / (rhs_inner_prod(igh_u) + EPS)
+    rhs_sf(igh_t) = 1.0E4_r_def / (rhs_inner_prod(igh_t) + EPS)
+    rhs_sf(igh_d) = 1.0E4_r_def / (rhs_inner_prod(igh_d) + EPS)
+    rhs_sf(igh_p) = 1.0E4_r_def / (rhs_inner_prod(igh_p) + EPS)
+    dry_flux_solver_sf = 1.0E4_r_def / (dry_flux_solver_inner_prod + EPS)
+    moist_dyn_gas_law_sf = 1.0E4_r_def / (moist_dyn_gas_law_inner_prod + EPS)
     do i = 1, nummr
-      mr_sf(i) = 1.0E4_r_def / (mr_inner_prod(i) + eps)
+      mr_sf(i) = 1.0E4_r_def / (mr_inner_prod(i) + EPS)
     end do
 
     inner1 = 0.0_r_def
@@ -384,6 +361,7 @@ contains
     inner1 = inner1 + rhs_inner_prod(igh_t) * rhs_sf(igh_t)
     inner1 = inner1 + rhs_inner_prod(igh_d) * rhs_sf(igh_d)
     inner1 = inner1 + rhs_inner_prod(igh_p) * rhs_sf(igh_p)
+    inner1 = inner1 + dry_flux_solver_inner_prod * dry_flux_solver_sf
     inner1 = inner1 + moist_dyn_gas_law_inner_prod * moist_dyn_gas_law_sf
     do i = 1, nummr
       inner1 = inner1 + mr_inner_prod(i) * mr_sf(i)
@@ -398,6 +376,7 @@ contains
                  inc_a_times_X( rhs_sf(igh_t), rhs(igh_t) ),               &
                  inc_a_times_X( rhs_sf(igh_d), rhs(igh_d) ),               &
                  inc_a_times_X( rhs_sf(igh_p), rhs(igh_p) ),               &
+                 inc_a_times_X( dry_flux_solver_sf, dry_flux_solver ),     &
                  inc_a_times_X( moist_dyn_gas_law_sf, moist_dyn_gas_law ) )
     do i = 1, nummr
       call invoke( name="adjt_siss_13", &
@@ -408,8 +387,8 @@ contains
     ! Adjoint code
     ! --------------------------------------------------------------------------
 
-    call adj_semi_implicit_solver%step( state, rhs, moist_dyn_gas_law, mr, &
-                                        .false., first_iteration )
+    call adj_semi_implicit_solver%step( state, rhs, dry_flux_solver, &
+                                        moist_dyn_gas_law, mr, first_iteration )
 
     ! --------------------------------------------------------------------------
     ! Compute <AMx,x>
@@ -424,6 +403,7 @@ contains
                  x_innerproduct_y( rhs_rhs_inp_inner_prod(igh_t), rhs_in(igh_t), rhs(igh_t) ),         &
                  x_innerproduct_y( rhs_rhs_inp_inner_prod(igh_d), rhs_in(igh_d), rhs(igh_d) ),         &
                  x_innerproduct_y( rhs_rhs_inp_inner_prod(igh_p), rhs_in(igh_p), rhs(igh_p) ),         &
+                 x_innerproduct_y( dry_flux_solver_dry_flux_solver_inp_inner_prod, dry_flux_solver_in, dry_flux_solver ), &
                  x_innerproduct_y( moist_dyn_gas_law_moist_dyn_gas_law_inp_inner_prod, moist_dyn_gas_law_in, moist_dyn_gas_law ) )
     do i = 1, nummr
       call invoke( name="adjt_siss_15", &
@@ -439,6 +419,7 @@ contains
     inner2 = inner2 + rhs_rhs_inp_inner_prod(igh_t)
     inner2 = inner2 + rhs_rhs_inp_inner_prod(igh_d)
     inner2 = inner2 + rhs_rhs_inp_inner_prod(igh_p)
+    inner2 = inner2 + dry_flux_solver_dry_flux_solver_inp_inner_prod
     inner2 = inner2 + moist_dyn_gas_law_moist_dyn_gas_law_inp_inner_prod
     do i = 1, nummr
       inner2 = inner2 + mr_mr_inp_inner_prod(i)

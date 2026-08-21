@@ -7,6 +7,7 @@
 
 module bl_exp_alg_mod
 
+  use config_mod,           only: config_type
   use constants_mod,        only: i_def, r_def
   use field_mod,            only: field_type
   use integer_field_mod,    only: integer_field_type
@@ -19,7 +20,9 @@ module bl_exp_alg_mod
   use fs_continuity_mod,             only: W2, W3, Wtheta
   use sci_geometric_constants_mod,   only: get_height_fv, get_da_at_w2,       &
                                            get_delta_at_wtheta,               &
-                                           get_dz_at_wtheta
+                                           get_dz_at_wtheta,                  &
+                                           get_face_selector_ew,              &
+                                           get_face_selector_ns
   use physics_constants_mod,         only: get_max_diff, get_rdz_fd1,         &
                                            get_rdz_w3, get_dtrdz_wth
   use map_fd_to_prognostics_alg_mod, only: set_wind
@@ -29,8 +32,7 @@ module bl_exp_alg_mod
   use bl_option_mod,                 only: l_noice_in_turb
   use um_sizes_init_mod,             only: um_sizes_init
 
-  use io_config_mod,        only: subroutine_timers
-  use timer_mod,            only: timer
+  use timing_mod,           only: start_timing, stop_timing, tik, LPROF
   use log_mod,              only: log_event, LOG_LEVEL_DEBUG
   use mesh_mod,             only: mesh_type
   use model_clock_mod,      only: model_clock_type
@@ -52,6 +54,7 @@ contains
   !>             vertical mixing of heat, momentum and moisture,
   !>             as documented in UMDP24
   !>         NB This version uses winds in w3 space (i.e. A-grid)
+  !>@param[in]     config            Application namelist configuration object
   !>@param[in]     theta             Theta in its native (wth) space
   !>@param[in]     rho               Dry density in its native (w3) space
   !>@param[in]     exner             Exner Pressure in the w3 space
@@ -67,17 +70,15 @@ contains
   !>@param[in,out] surface_fields      Fields for surface scheme
   !>@param[in]     recip_l_mo_sea      Inverse Obukhov length over sea only
   !>@param[in]     rhostar             Surface density
-  !>@param[in      h_blend_orog        Orographic blending height
   !>@param[in]     t1_sd_2d            StDev of level 1 temperature
   !>@param[in]     q1_sd_2d            StDev of level 1 humidity
   !>@param[in]     model_clock         Time in the model
-  subroutine bl_exp_alg(theta, rho, exner, mr_n,                 &
+  subroutine bl_exp_alg(config, theta, rho, exner, mr_n,                  &
                         derived_fields, radiation_fields,                 &
                         microphysics_fields, dmr_mphys, orography_fields, &
                         turbulence_fields, convection_fields,             &
                         cloud_fields, surface_fields,                     &
-                        recip_l_mo_sea,                                   &
-                        rhostar, h_blend_orog, t1_sd_2d, q1_sd_2d,        &
+                        recip_l_mo_sea, rhostar, t1_sd_2d, q1_sd_2d,      &
                         model_clock)
 
     use bl_exp_kernel_mod, only: bl_exp_kernel_type
@@ -86,6 +87,8 @@ contains
     use planet_constants_mod, only: lcrcp_def, lsrcp_def
 
     implicit none
+
+    type(config_type), intent(in) :: config
 
     type( field_type ), intent( in )        :: theta, rho, exner, mr_n(nummr)
     type( field_type ), intent( in )        :: dmr_mphys ( nummr )
@@ -101,7 +104,6 @@ contains
 
     type( field_type ), intent( in )     :: recip_l_mo_sea
     type( field_type ), intent( in )     :: rhostar
-    type( field_type ), intent( in )     :: h_blend_orog
     type( field_type ), intent( in )     :: t1_sd_2d
     type( field_type ), intent( in )     :: q1_sd_2d
 
@@ -208,6 +210,9 @@ contains
     type( field_type ), pointer :: w2_rmultiplicity
     type( field_type ), pointer :: dz_wth
 
+    type( integer_field_type ), pointer :: face_selector_ew
+    type( integer_field_type ), pointer :: face_selector_ns
+
     ! local variables
     type(mesh_type),           pointer :: mesh
     type( field_type ) :: dtl_mphys, dmt_mphys, ngstress_w2,                  &
@@ -217,8 +222,9 @@ contains
     type( field_type ) :: mr_ice
 
     integer(i_def) :: ncells
+    integer(tik)   :: id
 
-    if ( subroutine_timers ) call timer('bl_exp_alg')
+    if ( LPROF ) call start_timing( id, 'bl.explicit' )
 
     call log_event( 'slow_physics: Running explicit Boundary layer', LOG_LEVEL_DEBUG )
 
@@ -319,18 +325,22 @@ contains
 
     mesh => theta%get_mesh()
 
-    height_wth       => get_height_fv( Wtheta, mesh%get_id() )
-    height_w3        => get_height_fv( W3, mesh%get_id() )
+    height_wth => get_height_fv(config, mesh, Wtheta)
+    height_w3  => get_height_fv(config, mesh, W3)
+
+    face_selector_ew => get_face_selector_ew(mesh)
+    face_selector_ns => get_face_selector_ns(mesh)
+
     ! delta is calculated in sci_calc_delta_at_wtheta_kernel_mod.F90
     ! in lfric core as the mininum of the cell horizontal edge lengths
-    delta            => get_delta_at_wtheta( mesh%get_id() )
-    max_diff_smag    => get_max_diff( mesh%get_id(), model_clock )
-    dA               => get_da_at_w2( mesh%get_id() )
-    rdz_fd1          => get_rdz_fd1( mesh%get_id() )
-    rdz_w3           => get_rdz_w3( mesh%get_id() )
-    dtrdz_wth        => get_dtrdz_wth( mesh%get_id(), model_clock )
+    delta            => get_delta_at_wtheta(mesh)
+    max_diff_smag    => get_max_diff(config, mesh%get_id(), model_clock)
+    dA               => get_da_at_w2(mesh)
+    rdz_fd1          => get_rdz_fd1(config, mesh%get_id())
+    rdz_w3           => get_rdz_w3(config, mesh%get_id())
+    dtrdz_wth        => get_dtrdz_wth(config, mesh%get_id(), model_clock )
     w2_rmultiplicity => get_rmultiplicity_fv( W2, mesh%get_id() )
-    dz_wth           => get_dz_at_wtheta( mesh%get_id() )
+    dz_wth           => get_dz_at_wtheta(config, mesh)
 
     ! Initialise diagnostics
     call initialise_diags_for_bl_exp(zht, oblen)
@@ -380,7 +390,7 @@ contains
                                     cumulus, tile_fraction, sd_orog,           &
                                     peak_to_trough_orog, silhouette_area_orog, &
                                     tile_temperature, rhostar, recip_l_mo_sea, &
-                                    h_blend_orog, t1_sd_2d, q1_sd_2d,          &
+                                    t1_sd_2d, q1_sd_2d,                        &
                                     dtl_mphys, dmt_mphys, sw_heating_rate,     &
                                     lw_heating_rate, cf_bulk, cf_liquid,       &
                                     rh_crit, tnuc, tnuc_nlcl,                  &
@@ -415,20 +425,21 @@ contains
     call um_sizes_init(1_i_def)
 
     if (formdrag == formdrag_dist_drag) then
-      if ( subroutine_timers ) call timer('bl_exp_alg')
+      if ( LPROF ) call stop_timing( id, 'bl.explicit' )
       call theta%copy_field_properties(fd_tauz)
       call invoke(setval_c(fd_tauz, 0.0_r_def))
       ! Calculate form drag stress in w2
-      call set_wind(fd_tau_w2,fd_taux,fd_tauy,fd_tauz)
+      call set_wind(config, fd_tau_w2,fd_taux,fd_tauy,fd_tauz)
       call invoke(inc_X_divideby_Y(fd_tau_w2, dA))
-      if ( subroutine_timers ) call timer('bl_exp_alg')
+      if ( LPROF ) call start_timing( id, 'bl.explicit' )
     end if
 
     ! Calculate explicit momentum diffusion on cell faces
     call invoke(bl_exp_du_kernel_type(4_i_def, tau_w2, tau_land_w2, tau_ssi_w2,&
                                       rhokm_w2, rdz_fd1, u_physics,            &
                                       surf_interp_w2, ngstress_w2, fd_tau_w2,  &
-                                      sea_current_w2_ptr) )
+                                      sea_current_w2_ptr,                      &
+                                      face_selector_ew, face_selector_ns) )
 
     if (l_calc_tau_at_p) then
       call dz_wth%copy_field_properties(rdz_wth)
@@ -446,14 +457,16 @@ contains
                   bl_exp_du_kernel_type(1_i_def, taux, taux_land, taux_ssi,    &
                                         rhokm_bl, rdz_wth, u_in_w3,            &
                                         surf_interp, ngstress_bl, fd_taux,     &
-                                        sea_u_current_ptr),                    &
+                                        sea_u_current_ptr,                     &
+                                        face_selector_ew, face_selector_ns),   &
                   bl_exp_du_kernel_type(1_i_def, tauy, tauy_land, tauy_ssi,    &
                                         rhokm_bl, rdz_wth, v_in_w3,            &
                                         surf_interp, ngstress_bl, fd_tauy,     &
-                                        sea_v_current_ptr) )
+                                        sea_v_current_ptr,                     &
+                                        face_selector_ew, face_selector_ns) )
     end if
 
-    if ( subroutine_timers ) call timer('bl_exp_alg')
+    if ( LPROF ) call stop_timing( id, 'bl.explicit' )
 
     ! output BL diagnostics
     if (write_diag .and. use_xios_io) then

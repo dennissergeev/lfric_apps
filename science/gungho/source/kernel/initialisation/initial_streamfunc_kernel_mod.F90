@@ -18,7 +18,14 @@ use argument_mod,              only : arg_type, func_type,       &
 use constants_mod,             only : r_def, i_def, PI
 use fs_continuity_mod,         only : W1
 use kernel_mod,                only : kernel_type
-use initial_wind_config_mod,   only : profile
+
+! Configuration modules
+use base_mesh_config_mod,      only: geometry, topology, &
+                                     geometry_planar,    &
+                                     geometry_spherical
+use finite_element_config_mod, only: coord_system
+use initial_wind_config_mod,   only: profile
+use planet_config_mod,         only: scaled_radius
 
 implicit none
 
@@ -108,9 +115,6 @@ subroutine initial_streamfunc_code(nlayers,                         &
                                    )
 
   use analytic_streamfunction_profiles_mod, only: analytic_streamfunction
-  use base_mesh_config_mod,                 only: geometry,           &
-                                                  geometry_planar,    &
-                                                  geometry_spherical
   use sci_chi_transform_mod,                only: chi2llr
   use sci_coordinate_jacobian_mod,          only: coordinate_jacobian, &
                                                   coordinate_jacobian_inverse
@@ -169,7 +173,11 @@ subroutine initial_streamfunc_code(nlayers,                         &
     end do
 
 
-    call coordinate_jacobian(ndf_chi,        &
+    call coordinate_jacobian(coord_system,   &
+                             geometry,       &
+                             topology,       &
+                             scaled_radius,  &
+                             ndf_chi,        &
                              nqp_h,          &
                              nqp_v,          &
                              chi_1_cell,     &
@@ -194,8 +202,10 @@ subroutine initial_streamfunc_code(nlayers,                         &
 
         if ( geometry == geometry_spherical ) then
           ! Need (lon,lat,r) coordinates
-          call chi2llr(coords(1), coords(2), coords(3), &
-                       ipanel, llr(1), llr(2), llr(3))
+          call chi2llr( coords(1), coords(2), coords(3), &
+                        ipanel, geometry, topology,      &
+                        coord_system, scaled_radius,     &
+                        llr(1), llr(2), llr(3) )
 
           psi_spherical = analytic_streamfunction( llr, profile, 3, option3, &
                                                    time, domain_max_x )

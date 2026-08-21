@@ -113,7 +113,7 @@ def run_exe(arg, outfile, style):
         if retcode != 0:
             print("Execution terminated by the signal", retcode)
             sys.exit(1)
-        cmd = 'ncap2 -h -s "remap_matrix[num_links,num_wgts]=S" ' + outfile
+        cmd = 'ncap2 -A -h -s "remap_matrix[num_links,num_wgts]=S" ' + outfile
         print(cmd)
         retcode = subprocess.call(cmd, shell=True)
         if retcode != 0:
@@ -145,8 +145,8 @@ if __name__ == "__main__":
     DST_GRID = GRID()
     DST_GRID = get_env_info(DST_GRID, 'DST')
     DST_GRID = get_data(DST_GRID)
-    # end processing destination grid
     validate_input(DST_GRID)
+    # end processing destination grid
     print('DESTINATION grid ')
 
     print('Save SRC -> DST grid info')

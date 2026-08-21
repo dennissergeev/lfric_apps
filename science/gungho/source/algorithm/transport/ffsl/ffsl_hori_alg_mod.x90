@@ -9,6 +9,7 @@
 module ffsl_hori_alg_mod
 
   ! Constants and types
+  use config_mod,                       only: config_type
   use constants_mod,                    only: r_tran, i_def, l_def
   use field_mod,                        only: field_type
   use fs_continuity_mod,                only: W2H, W2Hbroken
@@ -22,7 +23,8 @@ module ffsl_hori_alg_mod
   use log_mod,                          only: log_event, LOG_LEVEL_ERROR
   use mesh_mod,                         only: mesh_type
   use r_tran_field_mod,                 only: r_tran_field_type
-  use timer_mod,                        only: timer
+  use timing_mod,                       only: start_timing, stop_timing, &
+                                              tik, LPROF
 
   ! Transport control
   use flux_precomputations_alg_mod,     only: flux_precomputations_type
@@ -93,7 +95,7 @@ module ffsl_hori_alg_mod
   public  :: ffsl_hori_cosmic_inner_alg
   public  :: ffsl_hori_outer_alg
   public  :: ffsl_hori_swift_inner_alg
-  private :: ffsl_extra_points
+  public  :: ffsl_extra_points
   private :: monotone_option_special_edges
 
 contains
@@ -163,8 +165,9 @@ contains
     ! Useful constants
     real(kind=r_tran)   :: half_dt
     logical(kind=l_def) :: swift_splitting
+    integer(tik)        :: id
 
-    if ( subroutine_timers ) call timer(routine_name)
+    if ( LPROF ) call start_timing( id, 'transport.ffsl_horizontal' )
 
     ! Get pre-computed objects and set pointers --------------------------------
     mesh => field_n%get_mesh()
@@ -259,7 +262,7 @@ contains
       end if
     end if
 
-    if ( subroutine_timers ) call timer(routine_name)
+    if ( LPROF ) call stop_timing( id, 'transport.ffsl_horizontal' )
 
   end subroutine ffsl_hori_splitting_alg
 
@@ -335,6 +338,10 @@ contains
     real(kind=r_tran)   :: min_val
     logical(kind=l_def) :: is_cubed_sphere
 
+    type(config_type), pointer :: config
+
+    config => transport_controller%get_config()
+
     ! Get pre-computed objects and set pointers --------------------------------
     mesh_id = field_n%get_mesh_id()
     mesh => field_n%get_mesh()
@@ -362,13 +369,13 @@ contains
     )
 
     if (is_cubed_sphere) then
-      panel_id => get_panel_id(mesh_id)
+      panel_id => get_panel_id(mesh)
       panel_edge_dist => get_panel_edge_dist(mesh_id)
     end if
 
     ! Get pre-computed fields
-    detj_at_w3 => get_detj_at_w3_r_tran(mesh_id)
-    detj_at_w3_copy => get_detj_at_w3_r_tran(mesh_id)
+    detj_at_w3 => get_detj_at_w3_r_tran(config, mesh)
+    detj_at_w3_copy => get_detj_at_w3_r_tran(config, mesh)
     adv_one_x => wind_precomputations%get_adv_unity_x(mesh_id, splitting, step)
     adv_one_y => wind_precomputations%get_adv_unity_y(mesh_id, splitting, step)
     dep_dist => wind_precomputations%get_dep_dist_xy(                          &
@@ -386,11 +393,11 @@ contains
     dep_highest_k => wind_precomputations%get_dep_highest_k(                   &
         mesh_id, splitting, step, outer_step=.false.                           &
     )
-    face_selector_ew => get_face_selector_ew(mesh_id)
-    face_selector_ns => get_face_selector_ns(mesh_id)
+    face_selector_ew => get_face_selector_ew(mesh)
+    face_selector_ns => get_face_selector_ns(mesh)
 
     if (is_cubed_sphere) then
-      panel_id => get_panel_id(mesh_id)
+      panel_id => get_panel_id(mesh)
       panel_edge_dist => get_panel_edge_dist(mesh_id)
     end if
 
@@ -423,20 +430,20 @@ contains
     if ( panel_edge_treatment == panel_edge_treatment_extended_mesh ) then
       monotone_remap = ( monotone /= monotone_none )
       remap_depth = stencil_extent
-      call remap_on_extended_mesh(field_big_halo, field_n, monotone_remap,     &
+      call remap_on_extended_mesh(config,                                      &
+                                  field_big_halo, field_n, monotone_remap,     &
                                   transport_metadata%get_enforce_min_value(),  &
                                   transport_metadata%get_min_value(),          &
                                   remap_depth)
     else
       call field_big_halo%initialise( field_n%get_function_space(), &
-                                      halo_depth=get_required_stencil_depth() )
+                                      halo_depth=mesh%get_halo_depth() )
       call invoke( setval_x(field_big_halo, field_n) )
     end if
     ! Copy required as PSyclone doesn't allow the same field to be
     ! used as two kernel arguments
     field_ptr_copy => field_big_halo
 
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_sweeps')
     ! MASS FLUX COMPUTATION ====================================================
     if (panel_edge_treatment == panel_edge_treatment_special_edges) then
       ! Special edge treatment ------------------------------------------------
@@ -488,28 +495,21 @@ contains
                                     min_val, ndep, dt ) )
     end if
 
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_sweeps')
-
     ! fluxes may need unifying to guarantee a unique flux for each face --------
     if ( panel_edge_treatment == panel_edge_treatment_extended_mesh ) then
-      if ( subroutine_timers ) call timer('transport.ffsl_flux_unify')
       w2b_fs => function_space_collection%get_fs(mesh, 0, 0, W2Hbroken)
       call flux_broken%initialise( w2b_fs )
       call invoke( average_w2_to_w2b_kernel_type(flux_broken, flux),           &
                    ffsl_unify_flux_kernel_type(flux, flux_broken,              &
                                                1, panel_id, 1) )
-      if ( subroutine_timers ) call timer('transport.ffsl_flux_unify')
     end if
 
     ! Compute updated advective fields -----------------------------------------
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_update')
     call invoke( fv_divergence_x_kernel_type(increment_x, flux, detj_at_w3),   &
                  fv_divergence_y_kernel_type(increment_y, flux, detj_at_w3) )
 
     call ffsl_advective_increment(increment_x, field_n, dt, adv_one_x)
     call ffsl_advective_increment(increment_y, field_n, dt, adv_one_y)
-
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_update')
 
   end subroutine ffsl_hori_cosmic_inner_alg
 
@@ -595,9 +595,13 @@ contains
     logical(kind=l_def) :: enforce_minvalue
     logical(kind=l_def) :: is_cubed_sphere
 
+    type(config_type), pointer :: config
+
     ! Get pre-computed objects and set pointers --------------------------------
-    mesh_id = field_x%get_mesh_id()
+    config => transport_controller%get_config()
     mesh => field_x%get_mesh()
+    mesh_id = field_x%get_mesh_id()
+
     transport_counter => transport_controller%get_transport_counter()
     transport_metadata => transport_controller%get_transport_metadata()
 
@@ -619,12 +623,12 @@ contains
     )
 
     if (is_cubed_sphere) then
-      panel_id => get_panel_id(mesh_id)
+      panel_id => get_panel_id(mesh)
       panel_edge_dist => get_panel_edge_dist(mesh_id)
     end if
 
-    face_selector_ew => get_face_selector_ew(mesh_id)
-    face_selector_ns => get_face_selector_ns(mesh_id)
+    face_selector_ew => get_face_selector_ew(mesh)
+    face_selector_ns => get_face_selector_ns(mesh)
 
     if (equation_form == equation_form_consistent) then
       ffsl_precomputations => transport_controller%get_flux_precomputations()
@@ -663,8 +667,8 @@ contains
       )
     else
       ! Reset unity for advective/conservative forms
-      dry_mass_n => get_detj_at_w3_r_tran(mesh_id)
-      dry_mass_n_copy => get_detj_at_w3_r_tran(mesh_id)
+      dry_mass_n => get_detj_at_w3_r_tran(config, mesh)
+      dry_mass_n_copy => get_detj_at_w3_r_tran(config, mesh)
       dry_mass_x => wind_precomputations%get_adv_detj_x(                       &
           mesh_id, splitting, step                                             &
       )
@@ -716,13 +720,14 @@ contains
     if ( panel_edge_treatment == panel_edge_treatment_extended_mesh ) then
       monotone_remap = ( monotone /= monotone_none )
       remap_depth = stencil_extent
-      call remap_on_extended_mesh(field_big_halo, field_n, monotone_remap,     &
+      call remap_on_extended_mesh(config,                                      &
+                                  field_big_halo, field_n, monotone_remap,     &
                                   transport_metadata%get_enforce_min_value(),  &
                                   transport_metadata%get_min_value(),          &
                                   remap_depth)
     else
       call field_big_halo%initialise( field_n%get_function_space(), &
-                                      halo_depth=get_required_stencil_depth() )
+                                      halo_depth=mesh%get_halo_depth() )
       call invoke( setval_x(field_big_halo, field_n) )
     end if
 
@@ -737,7 +742,6 @@ contains
 
     field_ptr_copy => field_big_halo
 
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_sweeps')
     ! MASS FLUX COMPUTATION ====================================================
     if (panel_edge_treatment == panel_edge_treatment_remapping) then
       ! Use remapped fields at panel edges -------------------------------------
@@ -810,21 +814,17 @@ contains
 
     end if
 
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_sweeps')
-
     ! fluxes may need unifying to guarantee a unique flux for each face --------
     if ( panel_edge_treatment == panel_edge_treatment_extended_mesh ) then
-      if ( subroutine_timers ) call timer('transport.ffsl_flux_unify')
       w2b_fs => function_space_collection%get_fs(mesh, 0, 0, W2Hbroken)
       call flux_broken%initialise( w2b_fs )
       call invoke( average_w2_to_w2b_kernel_type(flux_broken, flux),           &
                    ffsl_unify_flux_kernel_type(flux, flux_broken,              &
                                                1, panel_id, 1) )
-      if ( subroutine_timers ) call timer('transport.ffsl_flux_unify')
+
     end if
 
     ! Compute advected fields
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_update')
     call invoke( fv_difference_x_kernel_type(increment_x, flux),               &
                  fv_difference_y_kernel_type(increment_y, flux) )
     ! Obtain updated mixing ratio by dividing by updated density
@@ -832,8 +832,6 @@ contains
                                    dry_mass_n, increment_x, step_dt)
     call swift_inner_update_tracer(field_y, field_n, dry_mass_y,               &
                                    dry_mass_n, increment_y, step_dt)
-
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_update')
 
   end subroutine ffsl_hori_swift_inner_alg
 
@@ -944,6 +942,10 @@ contains
     logical(kind=l_def) :: outer
     logical(kind=l_def) :: is_cubed_sphere
 
+    type(config_type), pointer :: config
+
+    config => transport_controller%get_config()
+
     ! Get pre-computed objects and set pointers --------------------------------
     mesh_id = field_x%get_mesh_id()
     mesh => field_x%get_mesh()
@@ -966,8 +968,8 @@ contains
     end if
 
     ! Get pre-computed fields
-    face_selector_ew => get_face_selector_ew(mesh_id)
-    face_selector_ns => get_face_selector_ns(mesh_id)
+    face_selector_ew => get_face_selector_ew(mesh)
+    face_selector_ns => get_face_selector_ns(mesh)
 
     ! Whether computation is on the cubed sphere
     is_cubed_sphere = (                                                        &
@@ -976,7 +978,7 @@ contains
     )
 
     if (is_cubed_sphere) then
-      panel_id => get_panel_id(mesh_id)
+      panel_id => get_panel_id(mesh)
       panel_edge_dist => get_panel_edge_dist(mesh_id)
     end if
 
@@ -1022,10 +1024,10 @@ contains
             mesh_id, splitting, step                                           &
         )
       else
-        dry_mass_x => get_detj_at_w3_r_tran(mesh_id)
-        dry_mass_y => get_detj_at_w3_r_tran(mesh_id)
+        dry_mass_x => get_detj_at_w3_r_tran(config, mesh)
+        dry_mass_y => get_detj_at_w3_r_tran(config, mesh)
       end if
-      detj_at_w3 => get_detj_at_w3_r_tran(mesh_id)
+      detj_at_w3 => get_detj_at_w3_r_tran(config, mesh)
       dep_dist => wind_precomputations%get_dep_dist_xy(                        &
           mesh_id, splitting, step, outer                                      &
       )
@@ -1079,17 +1081,19 @@ contains
     if ( panel_edge_treatment == panel_edge_treatment_extended_mesh ) then
       monotone_remap = ( monotone /= monotone_none )
       remap_depth = stencil_extent
-      call remap_on_extended_mesh(field_x_big_halo, field_x, monotone_remap,   &
+      call remap_on_extended_mesh(config,                                      &
+                                  field_x_big_halo, field_x, monotone_remap,   &
                                   transport_metadata%get_enforce_min_value(),  &
                                   transport_metadata%get_min_value(),          &
                                   remap_depth)
-      call remap_on_extended_mesh(field_y_big_halo, field_y, monotone_remap,   &
+      call remap_on_extended_mesh(config,                                      &
+                                  field_y_big_halo, field_y, monotone_remap,   &
                                   transport_metadata%get_enforce_min_value(),  &
                                   transport_metadata%get_min_value(),          &
                                   remap_depth)
     else
-      call field_x_big_halo%initialise(field_fs, halo_depth=get_required_stencil_depth())
-      call field_y_big_halo%initialise(field_fs, halo_depth=get_required_stencil_depth())
+      call field_x_big_halo%initialise(field_fs, halo_depth=mesh%get_halo_depth())
+      call field_y_big_halo%initialise(field_fs, halo_depth=mesh%get_halo_depth())
       call invoke( setval_x(field_x_big_halo, field_x),                        &
                    setval_x(field_y_big_halo, field_y) )
     end if
@@ -1103,8 +1107,6 @@ contains
               monotone_remap, enforce_minvalue, min_val                        &
       )
     end if
-
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_sweeps')
 
     ! MASS FLUX COMPUTATION ====================================================
     if (panel_edge_treatment == panel_edge_treatment_remapping) then
@@ -1179,22 +1181,17 @@ contains
 
     end if
 
-    if ( subroutine_timers ) call timer('transport.ffsl_hori_sweeps')
-
     ! fluxes may need unifying to guarantee a unique flux for each face --------
     if ( panel_edge_treatment == panel_edge_treatment_extended_mesh ) then
-      if ( subroutine_timers ) call timer('transport.ffsl_flux_unify')
       w2b_fs => function_space_collection%get_fs(mesh, 0, 0, W2Hbroken)
       call flux_broken%initialise( w2b_fs )
       call invoke( average_w2_to_w2b_kernel_type(flux_broken, flux),           &
                    ffsl_unify_flux_kernel_type(flux, flux_broken,              &
                                                1, panel_id, 1) )
-      if ( subroutine_timers ) call timer('transport.ffsl_flux_unify')
     end if
 
     ! Compute advective increments, if required --------------------------------
     if (to_compute_adv_inc .or. to_compute_field_np1) then
-      if ( subroutine_timers ) call timer('transport.ffsl_hori_update')
 
       call increment_x%initialise( vector_space = field_fs )
       call increment_y%initialise( vector_space = field_fs )
@@ -1262,7 +1259,6 @@ contains
         end if
       end if
 
-      if ( subroutine_timers ) call timer('transport.ffsl_hori_update')
     end if
 
   end subroutine ffsl_hori_outer_alg

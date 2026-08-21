@@ -66,6 +66,8 @@
        <field id="init_exner" name="exner" long_name="exner_pressure" unit="1" grid_ref="half_level_face_grid" />
        <field id="init_height_w3" name="height_w3" long_name="height_of_cell_centres_above_earth_radius" unit="m" grid_ref="half_level_face_grid" />
        <field id="init_height_wth" name="height_wth" long_name="height_of_cell_interfaces_above_earth_radius" unit="m" grid_ref="full_level_face_grid" />
+       <field id="init_height_w0" name="height_w0" long_name="height_of_cell_vertices_above_earth_radius" unit="m" grid_ref="node_grid" />
+       <field id="init_height_w2h" name="height_w2h" long_name="height_of_cell_faces_above_earth_radius" unit="m" grid_ref="half_level_edge_grid" />
        <field id="init_ageofair" name="ageofair" long_name="ageofair" unit="s" grid_ref="half_level_face_grid" />
        <field id="init_area_at_msl" name="cell_area" long_name="grid_cell_area" standard_name="grid_cell_area" unit="m2" domain_ref="face"/>
      </field_group>
@@ -205,6 +207,7 @@
       <!-- File definition for reading in from a UM2LFRic FD UGRID format dump  -->
 
       <file id="read_lfric_fd_dump" name="lfric_fd_dump" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+       <field_group id="read_lfric_fd_dump_field_group" >
        <field id="read_ew_wind_in_w3" name="ew_wind_in_w3" long_name="eastward_wind" standard_name="eastward_wind" unit="m s-1" grid_ref="half_level_face_grid" operation="instant" />
        <field id="read_ns_wind_in_w3" name="ns_wind_in_w3" long_name="northward_wind" standard_name="northward_wind" unit="m s-1" grid_ref="half_level_face_grid" operation="instant" />
        <field id="read_theta_in_wtheta" name="theta_in_wtheta" long_name="air_potential_temperature" standard_name="air_potential_temperature" unit="K" grid_ref="full_level_face_grid" operation="instant" />
@@ -215,12 +218,15 @@
        <field id="read_mcl_in_wtheta" name="mcl_in_wtheta" long_name="cloud_liquid_water_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
        <field id="read_mcf_in_wtheta" name="mcf_in_wtheta" long_name="cloud_ice_mixing_ratio"  unit="1" grid_ref="full_level_face_grid" operation="instant" />
        <field id="read_tstar" name="tstar" long_name="surface_temperature" standard_name="surface_temperature" unit="K" domain_ref="face" operation="instant" />
+       </field_group>
       </file>
 
         <!-- ANCIL FILES -->
 
       <file id="orography_mean_ancil" name="orography_mean_ancil" mode="read" output_freq="1ts" convention="UGRID" cyclic="true" enabled=".FALSE.">
+       <field_group id="orography_mean_ancil_field_group" >
        <field id="surface_altitude" name="surface_altitude" long_name="Surface altitude" unit="m" operation="once" domain_ref="face"/>
+       </field_group>
        </file>
 
     </file_definition>
@@ -294,7 +300,7 @@
     <variable_definition>
       <variable_group id = "buffer">
         <variable id = "optimal_buffer_size" type = "string" >performance</variable>
-        <variable id = "buffer_factor_size" type = "double" >1.0</variable>
+        <variable id = "buffer_size_factor" type = "double" >1.0</variable>
       </variable_group>
 
       <variable_group id = "parameters" >
