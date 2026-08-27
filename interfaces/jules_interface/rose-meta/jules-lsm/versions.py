@@ -51,5 +51,8 @@ class vn31_tXXXX(MacroUpgrade):
         )
         self.add_setting(config, [nml, "l_internal_flux_heating"], ".false.")
         self.add_setting(config, [nml, "internal_flux_heating_amplitude"], "0.0")
+        self.add_setting(
+            config, [nml, "internal_flux_heating_scale_heights"], "1.0"
+        )
 
         return config, self.reports

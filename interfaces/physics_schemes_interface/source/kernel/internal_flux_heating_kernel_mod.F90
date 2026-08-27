@@ -14,14 +14,17 @@
 !!
 !!          where S_v(p) is the (nondimensional) vertical structure of the
 !!          forcing, described as varying linearly in log-pressure from one
-!!          at the base of the domain to zero one scale height above:
+!!          at the base of the domain to zero n_h scale heights above:
 !!
-!!            S_v(p) = clip[0,1]( 1 - ln(p_base/p) )
+!!            S_v(p) = clip[0,1]( 1 - ln(p_base/p) / n_h )
 !!
-!!          Using p = p_zero * exner**(1/kappa), this is evaluated exactly
-!!          (no separate scale-height constant needed) as
+!!          The paper uses n_h = 1; here n_h is the namelist variable
+!!          internal_flux_heating_scale_heights, so that the forcing can be
+!!          made to decay more slowly with height. Using
+!!          p = p_zero * exner**(1/kappa), this is evaluated exactly (no
+!!          separate scale-height constant needed) as
 !!
-!!            S_v(k) = clip[0,1]( 1 - (1/kappa) * ln(exner_base/exner(k)) )
+!!            S_v(k) = clip[0,1]( 1 - ln(exner_base/exner(k)) / (kappa*n_h) )
 !!
 !!          with exner_base the Exner pressure at the base of the domain
 !!          (level 0) in the same column. S_h(lambda,phi,t) here is the
@@ -57,11 +60,12 @@ public :: internal_flux_heating_code
 !------------------------------------------------------------------------------
 type, extends(kernel_type) :: internal_flux_heating_kernel_type
   private
-  type(arg_type) :: meta_args(5) = (/                                &
+  type(arg_type) :: meta_args(6) = (/                                &
     arg_type(GH_FIELD, GH_REAL, GH_WRITE, Wtheta),                   & ! dtheta_internal_flux
     arg_type(GH_FIELD, GH_REAL, GH_READ,  Wtheta),                   & ! exner_in_wth
     arg_type(GH_FIELD, GH_REAL, GH_READ,  ANY_DISCONTINUOUS_SPACE_1),& ! internal_flux
     arg_type(GH_SCALAR, GH_REAL, GH_READ),                           & ! kappa
+    arg_type(GH_SCALAR, GH_REAL, GH_READ),                           & ! scale_heights
     arg_type(GH_SCALAR, GH_REAL, GH_READ)                            & ! heating_ratio
     /)
   integer :: operates_on = CELL_COLUMN
@@ -79,6 +83,8 @@ contains
 !> @param[in]     exner_in_wth         Exner pressure on Wtheta levels
 !> @param[in]     internal_flux        Random harmonics pattern at the surface (W m-2)
 !> @param[in]     kappa                Ratio of gas constant to specific heat, R/cp
+!> @param[in]     scale_heights        Number of scale heights above the base of the
+!!                                     domain at which S_v falls to zero
 !> @param[in]     heating_ratio        internal_flux_heating_amplitude / internal_flux_value
 !> @param[in]     ndf_wth              No. of DOFs per cell for Wtheta space
 !> @param[in]     undf_wth             No. of unique DOFs for Wtheta space
@@ -91,6 +97,7 @@ subroutine internal_flux_heating_code(nlayers,                     &
                                       exner_in_wth,                &
                                       internal_flux,               &
                                       kappa,                       &
+                                      scale_heights,               &
                                       heating_ratio,               &
                                       ndf_wth, undf_wth, map_wth,  &
                                       ndf_2d, undf_2d, map_2d)
@@ -108,6 +115,7 @@ subroutine internal_flux_heating_code(nlayers,                     &
   real(r_def), intent(in)    :: exner_in_wth(undf_wth)
   real(r_def), intent(in)    :: internal_flux(undf_2d)
   real(r_def), intent(in)    :: kappa
+  real(r_def), intent(in)    :: scale_heights
   real(r_def), intent(in)    :: heating_ratio
 
   ! Local variables
@@ -122,13 +130,15 @@ subroutine internal_flux_heating_code(nlayers,                     &
   ! correctly at zero.
   do k = 0, nlayers
 
-    ! S_v(p) = 1 - ln(p_base/p), using p = p_zero * exner**(1/kappa), so
+    ! S_v(p) = 1 - ln(p_base/p) / scale_heights, using
+    ! p = p_zero * exner**(1/kappa), so
     ! ln(p_base/p) = (1/kappa) * ln(exner_base/exner(k)). This is exactly 1
     ! at the base of the domain (k = 0, exner = exner_base) and decreases
     ! monotonically with height (exner falls off monotonically with
-    ! height), reaching 0 exactly one scale height above the base.
-    s_v = 1.0_r_def - &
-      (1.0_r_def/kappa) * log(exner_base/exner_in_wth(map_wth(1) + k))
+    ! height), reaching 0 exactly scale_heights scale heights above the
+    ! base. scale_heights is guaranteed positive by the algorithm layer.
+    s_v = 1.0_r_def - (1.0_r_def/(kappa*scale_heights)) * &
+      log(exner_base/exner_in_wth(map_wth(1) + k))
 
     ! S_v is monotonically decreasing in k, so once it has reached zero it
     ! will stay zero (or negative, before clipping) for all levels above -

@@ -25,7 +25,8 @@ use specified_surface_config_mod,  only: surf_temp_forcing, &
                                          internal_flux_forcing_wavenumber, &
                                          internal_flux_forcing_decorr_timescale, &
                                          l_internal_flux_heating, &
-                                         internal_flux_heating_amplitude
+                                         internal_flux_heating_amplitude, &
+                                         internal_flux_heating_scale_heights
 use internal_flux_kernel_mod,      only: internal_flux_kernel_type
 use internal_flux_heating_kernel_mod, only: internal_flux_heating_kernel_type
 use jules_control_init_mod,        only: n_surf_tile
@@ -174,21 +175,29 @@ contains
               ! arXiv:1807.08433): apply the same random realisation that
               ! now drives internal_flux, rescaled to
               ! internal_flux_heating_amplitude, as a 3D potential
-              ! temperature increment near the base of the domain.
+              ! temperature increment near the base of the domain, decaying
+              ! to zero internal_flux_heating_scale_heights scale heights
+              ! above it.
               if ( l_internal_flux_heating ) then
                 if ( internal_flux_value == 0.0_r_def ) then
                   call log_event( 'slow_physics: l_internal_flux_heating '//&
                     'requires a non-zero internal_flux_value to rescale '// &
                     'from - skipping', LOG_LEVEL_ERROR )
+                else if ( internal_flux_heating_scale_heights <= 0.0_r_def ) &
+                  then
+                  call log_event( 'slow_physics: '//                        &
+                    'internal_flux_heating_scale_heights must be positive', &
+                    LOG_LEVEL_ERROR )
                 else
                   heating_ratio = internal_flux_heating_amplitude / &
                     internal_flux_value
-                  call invoke( internal_flux_heating_kernel_type(          &
-                                          dtheta_internal_flux,            &
-                                          exner_in_wth,                    &
-                                          internal_flux,                   &
-                                          kappa,                           &
-                                          heating_ratio ) )
+                  call invoke( internal_flux_heating_kernel_type(         &
+                              dtheta_internal_flux,                        &
+                              exner_in_wth,                                &
+                              internal_flux,                               &
+                              kappa,                                       &
+                              internal_flux_heating_scale_heights,         &
+                              heating_ratio ) )
                 end if
               end if
 
